@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- ===== SCRIPT TEMA ===== -->
+  <script>
+    (function() {
+      const saved = localStorage.getItem('totemino_theme');
+      const theme = saved || 
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+    window.addEventListener('pageshow', function(event) {
+      if (event.persisted || performance.getEntriesByType('navigation')[0]?.type === 'back_forward') {
+        location.reload();
+      }
+    });
+  </script>
+
+  <title>Modifica Menu - Totemino</title>
+  <link rel="icon" type="image/png" href="img/favicon.png">
+  <link rel="stylesheet" href="gestione-menu-styles.css">
+  <link rel="stylesheet" href="customization-styles.css">
+</head>
+
+<body>
+  <!-- ===== SFONDO LUMINOSO ===== -->
+  <div class="bg-light light1"></div>
+  <div class="bg-light light2"></div>
+  <div class="bg-light light3"></div>
+
+  <!-- ===== SEZIONE HEADER ===== -->
+  <div class="title">
+    <div class="logo_space">
+      <img class="theme-img" data-light="img/logo/1_light.png" data-dark="img/logo/1_dark.png" alt="Logo" id="logoSwap">
+      <a href="index.html"><h1>Totemino</h1></a>
+      <p>Menu</p>
+    </div>
+    <div>
+      <button id="back-btn" class="header-btn" type="button">
+        <img class="theme-img" data-light="img/exit_light.png" data-dark="img/exit_dark.png" alt="Torna a Gestione">
+      </button>
+      <button id="theme" class="header-btn" type="button">
+        <img class="theme-img" data-light="img/theme_light.png" data-dark="img/theme_dark.png" alt="Cambia tema">
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== SEZIONE PRINCIPALE ===== -->
+  <div class="management-container">
+
+    <!-- ===== TIPI DI MENU ===== -->
+    <div class="menu-types-manager-section">
+      <div class="coperto-settings-section">
+        <div class="coperto-header">
+          <h2>Gestisci Tipi di Menu</h2>
+        </div>
+        <div class="menu-types-cards-container" id="menu-types-cards">
+          <!-- Le card verranno generate qui -->
+        </div>
+        <button class="btn-primary" style="margin: 2rem auto 0.5rem; display: block;" onclick="openAddMenuTypePopup()">
+          + Aggiungi nuovo Tipo di Menu
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== FILTRO MENU ===== -->
+    <div class="filter-group">
+      <label for="menu-type-filter">Filtra gli elementi:</label>
+      <select id="menu-type-filter" class="dropdown">
+        <option value="default">Menu Intero</option>
+      </select>
+    </div>
+
+    <!-- ===== SEZIONI MENU ===== -->
+    <div class="menu-sections" id="menu-sections"></div>
+
+    <!-- ===== SALVATAGGIO MENU ===== -->
+    <div class="save-section">
+      <button class="save-btn" id="save-menu">Salva Menu</button>
+    </div>
+  </div>
+
+  <!-- ===== POPUP MODIFICA ELEMENTO ===== -->
+  <div class="popup hidden" id="edit-popup">
+    <div class="popup-content management-popup">
+      <button class="close-popup" id="close-edit-popup">
+        <img src="img/x.png" alt="Chiudi">
+      </button>
+      <h2 class="popup-title" id="popup-title">Modifica Elemento</h2>
+
+      <!-- ===== FORM PRINCIPALE ===== -->
+      <div class="main-form-section">
+        <div class="image-section">
+          <p style="display: block; font-weight: 600; margin-bottom: 0.3rem; color: var(--text-primary); font-size: 0.95rem;">Immagine</p>
+          <div class="image-upload-area" id="product-image-area">
+            <img id="product-preview" src="" alt="Anteprima prodotto" class="image-preview hidden">
+            <div class="upload-placeholder" id="product-placeholder">
+              <img src="img/upload.png" alt="Carica">
+              <span>Trascina o clicca</span>
+            </div>
+            <input type="file" id="product-image" accept="image/*" class="hidden">
+          </div>
+        </div>
+
+        <div class="text-inputs">
+          <div class="form-field">
+            <label for="item-name">Nome prodotto:</label>
+            <input type="text" id="item-name" placeholder="Es. Pizza Margherita">
+          </div>
+
+          <div class="form-field">
+            <label for="item-price">Prezzo (€):</label>
+            <input type="number" id="item-price" step="0.10" placeholder="Es. 6.90">
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== DESCRIZIONE ===== -->
+      <div class="form-field">
+        <label for="item-description">Descrizione (opzionale):</label>
+        <textarea id="item-description" placeholder="Descrivi gli ingredienti del prodotto, separati da una virgola. (Es. Pomodoro, mozzarella, basilico)"></textarea>
+      </div>
+
+      <!-- ===== CHECKBOX OPZIONI ===== -->
+      <div class="checkbox-section">
+        <label class="checkbox-label">
+          <input type="checkbox" id="item-new">
+          <span class="checkmark"></span>
+          <span class="checkbox-text">Segna come "Novità"</span>
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="hide-item">
+          <span class="checkmark"></span>
+          <span class="checkbox-text">Nascondi elemento</span>
+        </label>
+      </div>
+
+      <!-- ===== CUSTOMIZZAZIONE ===== -->
+      <div class="customization-field">
+        <div class="customization-header">
+          <label class="checkbox-label">
+            <input type="checkbox" id="item-customizable" onchange="updateCustomizationVisibility()">
+            <span class="checkmark"></span>
+            <span class="checkbox-text">Prodotto Modificabile</span>
+          </label>
+        </div>
+
+        <div class="customization-controls" id="customization-controls" style="display: none;">
+          <input type="hidden" id="customization-group-id" />
+          <button type="button" class="btn-group-id-display" id="btn-group-id-display" onclick="openCurrentGroupOrSelection()">-</button>
+          <button type="button" class="btn-choose-group" onclick="openGroupSelectionPopup()">Scegli Gruppo</button>
+          <button type="button" class="btn-add-group" onclick="createNewGroup()">+ Aggiungi Gruppo</button>
+        </div>
+      </div>
+
+      <!-- ===== VISIBILITÀ MENU ===== -->
+      <div class="menu-types-field">
+        <div class="menu-types-checkboxes checkbox-section" id="menu-types-checkboxes"></div>
+      </div>
+
+      <!-- ===== ALLERGENI ===== -->
+      <div class="allergens-section">
+        <h3>Allergeni</h3>
+        <div class="allergens-grid" id="allergens-grid"></div>
+      </div>
+
+      <!-- ===== AZIONI POPUP ===== -->
+      <div class="popup-actions">
+        <button class="btn-danger hidden" id="delete-item">Elimina</button>
+        <button class="btn-secondary" id="cancel-edit">Annulla</button>
+        <button class="btn-primary" id="save-item">Salva</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== POPUP ELIMINAZIONE ===== -->
+  <div class="delete-popup-overlay popup hidden" id="delete-popup">
+    <div class="delete-popup">
+      <div class="delete-popup-header">
+        <h1>Sei sicuro?</h1>
+        <p>Eliminare questo elemento non può essere annullato</p>
+      </div>
+      <div class="delete-popup-actions">
+        <button id="cancel-delete">Annulla</button>
+        <button id="confirm-delete">Elimina</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== POPUP SELEZIONE GRUPPO ===== -->
+  <div class="popup hidden" id="group-selection-popup">
+    <div class="group-selection-content">
+      <div class="group-selection-header">
+        <h2>Seleziona Gruppo Customizzazione</h2>
+        <button class="close-popup" onclick="closeGroupSelectionPopup()">
+          <img src="img/x.png" alt="Chiudi">
+        </button>
+      </div>
+      <div id="groups-list"></div>
+      <div class="create-new-group-section">
+        <button class="btn-create-new-group" onclick="createNewGroup()">+ Crea Nuovo Gruppo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== POPUP GESTIONE CUSTOMIZZAZIONE ===== -->
+  <div class="popup hidden" id="customization-popup">
+    <div class="customization-popup-content">
+      <button class="close-popup" onclick="closeCustomizationGroupPopup()">
+        <img src="img/x.png" alt="Chiudi">
+      </button>
+      <h2 id="customization-popup-title">Crea Nuovo Gruppo Customizzazione</h2>
+      <div id="customization-sections-container"></div>
+      <button class="add-section-btn" onclick="addCustomizationSection()">+ Aggiungi Nuova Sezione</button>
+      <div class="customization-popup-actions">
+        <button class="btn-secondary" onclick="closeCustomizationGroupPopup()">Annulla</button>
+        <button class="btn-save-customization" onclick="saveCustomizationGroup()">Salva Gruppo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== POPUP MODIFICA TIPO MENU ===== -->
+  <div class="popup hidden" id="edit-menu-type-popup">
+    <div class="customization-popup-content">
+      <button class="close-popup" onclick="closeEditMenuTypePopup()">
+        <img src="img/x.png" alt="Chiudi">
+      </button>
+      <h2 class="popup-title">Modifica Tipo Menu</h2>
+      
+      <input type="hidden" id="editing-menu-type-id">
+            
+      <div class="menu-icon-selector">
+        <div class="menu-icon-preview-container">
+          <div class="form-field">
+            <label for="menu-icon-preview">Icona:</label>
+            <div class="image-preview-icon">
+              <img id="menu-icon-preview" src="img/menu_icons/1.png" alt="Icona menu">
+            </div>
+          </div>
+          <div class="menu-icon-controls">
+            <button class="reorder-btn" type="button" onclick="changeMenuIcon('prev')" title="Icona precedente">
+              <img src="img/arrow-up.png" alt="Su">
+            </button>
+            <button class="reorder-btn" type="button" onclick="changeMenuIcon('next')" title="Icona successiva">
+              <img src="img/arrow-down.png" alt="Giù">
+            </button>
+          </div>
+        </div>
+        
+        <div class="menu-icon-form-section">
+          <div class="form-field">
+            <label for="menu-type-name-edit">Nome visualizzato:</label>
+            <input type="text" id="menu-type-name-edit" placeholder="Es. Menu Bar">
+          </div>
+
+          <div class="form-field" id="coperto-form">
+            <label for="menu-type-coperto-edit">Prezzo Coperto (€):</label>
+            <input type="number" id="menu-type-coperto-edit" step="0.01" min="0" placeholder="0.00" value="0.00">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-field" style="margin-bottom: 1.5rem;">
+        <label>Metodi di Checkout disponibili:</label>
+        <p style="font-size: 0.85rem; opacity: 0.7; margin: 0.3rem 0 0.5rem;">Deseleziona tutti per abilitare la modalità "Visualizzazione" del menu</p>
+        <div class="checkout-methods-simple">
+          <label class="checkbox-label need-premium">
+            <input type="checkbox" id="edit-method-table">
+            <span class="checkmark"></span>
+            <span class="checkbox-text">Servizio al Tavolo</span>
+          </label>
+          <label class="checkbox-label need-pro">
+            <input type="checkbox" id="edit-method-delivery">
+            <span class="checkmark"></span>
+            <span class="checkbox-text">Consegna a Domicilio</span>
+          </label>
+          <label class="checkbox-label need-premium">
+            <input type="checkbox" id="edit-method-takeaway">
+            <span class="checkmark"></span>
+            <span class="checkbox-text">Take away</span>
+          </label>
+          <label class="checkbox-label need-hobby">
+            <input type="checkbox" id="edit-method-show">
+            <span class="checkmark"></span>
+            <span class="checkbox-text">Mostra Ordine</span>
+          </label>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 1.5rem;">
+        <label class="checkbox-label">
+          <input type="checkbox" id="menu-type-visibility-edit">
+          <span class="checkmark"></span>
+          <span class="checkbox-text">Menu visibile pubblicamente</span>
+        </label>
+      </div>
+
+      <div class="popup-actions" style="margin-top: 2rem;">
+        <button class="btn-danger" onclick="deleteMenuTypeFromPopup()">Elimina</button>
+        <button class="btn-secondary" onclick="closeEditMenuTypePopup()">Annulla</button>
+        <button class="btn-primary" onclick="saveMenuTypeChanges()">Salva</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== POPUP AGGIUNGI TIPO MENU ===== -->
+  <div class="popup hidden" id="add-menu-type-popup">
+    <div class="customization-popup-content">
+      <button class="close-popup" onclick="closeAddMenuTypePopup()">
+        <img src="img/x.png" alt="Chiudi">
+      </button>
+      <h2 class="popup-title">Nuovo Tipo Menu</h2>
+      
+      <input type="hidden" id="new-menu-type-id">
+
+      <!-- SELETTORE ICONA -->
+      <div class="menu-icon-selector">
+        <div class="menu-icon-preview-container">
+          <div class="form-field">
+            <label for="new-menu-icon-preview">Icona:</label>
+            <div class="image-preview-icon">
+              <img id="new-menu-icon-preview" src="img/menu_icons/1.png" alt="Icona menu">
+            </div>
+          </div>
+          <div class="menu-icon-controls">
+            <button class="reorder-btn" type="button" onclick="changeNewMenuIcon('prev')" title="Icona precedente">
+              <img src="img/arrow-up.png" alt="Su">
+            </button>
+            <button class="reorder-btn" type="button" onclick="changeNewMenuIcon('next')" title="Icona successiva">
+              <img src="img/arrow-down.png" alt="Giù">
+            </button>
+          </div>
+        </div>
+        
+        <div class="menu-icon-form-section">
+          <div class="form-field">
+            <label for="new-menu-type-name">Nome visualizzato:</label>
+            <input type="text" id="new-menu-type-name" placeholder="Es. Menu Bar" oninput="autoGenerateId()">
+          </div>
+
+          <div class="form-field" id="coperto-form">
+            <label for="new-menu-type-coperto">Prezzo Coperto (€):</label>
+            <input type="number" id="new-menu-type-coperto" step="0.01" min="0" placeholder="0.00" value="0.00">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-field" style="margin-bottom: 1.5rem;">
+        <label>Metodi di Checkout disponibili:</label>
+        <p style="font-size: 0.85rem; opacity: 0.7; margin: 0.3rem 0 0.5rem;">Deseleziona tutti per abilitare solo la visualizzazione del menu</p>
+        <div class="checkout-methods-simple">
+          <label class="checkbox-label need-premium">
+            <input type="checkbox" id="new-method-table" checked>
+            <span class="checkmark"></span>
+            <span class="checkbox-text">Servizio al Tavolo</span>
+          </label>
+          <label class="checkbox-label need-pro">
+            <input type="checkbox" id="new-method-delivery" checked>
+            <span class="checkmark"></span>
+            <span class="checkbox-text">Consegna a Domicilio</span>
+          </label>
+          <label class="checkbox-label need-premium">
+            <input type="checkbox" id="new-method-takeaway" checked>
+            <span class="checkmark"></span>
+            <span class="checkbox-text">Take away</span>
+          </label>
+          <label class="checkbox-label need-hobby">
+            <input type="checkbox" id="new-method-show" checked>
+            <span class="checkmark"></span>
+            <span class="checkbox-text">Mostra Ordine</span>
+          </label>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 1.5rem;">
+        <label class="checkbox-label">
+          <input type="checkbox" id="new-menu-type-visibility" checked>
+          <span class="checkmark"></span>
+          <span class="checkbox-text">Menu visibile pubblicamente</span>
+        </label>
+      </div>
+
+      <div class="popup-actions" style="margin-top: 2rem;">
+        <button class="btn-secondary" onclick="closeAddMenuTypePopup()">Annulla</button>
+        <button class="btn-primary" onclick="createNewMenuType()">Crea</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== NOTIFICA SALVATAGGIO ===== -->
+  <div class="notification hidden" id="save-notification">
+    <span>Menu salvato con successo!</span>
+  </div>
+
+  <!-- ===== POPUP MODIFICA CATEGORIA ===== -->
+  <div class="popup hidden" id="edit-category-popup">
+    <div class="customization-popup-content">
+      <button class="close-popup" onclick="closeEditCategoryPopup()">
+        <img src="img/x.png" alt="Chiudi">
+      </button>
+      <h2 class="popup-title">Modifica Categoria</h2>
+      
+      <div class="form-field" style="margin-bottom: 2rem;">
+        <h4 style="font-weight:600; font-size:1rem; margin-bottom: 0.5rem;">Nome categoria:</h4>
+        <input type="text" id="category-name-input" placeholder="Nome della categoria">
+      </div>
+
+      <div class="menu-type-removal" style="margin-bottom: 2rem;">
+        <h4 style="font-weight:600; font-size:1rem; margin-bottom: 0.5rem;">Questa categoria appare in:</h4>
+        <div id="category-menu-types" class="checkout-methods-simple"></div>
+      </div>
+
+
+      <div class="category-items-reorder">
+        <h4 style="font-weight:600; font-size:1rem; margin-bottom: 0.5rem;">Riordina elementi</h4>
+        <div id="draggable-items-list"></div>
+      </div>
+
+      <div class="popup-actions" style="margin-top: 2rem;">
+        <button class="btn-secondary" onclick="closeEditCategoryPopup()">Annulla</button>
+        <button class="btn-primary" onclick="saveCategoryChanges()">Salva Modifiche</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- ===== SCRIPT FINALI ===== -->
+  <script src="auth-protection.js"></script>
+  <script src="theme.js"></script>
+  <script src="logo-pop.js"></script>
+  <script src="gestione-menu-script.js"></script>
+  <script src="customization-manager.js"></script>
+</body>
+</html>

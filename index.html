@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        (function() {
+          const saved = localStorage.getItem('totemino_theme');
+          const theme = saved || 
+            (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          document.documentElement.setAttribute('data-theme', theme);
+          
+          window.addEventListener('pageshow', function(event) {
+            if (event.persisted || performance.getEntriesByType('navigation')[0]?.type === 'back_forward') {
+              location.reload();
+            }
+          });
+        })();
+    </script>
+    <title>Totemino - Più di un menù</title>
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    <link rel="stylesheet" href="index-styles.css"/>
+    <link rel="stylesheet" href="reviews-styles.css"/>
+    <style>
+        /* Animazione loading dots per bottoni pricing */
+        .btn-pricing.loading {
+            pointer-events: none;
+        }
+
+        .btn-pricing .btn-text {
+            display: inline;
+            font-weight: 600;
+        }
+
+        .btn-pricing.loading .btn-text {   
+            display: none;
+        }
+
+        .loading-dots {
+            display: none;
+            gap: 8px;
+        }
+
+        .btn-pricing.loading .loading-dots {
+            display: flex;
+            margin: 5px auto;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-dots span {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background-color: currentColor;
+            animation: loadingDot 1.4s infinite ease-in-out both;
+        }
+
+        .loading-dots span:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .loading-dots span:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes loadingDot {
+            0%, 80%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-light light1"></div>
+    <div class="bg-light light2"></div>
+    <div class="bg-light light3"></div>
+    
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img class="theme-img" data-light="img/logo/1_light.png" data-dark="img/logo/1_dark.png" alt="Totemino Logo" id="logoSwap">
+                <a href="#"><h1>Totemino</h1></a>
+            </div>
+            <div class="nav-actions">
+                <button id="theme" class="nav-btn theme-btn" type="button">
+                    <img class="theme-img" data-light="img/theme_light.png" data-dark="img/theme_dark.png" alt="Tema">
+                </button>
+                <a href="login.html" class="nav-btn login-btn" id="navLoginBtn">Accedi</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h2 class="hero-title">Aumenta il valore medio degli ordini fino al 30%</h2>
+                <p class="hero-subtitle">Non è un semplice menù digitale: è un percorso di ordinazione studiato per far scoprire tutta la tua offerta, ridurre la pressione sociale e suggerire gli extra giusti al checkout.</p>
+                <div class="hero-cta">
+                    <a href="login.html" class="btn-hero">Inizia con la Prova Gratuita</a>
+                    <span class="hero-note">Nessuna carta richiesta - 14 giorni di prova</span>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="img/hero1.png" alt="WebApp Totemino su Telefono">
+                <img src="img/hero2.png" alt="Camerieri Felici">
+                <img src="img/hero3.png" alt="WebApp Totemino su Laptop">
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Bar -->
+    <section class="stats-bar">
+        <div class="stats-container">
+            <div class="stat-item">
+                <h3>0%</h3>
+                <p>Commissioni</p>
+            </div>
+            <div class="stat-item">
+                <h3>23+</h3>
+                <p>Ristoranti</p>
+            </div>
+            <div class="stat-item">
+                <h3>13800+</h3>
+                <p>Ordini al mese</p>
+            </div>
+            <div class="stat-item">
+                <h3>4.8/5</h3>
+                <p>Recensioni</p>
+            </div>
+        </div>
+    </section>
+
+    
+    <!-- Why It Works -->
+    <section class="why-it-works">
+        <div class="section-header">
+            <h2>Perché funziona</h2>
+            <p>Psicologia, UX e suggerimenti automatici: tre leve che spingono il cliente a comprare di più, senza sentirsi “venduto”.</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">😌</div>
+                <h3>Ordini senza pressione sociale</h3>
+                <p>Con l’ordinazione autonoma il cliente si prende il suo tempo e aggiunge più facilmente extra e personalizzazioni. In molte catene e casi d’uso, i kiosk sono associati a un aumento dello scontrino medio nell’ordine del 15%–30%.</p>
+                <p style="opacity:.7;font-size:.9rem;margin-top:10px;">
+                    Fonti: <a href="https://www.qsrmagazine.com/growth/consumer-trends/kiosks-take-center-stage-in-the-phygital-revolution/" target="_blank" rel="noopener">QSR Magazine (Tillster)</a>,
+                    <a href="https://www.qsrmagazine.com/uncategorized/study-kiosk-demand-rise-quick-service/" target="_blank" rel="noopener">QSR Magazine (2018)</a>,
+                    <a href="https://hrcak.srce.hr/file/445800" target="_blank" rel="noopener">Tourism and Hospitality Management (PDF, 2023)</a>
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">👀</div>
+                <h3>Scoperta guidata del menù</h3>
+                <p>Le scelte si fanno velocemente: molte persone decidono cosa ordinare in meno di 3 minuti. Se il menù è scomodo (QR, zoom, PDF), si vedono solo poche cose. Totemino rende l’esplorazione fluida e ti permette di far “passare” tutto il menù prima del checkout.</p>
+                <p style="opacity:.7;font-size:.9rem;margin-top:10px;">
+                    Fonti: <a href="https://www.restaurantonline.co.uk/Article/2017/08/09/Diners-take-just-three-minutes-to-choose-their-food-new-research-reveals/" target="_blank" rel="noopener">Restaurant Online (ricerca commissionata da Elliotts)</a>,
+                    <a href="https://www.usfoods.com/tools-tips-and-ideas/articles-and-publications/articles/american-menu-choices" target="_blank" rel="noopener">US Foods (sondaggio: preferenza menù fisico vs QR)</a>
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🧠</div>
+                <h3>Upsell intelligente al checkout</h3>
+                <p>Prima del pagamento, Totemino rilegge l’ordine e propone ciò che manca in modo coerente con quello che il cliente ha già scelto. I motori di raccomandazione e le proposte contestuali sono una leva concreta per aumentare check-size e vendite digitali.</p>
+                <p style="opacity:.7;font-size:.9rem;margin-top:10px;">
+                    Fonti: <a href="https://www.tillster.com/blog/7-ways-kiosk-recommendation-engines-can-increase-restaurant-profits" target="_blank" rel="noopener">Tillster (recommendation engines)</a>,
+                    <a href="https://ingenico.com/ca-en/newsroom/blogs/self-service-kiosks-are-becoming-popular-restaurants-heres-why" target="_blank" rel="noopener">Ingenico (case study: più item nel carrello)</a>,
+                    <a href="https://now.temple.edu/news/2024-04-12/feeling-rushed-food-ordering-kiosk-youre-not-alone" target="_blank" rel="noopener">Temple University (ansia e design della fila)</a>
+                </p>
+            </div>
+        </div>
+
+        <p style="opacity:.75;font-size:0.9rem;max-width:700px;margin:22px auto 0;text-align:center;">
+            Nota: i risultati variano in base a tipo di locale, pricing e configurazione del menù. L’obiettivo di Totemino è rendere sistematiche queste leve (UX + suggerimenti) e misurarle nelle tue statistiche.
+        </p>
+    </section>
+
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="section-header">
+            <h2>Tutto ciò di cui hai bisogno</h2>
+            <p>Una piattaforma completa per modernizzare il tuo ristorante</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card" onclick="window.location.href='servizi.html'">
+                <div class="feature-icon">📱</div>
+                <h3>Menù Digitale</h3>
+                <p>Crea menù interattivi con foto, descrizioni, aggiunte e allergeni e cambia i prezzi quando vuoi</p>
+            </div>
+            <div class="feature-card" onclick="window.location.href='servizi.html'">
+                <div class="feature-icon">⚡</div>
+                <h3>Ordini Istantanei</h3>
+                <p>I clienti ordinano dal tavolo o da casa e gli ordini arrivano subito in cucina</p>
+            </div>
+            <div class="feature-card" onclick="window.location.href='servizi.html'">
+                <div class="feature-icon">📊</div>
+                <h3>Statistiche Avanzate</h3>
+                <p>Report dettagliati su vendite, prodotti più richiesti e performance del locale</p>
+            </div>
+            <div class="feature-card" onclick="window.location.href='servizi.html'">
+                <div class="feature-icon">💳</div>
+                <h3>Pagamenti Integrati</h3>
+                <p>Accetta pagamenti con carta direttamente dall'app, senza commissioni extra</p>
+            </div>
+            <div class="feature-card" onclick="window.location.href='servizi.html'">
+                <div class="feature-icon">🎯</div>
+                <h3>Marketing in-App</h3>
+                <p>Banner pubblicitari, codici sconto e suggerimenti AI per aumentare le vendite</p>
+            </div>
+            <div class="feature-card" onclick="window.location.href='servizi.html'">
+                <div class="feature-icon">🔧</div>
+                <h3>Supporto Dedicato</h3>
+                <p>Assistenza prioritaria e aggiornamenti continui per il successo del tuo business</p>
+            </div>
+            <div class="feature-card" onclick="window.location.href='servizi.html'">
+                <div class="feature-icon">📲</div>
+                <h3>Responsività</h3>
+                <p>In modo da poter eseguire operazioni gestionali anche dalla comodità del telefono</p>
+            </div>
+            <div class="feature-card" onclick="window.location.href='servizi.html'">
+                <div class="feature-icon">💰</div>
+                <h3>Conveniente</h3>
+                <p>Ottieni tutti i vantaggi dei soliti menù "premium", ma senza pagare l'etichetta</p>
+            </div>
+        </div>
+        <button class="show-more-btn" id="showMoreFeatures">
+            <p>Mostra di più</p>
+        </button>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works">
+        <div class="section-header">
+            <h2>Semplice come 1, 2, 3</h2>
+            <p>Attiva Totemino in pochi minuti</p>
+        </div>
+        <div class="steps-container">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>Crea il tuo menù</h3>
+                    <p>Aggiungi prodotti, foto e descrizioni dal pannello di controllo</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>Genera QR code</h3>
+                    <p>Stampa i QR code personalizzati per ogni tavolo del tuo locale</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>Inizia a ricevere ordini</h3>
+                    <p>I clienti ordinano in autonomia e tu gestisci tutto da un'unica dashboard</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing">
+        <div class="section-header">
+            <h2>Prezzi sempre competitivi</h2>
+            <p>Scegli il piano perfetto per il tuo ristorante</p>
+        </div>
+        <div class="pricing-grid">
+            <!-- Hobby Plan -->
+            <div class="pricing-card">
+                <div class="pricing-header">
+                    <h3>Hobby</h3>
+                    <p>Alle prime armi con strumenti digitali</p>
+                    <div class="price">
+                        <span class="currency">€</span>
+                        <span class="amount">29</span>
+                        <span class="period">/mese + IVA</span>
+                    </div>
+                </div>
+                <a href="login.html" class="btn-pricing" data-plan="hobby" data-price-id="price_1Sc7bC7dAnRE04Pk4s9xD4El">
+                    <span class="btn-text">Inizia ora</span>
+                    <span class="loading-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </span>
+                </a>
+                <ul class="features-list">
+                    <li><img src="img/check.png"> Menù solo visualizzazione</li>
+                    <li><img src="img/check.png"> Gestione menù semplice</li>
+                    <li><img src="img/check.png"> Aggiunta di prodotti illimitati</li>
+                    <li><img src="img/check.png"> QR code personalizzati</li>
+                    <li><img src="img/check.png"> Aggiornamenti futuri</li>
+                </ul>
+            </div>
+
+            <!-- Pro Plan -->
+            <div class="pricing-card featured">
+                <div class="popular-badge">Consigliato</div>
+                <div class="pricing-header">
+                    <h3>Pro</h3>
+                    <p>Per automazione e controllo</p>
+                    <div class="price">
+                        <span class="currency">€</span>
+                        <span class="amount">149</span>
+                        <span class="period">/mese + IVA</span>
+                    </div>
+                </div>
+                <a href="login.html" class="btn-pricing" data-plan="pro" data-price-id="price_1Sc7ex7dAnRE04PkjcQ3RALK">
+                    <span class="btn-text">Inizia con la Prova Gratuita</span>
+                    <span class="loading-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </span>
+                </a>
+                <ul class="features-list">
+                    <li><img src="img/check.png"> Tutte le funzioni di Premium</li>
+                    <li><img src="img/check.png"> Domicilio con 0% di commissioni</li>
+                    <li><img src="img/check.png"> Suggerimenti con IA al checkout</li>
+                    <li><img src="img/check.png"> Statistiche e report mensili</li>
+                    <li><img src="img/check.png"> Menù iniziale configurato da noi</li>
+                </ul>
+            </div>
+
+            <!-- Premium Plan -->
+            <div class="pricing-card">
+                <div class="pricing-header">
+                    <h3>Premium</h3>
+                    <p>Per gestione smart di ordini & comande</p>
+                    <div class="price">
+                        <span class="currency">€</span>
+                        <span class="amount">69</span>
+                        <span class="period">/mese + IVA</span>
+                    </div>
+                </div>
+                <a href="login.html" class="btn-pricing" data-plan="premium" data-price-id="price_1Sc7eA7dAnRE04PkniueG6en">
+                    <span class="btn-text">Inizia con la Prova Gratuita</span>
+                    <span class="loading-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </span>
+                </a>
+                <ul class="features-list">
+                    <li><img src="img/check.png"> Tutte le funzioni Hobby</li>
+                    <li><img src="img/check.png"> Ordinazioni base dall'app</li>
+                    <li><img src="img/check.png"> Gestione delle comande LIVE</li>
+                    <li><img src="img/check.png"> Banner promozionali nel menù</li>
+                    <li><img src="img/check.png"> Supporto e formazione</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Social Proof / Testimonials -->
+     
+    <div class="create-reviews-section"></div>
+
+    <!-- Final CTA -->
+    <section class="final-cta">
+        <div class="cta-container">
+            <h2>Pronto a fare la scelta giusta?</h2>
+            <p>Unisciti ai ristoratori che hanno già scelto Totemino</p>
+            <a href="login.html" class="btn-cta-large">Ottieni la Prova Gratuita</a>
+            <span class="cta-note">Nessuna carta richiesta - 14 giorni di prova</span>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section">
+        <div class="faq-container">
+            <h2 class="faq-title">Domande Frequenti</h2>
+            
+            <!-- FAQ Ristoratore -->
+            <div class="faq-category">
+                <h3 class="faq-category-title">Per il Ristoratore</h3>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Quanto è difficile da usare? Sono negato con la tecnologia...</span>
+                        <span class="faq-icon"><img src="img/down_arrow.png"></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            Tranquillo, è pensato proprio per essere semplice. Se sai usare WhatsApp, sai usare Totemino. Tutto intuitivo, niente paroloni tecnici.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Come faccio a far vedere il menù ai clienti?</span>
+                        <span class="faq-icon"><img src="img/down_arrow.png"></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            Stampi il QR code che ti diamo e lo metti sui tavoli. Il cliente lo scansiona con la fotocamera del telefono ed è dentro. Niente app da scaricare, zero sbattimenti.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Posso cambiare i prezzi quando voglio?</span>
+                        <span class="faq-icon"><img src="img/down_arrow.png"></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            Certo! Dal pannello di gestione modifichi tutto in tempo reale: prezzi, piatti, ingredienti, foto. Finito il pesce? Lo togli in 10 secondi.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Che differenza c'è tra i piani Hobby, Premium e Pro?</span>
+                        <span class="faq-icon"><img src="img/down_arrow.png"></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            Hobby è perfetto per iniziare: menù digitale e basta. Premium aggiunge la gestione ordini in tempo reale (tavoli, delivery, asporto). Pro è il pacchetto completo con statistiche avanzate, AI che suggerisce piatti ai clienti e ti aiuta a capire cosa funziona davvero.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Le statistiche servono davvero o sono solo numeri a caso?</span>
+                        <span class="faq-icon"><img src="img/down_arrow.png"></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            Servono eccome. Scopri quali piatti vendono di più, in che orari la gente ordina, quanto ti portano i suggerimenti AI. Capisci dove investire e dove tagliare. Dati veri, decisioni intelligenti.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Gli ordini arrivano davvero in tempo reale?</span>
+                        <span class="faq-icon"><img src="img/down_arrow.png"></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            Sì, istantanei. Il cliente ordina dal tavolo e tu lo vedi subito sul tuo schermo in cucina o al banco. Puoi anche ricevere notifiche push se le attivi.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ Cliente -->
+            <div class="faq-category">
+                <h3 class="faq-category-title">Per il Cliente</h3>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Devo scaricare un'app?</span>
+                        <span class="faq-icon"><img src="img/down_arrow.png"></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            No! Scansioni il QR sul tavolo e si apre tutto nel browser. Zero download, zero registrazioni obbligatorie.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>È complicato per chi non è pratico di tecnologia?</span>
+                        <span class="faq-icon"><img src="img/down_arrow.png"></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            Per niente. È fatto per essere usato da tutti, anche da tua nonna. Menù chiaro, bottoni grandi, tutto scritto in italiano semplice.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Cosa sono i suggerimenti AI che vedo nel menù?</span>
+                        <span class="faq-icon"><img src="img/down_arrow.png"></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            L'intelligenza artificiale ti consiglia piatti in base a cosa hai già ordinato o a cosa va per la maggiore. È come avere il cameriere che ti dice "questo ti piacerà sicuro".
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Posso vedere ingredienti e allergeni?</span>
+                        <span class="faq-icon"><img src="img/down_arrow.png"></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            Se il ristorante li ha inseriti, sì. Clicca sulla "i" accanto al piatto e vedi tutto. Ma dipende sempre da cosa ha deciso di condividere il locale.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Ho sbagliato ordine, posso modificarlo?</span>
+                        <span class="faq-icon"><img src="img/down_arrow.png"></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            Una volta inviato, l'ordine parte subito verso la cucina. Chiama il personale e si sistemerà tutto, ma dall'app non puoi più cambiarlo.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Posso ordinare da casa per il delivery?</span>
+                        <span class="faq-icon"><img src="img/down_arrow.png"></span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            Dipende dal ristorante. Se hanno attivato il servizio delivery su Totemino, sì. Ordini, scegli l'orario e aspetti comodamente a casa.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-container">
+            
+            <div class="footer-content">
+            <div class="footer-left">
+                <p class="footer-brand">Totemino</p>
+                <p class="footer-tagline">Il tuo compagno di ristorazione</p>
+                <p class="footer-contact">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                </svg>
+                351 054 8462
+                </p>
+            </div>
+
+            <nav class="footer-nav">
+                <h4 class="footer-nav-title">Cosa offriamo</h4>
+                <a href="servizi.html">Servizi</a>
+                <a href="upgrade.html">Piani</a>
+                <a href="about.html">Chi siamo</a>
+                <a href="contatti.html">Contattaci</a>
+            </nav>
+
+            <div class="footer-social-section">
+                <h4 class="footer-nav-title">Seguici</h4>
+                <div class="footer-social">
+                <a href="https://wa.me/+393510548462" aria-label="WhatsApp">
+                    <img src="img/whatsapp-logo.png" alt="WhatsApp">
+                </a>
+                <a href="https://instagram.com/webtorstudios" aria-label="Instagram">
+                    <img src="img/instagram-logo.png" alt="Instagram">
+                </a>
+                <a href="mailto:webtorstudios@gmail.com" aria-label="Email">
+                    <img src="img/mail-logo.png" alt="Email">
+                </a>
+                </div>
+            </div>
+            </div>
+
+        </div>
+
+        <div class="footer-bottom">
+            <p>© 2026 Totemino. Tutti i diritti riservati.</p>
+            <div class="footer-links">
+            <a href="termini-e-condizioni.html">Termini e condizioni</a>
+            <span class="separator">•</span>
+            <a href="cookie-policy.html">Informativa Privacy</a>
+            </div>
+        </div>
+    </footer>
+    
+    <script src="index-script.js"></script>
+    <script src="reviews-script.js"></script>
+    <script src="theme.js"></script>
+    <script src="logo-pop.js"></script>
+    <script>
+        // Controlla lo stato di login e aggiorna UI dinamicamente
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('/api/auth/me', { credentials: 'include' });
+                const data = await response.json();
+                
+                if (data.success && data.user) {
+                    const user = data.user;
+                    const navLoginBtn = document.getElementById('navLoginBtn');
+                    
+                    // Aggiorna bottone nav con ID utente
+                    if (navLoginBtn) {
+                        navLoginBtn.textContent = user.userCode;
+                        navLoginBtn.href = `profile.html?id=${user.userCode}`;
+                    }
+                    
+                    // Riordina le pricing cards: hobby, premium, pro
+                    const pricingGrid = document.querySelector('.pricing-grid');
+                    if (pricingGrid) {
+                        const cards = Array.from(pricingGrid.children);
+                        const hobbyCard = cards.find(card => card.querySelector('[data-plan="hobby"]'));
+                        const premiumCard = cards.find(card => card.querySelector('[data-plan="premium"]'));
+                        const proCard = cards.find(card => card.querySelector('[data-plan="pro"]'));
+                        
+                        // Riordina: hobby, premium, pro
+                        pricingGrid.innerHTML = '';
+                        if (hobbyCard) pricingGrid.appendChild(hobbyCard);
+                        if (premiumCard) pricingGrid.appendChild(premiumCard);
+                        if (proCard) pricingGrid.appendChild(proCard);
+                    }
+                    
+                    // Nascondi il piano corrente e quelli inferiori
+                    const currentPlan = user.planType;
+                    if (currentPlan) {
+                        const hobbyCard = document.querySelector('[data-plan="hobby"]')?.closest('.pricing-card');
+                        const premiumCard = document.querySelector('[data-plan="premium"]')?.closest('.pricing-card');
+                        const proCard = document.querySelector('[data-plan="pro"]')?.closest('.pricing-card');
+                        
+                        // Gerarchia: hobby < premium < pro
+                        if (currentPlan === 'hobby') {
+                            // Nascondi solo hobby
+                            if (hobbyCard) hobbyCard.style.display = 'none';
+                        } else if (currentPlan === 'premium') {
+                            // Nascondi hobby e premium
+                            if (hobbyCard) hobbyCard.style.display = 'none';
+                            if (premiumCard) premiumCard.style.display = 'none';
+                        } else if (currentPlan === 'pro') {
+                            if (document.querySelector('.pricing')) document.querySelector('.pricing').style.display = 'none';
+                        }
+                    }
+                    
+                    // Aggiorna i bottoni delle pricing cards
+                    const planLabels = {
+                        hobby: 'Passa a Hobby',
+                        premium: 'Passa a Premium',
+                        pro: 'Diventa Pro'
+                    };
+                    
+                    document.querySelectorAll('.btn-pricing').forEach(btn => {
+                        const planType = btn.dataset.plan;
+                        const priceId = btn.dataset.priceId;
+                        
+                        if (planType && planLabels[planType]) {
+                            btn.querySelector('.btn-text').textContent = planLabels[planType];
+                            btn.href = '#';
+                            
+                            // Aggiungi handler per checkout Stripe
+                            btn.addEventListener('click', async (e) => {
+                                e.preventDefault();
+                                btn.classList.add('loading');
+                                
+                                try {
+                                    const checkoutResponse = await fetch('/api/create-checkout', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        credentials: 'include',
+                                        body: JSON.stringify({ priceId })
+                                    });
+                                    
+                                    const checkoutData = await checkoutResponse.json();
+                                    
+                                    if (checkoutData.url) {
+                                        window.location.href = checkoutData.url;
+                                    } else {
+                                        alert('Errore: ' + (checkoutData.error || 'Impossibile creare la sessione'));
+                                        btn.classList.remove('loading');
+                                    }
+                                } catch (error) {
+                                    console.error('Errore:', error);
+                                    alert('Errore di connessione. Riprova.');
+                                    btn.classList.remove('loading');
+                                }
+                            });
+                        }
+                    });
+                }
+            } catch (error) {
+                // Utente non loggato, mantieni link normali a login.html
+                console.log('Utente non loggato');
+            }
+        });
+    </script>
+</body>
+
+</html>

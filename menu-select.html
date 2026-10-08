@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scegli Menu - Totemino</title>
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    <script>
+        // Controllo immediato per redirect veloce
+        (async function() {
+            window.addEventListener('pageshow', function(event) {
+                if (event.persisted || performance.getEntriesByType('navigation')[0]?.type === 'back_forward') {
+                location.reload();
+                }
+            });
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            
+            if (!id) {
+                window.location.href = 'index-user.html';
+                return;
+            }
+            
+            try {
+                const settingsResponse = await fetch(`IDs/${id}/menuTypes.json`);
+                const settings = await settingsResponse.json();
+                
+                const menuResponse = await fetch(`IDs/${id}/menu.json`);
+                const menuData = await menuResponse.json();
+                
+                // Controlla se ci sono menu alternativi
+                let availableMenus = 0;
+                if (settings.menuTypes) {
+                    for (const menuType of settings.menuTypes) {
+                        if (checkMenuTypeHasItems(menuData, menuType.id)) {
+                            availableMenus++;
+                        }
+                    }
+                }
+                
+                // Se non ci sono menu alternativi, redirect IMMEDIATO
+                if (availableMenus === 0) {
+                    window.location.href = `index-user.html`;
+                    return;
+                }
+                
+                // Salva i dati per dopo
+                window.menuSelectionData = { settings, menuData };
+                
+            } catch (error) {
+                console.error('Errore nel caricamento:', error);
+                window.location.href = 'index-user.html';
+            }
+            
+            function checkMenuTypeHasItems(menuData, menuTypeId) {
+                for (const category of menuData.categories) {
+                    for (const item of category.items) {
+                        if (item.menuType && item.menuType.includes(menuTypeId)) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+        })();
+    </script>
+    <style>
+        @import url("menu-styles.css");
+        
+        .menu-container {
+            padding: 2rem 1rem;
+            text-align: center;
+        }
+
+        .menu-title {
+            font-family: 'CalSans';
+            font-size: 2.4rem;
+            color: var(--text-accent);
+            margin-bottom: 1rem;
+        }
+
+        .menu-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-width: 500px;
+            margin: 2rem auto;
+        }
+
+        .menu-card {
+            display: flex;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: #fdf8db;
+        }
+
+        @media (min-width: 1200px) {
+            .menu-card:hover {
+                transform: translateY(-3px);
+            }
+        }
+        
+        .menu-card:active {
+            transform: scale(0.98);
+        }
+
+        .menu-card img.menu-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 0.5rem;
+            object-fit: cover;
+            margin-right: 1rem;
+        }
+
+        .menu-card h3 {
+            flex: 1;
+            font-size: 1rem;
+            margin: 0;
+            font-weight: 500;
+            color: var(--text-primary);
+            text-align: left;
+        }
+
+        .menu-card img.arrow {
+            width: 24px;
+            height: 24px;
+            will-change: filter;
+        }
+        [data-theme="light"] .menu-card img.arrow {
+            filter: invert(1);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-light light1"></div>
+    <div class="bg-light light2"></div>
+    <div class="bg-light light3"></div>
+
+    <div class="title">
+        <div class="logo_space">
+            <img class="theme-img" data-light="img/logo/1_light.png" data-dark="img/logo/1_dark.png" alt="Logo" id="logoSwap">
+            <a href="index-user.html"><h1>Totemino</h1></a>
+        </div>
+        <div>
+            <button id="theme" class="header-btn" type="button">
+                <img class="theme-img" data-light="img/theme_light.png" data-dark="img/theme_dark.png" alt="Tema">
+            </button>
+        </div>
+    </div>
+
+    <div class="menu-container">
+        <h1 class="menu-title">Cosa cerchi?</h1>
+        <div class="menu-grid" id="menuGrid">
+            <!-- Le card dei menu verranno generate qui -->
+        </div>
+    </div>
+    
+    <script src="theme.js"></script>
+    <script src="logo-pop.js"></script>
+    <script>
+        // Aspetta che i dati siano caricati prima di procedere
+        async function initPage() {
+            // Attendi che i dati del menu siano stati caricati
+            while (!window.menuSelectionData) {
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            
+            const { settings, menuData } = window.menuSelectionData;
+            
+            // Controlla se ci sono menu disponibili
+            const availableMenus = [];
+            if (settings.menuTypes) {
+                for (const menuType of settings.menuTypes) {
+                    if (menuType.visibility !== false && checkMenuTypeHasItems(menuData, menuType.id)) {
+                        availableMenus.push(menuType);
+                    }
+                }
+            }
+            
+            // Controlla se le prenotazioni sono abilitate
+            let hasReservations = false;
+            try {
+                const settingsResponse = await fetch(`IDs/${id}/settings.json`);
+                const allSettings = await settingsResponse.json();
+                hasReservations = allSettings.reservations && allSettings.reservations.enabled === true;
+            } catch (error) {
+                console.log('Prenotazioni non abilitate o errore nel caricamento settings.json');
+            }
+            
+            // Logica di redirect:
+            // Se c'è SOLO 1 menu E NON ci sono prenotazioni -> redirect automatico
+            // Altrimenti mostra la pagina di selezione
+            if (availableMenus.length === 1 && !hasReservations) {
+                window.location.href = `menu.html?id=${id}&type=${availableMenus[0].id}`;
+                return;
+            }
+            
+            // Mostra la pagina di selezione
+            const menuGrid = document.getElementById('menuGrid');
+            
+            // Aggiungi le card dei menu
+            for (let i = 0; i < availableMenus.length; i++) {
+                const menuType = availableMenus[i];
+                const menuCard = document.createElement('a');
+                menuCard.className = 'menu-card';
+                menuCard.href = `menu.html?id=${id}&type=${menuType.id}`;
+                
+                const iconNumber = menuType.icon || 1;
+                
+                menuCard.innerHTML = `
+                    <img class="menu-icon" src="img/menu_icons/${iconNumber}.png" alt="${menuType.name}">
+                    <h3>${menuType.name}</h3>
+                    <img class="arrow" src="img/arrow_select.png" alt="Vai">
+                `;
+                
+                menuGrid.appendChild(menuCard);
+            }
+            
+            // Aggiungi la card per le prenotazioni se abilitate
+            if (hasReservations) {
+                const reservationCard = document.createElement('a');
+                reservationCard.className = 'menu-card';
+                reservationCard.href = `prenota.html?id=${id}`;
+                
+                reservationCard.innerHTML = `
+                    <img class="menu-icon" src="img/prenota.png" alt="Prenota un tavolo">
+                    <h3>Prenota un tavolo</h3>
+                    <img class="arrow" src="img/arrow_select.png" alt="Vai">
+                `;
+                
+                menuGrid.appendChild(reservationCard);
+            }
+        }
+        
+        function checkMenuTypeHasItems(menuData, menuTypeId) {
+            for (const category of menuData.categories) {
+                for (const item of category.items) {
+                    if (item.menuType && item.menuType.includes(menuTypeId)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        
+        // Avvia l'inizializzazione quando la pagina è pronta
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+</html>

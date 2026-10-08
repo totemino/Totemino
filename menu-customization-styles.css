@@ -1,0 +1,280 @@
+/* ===== SCHERMATA CUSTOMIZZAZIONE ===== */
+.customization-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-primary);
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  animation: slideInFromRight 0.3s ease-out;
+}
+
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.customization-header {
+  position: sticky;
+  top: 0;
+  background: var(--bg-secondary);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--input-bg);
+  z-index: 10;
+}
+
+.customization-header h2 {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.customization-header .back-btn {
+  height: 2.5rem;
+  aspect-ratio: 1;
+  background: var(--btn-secondary);
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.customization-header .back-btn:active {
+  transform: scale(0.9);
+}
+
+.customization-header .back-btn img {
+  width: 1.3rem;
+  height: 1.3rem;
+  opacity: var(--icon-opacity);
+}
+
+[data-theme="dark"] .customization-header .back-btn img {
+  filter: invert(1);
+}
+
+.customization-header h2 {
+  font-family: 'Klein-Bold';
+  font-size: 1.5rem;
+  color: var(--text-accent);
+  margin: 0;
+}
+
+.customization-content {
+  flex: 1;
+  padding: 1.5rem 1rem;
+  overflow-y: auto;
+}
+
+.customization-content > img {
+  width: 50%;
+  max-height: 250px;
+  object-fit: contain;
+  border-radius: 1.5rem;
+  display: block;
+  margin: 1rem auto 2rem; /* top auto bottom */
+}
+
+.customization-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.customization-section {
+  background: var(--card-bg);
+  border: 2px solid var(--card-border);
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px var(--shadow-sm);
+}
+
+.customization-section h3 {
+  font-family: 'Klein-Bold';
+  font-size: 1.2rem;
+  color: var(--text-accent);
+  margin: 0 0 1rem 0;
+}
+
+.customization-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--input-bg);
+}
+
+.customization-option:last-child {
+  border-bottom: none;
+}
+
+.customization-option label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.option-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+/* ✅ Stilizza checkbox come radio button */
+.radio-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid var(--text-primary);
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.radio-checkbox:checked {
+  background: var(--accent-gold);
+  border-color: var(--accent-gold);
+}
+
+.radio-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0.6rem;
+  height: 0.6rem;
+  background: var(--text-primary);
+  border-radius: 50%;
+}
+
+/* Checkbox quadrato per selezioni multiple */
+.square-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid var(--text-primary);
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.square-checkbox:checked {
+  background: var(--accent-gold);
+  border-color: var(--accent-gold);
+}
+
+.square-checkbox:checked::after {
+  content: '\f00c';
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.option-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.customization-footer {
+  position: sticky;
+  bottom: 0;
+  background: var(--bg-secondary);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 1rem;
+  border-top: 1px solid var(--input-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.price-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.price-display span {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.price-display .total-price {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-accent);
+}
+
+.add-to-cart-btn {
+  width: 100%;
+  background: var(--accent-gold);
+  border: none;
+  border-radius: 2rem;
+  padding: 1rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.add-to-cart-btn:active {
+  transform: scale(1.02);
+}
+
+.add-to-cart-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Stile per pulsante personalizza nel popup */
+.popup-controls .popup-customize-btn {
+  background: var(--accent-gold);
+  border: none;
+  border-radius: 2rem;
+  padding: 0.8rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: transform 0.2s;
+  white-space: nowrap;
+  width: 100%;
+  display: inline-block;
+}
+
+@media (min-width: 1200px) {
+  .customization-header, .customization-content, .customization-footer {
+    padding-left: 30%;
+    padding-right: 30%;
+  }
+}

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <script>
+    (function() {
+      const saved = localStorage.getItem('totemino_theme');
+      const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+    window.addEventListener('pageshow', function(event) {
+      if (event.persisted || performance.getEntriesByType('navigation')[0]?.type === 'back_forward') {
+        location.reload();
+      }
+    });
+  </script>
+    
+  <title>Cambia Tema - Totemino</title>
+  <link rel="icon" type="image/png" href="img/favicon.png">
+  <link rel="stylesheet" href="custom-theme-styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+  <div class="bg-light light1"></div>
+  <div class="bg-light light2"></div>
+  <div class="bg-light light3"></div>
+
+  <div class="title">
+    <div class="logo_space">
+      <img class="theme-img" data-light="img/logo/1_light.png" data-dark="img/logo/1_dark.png" alt="Logo" id="logoSwap">
+      <a href="index.html"><h1>Totemino</h1></a>
+      <p>Tema</p>
+    </div>
+    <div>
+      <button id="back-btn" class="header-btn" type="button">
+        <img class="theme-img" data-light="img/exit_light.png" data-dark="img/exit_dark.png" alt="Torna Indietro">
+      </button>
+      <button id="theme" class="header-btn" type="button">
+        <img class="theme-img" data-light="img/theme_light.png" data-dark="img/theme_dark.png" alt="Cambia tema">
+      </button>
+    </div>
+  </div>
+
+  <div class="theme-container">
+    <div class="theme-section">
+      <div class="section-header">
+        <h2 class="section-title">Temi pronti all'uso</h2>
+        <button class="reset-btn" id="reset-btn">
+          <i class="fas fa-rotate-left"></i>
+          Reimposta
+        </button>
+      </div>
+      <div class="presets-grid">
+        <button class="preset-card" data-light-hue="0" data-light-sat="1" data-dark-hue="60" data-dark-sat="1.0">
+          <div class="preset-preview">
+            <div class="preview-circle c1" style="filter: hue-rotate(0deg) saturate(1);"></div>
+            <div class="preview-circle c2" style="filter: hue-rotate(0deg) saturate(1);"></div>
+            <div class="preview-circle c3" style="filter: hue-rotate(0deg) saturate(1);"></div>
+          </div>
+          <span>Crepuscolo</span>
+        </button>
+
+        <button class="preset-card" data-light-hue="140" data-light-sat="1.5" data-dark-hue="260" data-dark-sat="1.0">
+          <div class="preset-preview">
+            <div class="preview-circle c1" style="filter: hue-rotate(140deg) saturate(1);"></div>
+            <div class="preview-circle c2" style="filter: hue-rotate(140deg) saturate(1.5);"></div>
+            <div class="preview-circle c3" style="filter: hue-rotate(140deg) saturate(1.5);"></div>
+          </div>
+          <span>Speranza</span>
+        </button>
+
+        <button class="preset-card" data-light-hue="250" data-light-sat="1.4" data-dark-hue="0" data-dark-sat="1.2">
+          <div class="preset-preview">
+            <div class="preview-circle c1" style="filter: hue-rotate(250deg) saturate(1.4);"></div>
+            <div class="preview-circle c2" style="filter: hue-rotate(250deg) saturate(1.4);"></div>
+            <div class="preview-circle c3" style="filter: hue-rotate(250deg) saturate(1.4);"></div>
+          </div>
+          <span>Infinito</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="theme-section">
+      <h2 class="section-title">Personalizza</h2>
+      
+      <div class="mode-toggle">
+        <button class="mode-btn active" data-mode="light">
+          <i class="fas fa-sun"></i>
+          Chiaro
+        </button>
+        <button class="mode-btn" data-mode="dark">
+          <i class="fas fa-moon"></i>
+          Scuro
+        </button>
+      </div>
+
+      <div class="custom-flex">
+        <div class="custom-controls">
+          <div class="control-group">
+            <label for="hue-slider">
+              <i class="fas fa-palette"></i>
+              Colore
+              <span id="hue-value">0°</span>
+            </label>
+            <input type="range" id="hue-slider" min="0" max="360" value="0" step="1">
+          </div>
+
+          <div class="control-group">
+            <label for="sat-slider">
+              <i class="fas fa-droplet"></i>
+              Saturazione
+              <span id="sat-value">1.0</span>
+            </label>
+            <input type="range" id="sat-slider" min="0" max="2" value="1" step="0.1">
+          </div>
+        </div>
+
+        <div class="preview-boxes">
+          <div class="preview-box light-preview">
+            <h3>Tema Chiaro</h3>
+            <div class="circles-container">
+              <div class="preview-circle pc1"></div>
+              <div class="preview-circle pc2"></div>
+              <div class="preview-circle pc3"></div>
+            </div>
+          </div>
+
+          <div class="preview-box dark-preview">
+            <h3>Tema Scuro</h3>
+            <div class="circles-container">
+              <div class="preview-circle pc1"></div>
+              <div class="preview-circle pc2"></div>
+              <div class="preview-circle pc3"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="save-btn-container">
+      <button class="btn-primary save-theme-btn" id="save-theme-btn">
+        Salva Tema
+      </button>
+    </div>
+  </div>
+
+  <div id="notification" class="notification"></div>
+  
+  <script src="auth-protection.js"></script>
+  <script src="theme.js"></script>
+  <script src="logo-pop.js"></script>
+  <script src="custom-theme-script.js"></script>
+</body>
+</html>

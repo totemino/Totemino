@@ -1,0 +1,43 @@
+{
+  "menuTypes": [
+    {
+      "id": "default",
+      "name": "Menu Intero",
+      "copertoPrice": 0,
+      "checkoutMethods": {
+        "table": false,
+        "delivery": true,
+        "takeaway": false,
+        "show": false
+      },
+      "visibility": true,
+      "icon": 1
+    },
+    {
+      "id": "menu-domicilio",
+      "name": "Menu Domicilio",
+      "copertoPrice": 0,
+      "checkoutMethods": {
+        "table": false,
+        "delivery": false,
+        "takeaway": true,
+        "show": false
+      },
+      "visibility": true,
+      "icon": 11
+    },
+    {
+      "id": "menu-bar",
+      "name": "Menu Bar",
+      "copertoPrice": 0,
+      "checkoutMethods": {
+        "table": false,
+        "delivery": false,
+        "takeaway": false,
+        "show": false
+      },
+      "visibility": true,
+      "icon": 13
+    }
+  ]
+}

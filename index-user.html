@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        (function() {
+            const saved = localStorage.getItem('totemino_theme');
+            const theme = saved || 
+                (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+            
+            window.addEventListener('pageshow', function(event) {
+                if (event.persisted || performance.getEntriesByType('navigation')[0]?.type === 'back_forward') {
+                location.reload();
+                }
+            });
+        })();
+    </script>
+    <title>Totemino</title>
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    <style>
+        @import url("menu-styles.css");
+        /* Hero Section */
+        .hero {
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            overflow: hidden;
+        }
+
+        .hero-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        /* Logo e Titolo */
+        .logo-container {
+            display: flex;
+            top: 10%;
+            flex-direction: column;
+            align-items: center;
+            position: fixed;
+            height: 11%;
+            aspect-ratio: 1;
+            opacity: 0;
+            animation: logoEntry 1.6s ease forwards;
+            z-index: 4;
+        }
+        .logo {
+            width: 100%;
+        }
+
+        .logo-container.active {
+            animation: logoExpand 0.5s ease-out forwards;
+        }
+        
+        .subtitle {
+            font-family: 'CalSans', sans-serif;
+            font-size: clamp(2.3rem, 12vw, 3.5rem);
+            font-weight: bolder;
+            text-align: center;
+            width: 90%;
+            position: fixed;
+            bottom: 25%;
+            line-height: 0.95;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--text-accent-gradient), var(--text-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            opacity: 0;
+            animation: textEntry 1.6s ease 0.2s forwards;
+        }
+
+        .italic-text {
+            font-family: 'CalSans', sans-serif;
+            font-style: italic;
+        }
+
+        /* Start Button */
+        .start-btn {
+            background: var(--index-btn);
+            color: #fdf8db;
+            border: 3px solid var(--index-btn);
+            width: calc(100% - 5rem);
+            max-width: 367px;
+            position: fixed;
+            bottom: 2.3rem;
+            padding: 0.7rem 0;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 2rem;
+            cursor: pointer;
+            opacity: 0;
+            animation: buttonEntry 0.4s ease 1.6s forwards;
+            transition: filter 0.3s ease, transform 0.2s ease;
+        }
+
+        .start-btn:active {
+            transform: scale(0.98);
+        }
+
+        .start-btn.hidden {
+            display: none;
+        }
+
+        .totemino-title {
+            position: fixed;
+            top: 3%;
+            left: 50%;
+            transform: translateX(-50%);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .totemino-title h1 {
+            font-family: 'Magic', sans-serif;
+            font-size: clamp(
+                0.1rem,
+                calc(1.6px + 0.0512 * (100vh - 50px)),
+                2.5rem
+            );
+            color: var(--text-accent);
+            opacity: 0;
+        }
+
+        .totemino-title h1.active {
+            animation: sparkle 0.8s ease-out forwards;
+        }
+
+        /* Login Card (Bottom Sheet) */
+        .login-card {
+            position: fixed;
+            left: 50%;
+            bottom: -100%;
+            width: 100%;
+            max-width: calc(367px + 15rem);
+            height:70%;
+            background: var(--index-card-bg);
+            color: #fdf8db;
+            transition: bottom 0.4s ease-out;
+            border-top-left-radius: 2rem;
+            border-top-right-radius: 2rem;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+            z-index: 3;
+            transform: translateX(-50%);
+            overflow: hidden;
+        }
+
+        .login-card.active {
+            bottom: 0;
+        }
+        .sheet-first {
+            width: 100%;
+            padding: 2.3rem 2rem;
+            height: 100%;
+            left: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.4s;
+        }
+        .sheet-first.shifted {
+            transform: translateX(100%);
+        }
+        /* Bottom Sheet Content */
+        .sheet-content {
+            width: 100%;
+            height: 100%;
+            max-width: 367px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sheet-content div {
+            width: 100%;
+        }
+
+        .greeting {
+            width: 100%;
+            font-size: 1.6rem;
+            font-weight: 600;
+            text-align: left;
+            margin-bottom: 2rem;
+        }
+
+        .login-description {
+            width: 100%;
+            font-size: 0.9rem;
+            text-align: left;
+            line-height: 1.7;
+            opacity: 0.95;
+            margin-bottom: 2rem;
+        }
+
+        /* PIN Inputs */
+        .pin-inputs {
+            width: 100%;
+            display: flex;
+            gap: clamp(9.6px, calc(9.6vw - 24px), 14.4px);
+            margin-bottom: 2rem;
+            justify-content: space-between;
+        }
+
+        .pin-inputs input {
+            width: 100%;
+            max-width: 80px;
+            aspect-ratio: 1;
+            background: #ebac4d;
+            color: #fdf8db;
+            font-size: clamp(1.5rem, 8.2vw, 2.2rem);
+            font-weight: 700;
+            text-align: center;
+            border: none;
+            border-radius: 1.2rem;
+            outline: none;
+            transition: all 0.1s;
+        }
+
+        .pin-inputs input.success {
+            background-color: #8aff7a;
+            box-shadow: 0 0 10px #89ff7a80;
+            animation: upDown 0.6s ease-in-out;
+        }
+
+        .pin-inputs input.error {
+            background-color: #ff4444;
+            box-shadow: 0 0 10px #ff444480;
+            animation: shake 0.8s ease-in-out;
+        }
+
+        /* Show Recent Orders Link */
+        .recent-orders-link {
+            font-size: 0.9rem;
+            color: #fdf8db;
+            text-decoration: underline;
+            cursor: pointer;
+
+            position: relative;
+            left: 50%;
+            transform: translateX(-50%);
+            display: inline-block;
+        }
+
+
+        /* Submit Button */
+        .submit-btn {
+            width: 100%;
+            background: transparent;
+            border: 3px solid #fdf8db;
+            padding: 0.7rem 0;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 2rem;
+            color: #fdf8db;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .submit-btn:active {
+            transform: scale(0.98);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* History Sheet */
+        .sheet-history {
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            padding: 2.3rem 2rem;
+            transition: left 0.4s;
+            overflow-y: auto;
+        }
+
+        .sheet-history.active {
+            left: 0;
+        }
+
+        .history-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            justify-content: space-between;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            width: 20px;
+            aspect-ratio: 1;
+        }
+        .back-btn img {
+            width: 100%;
+        }
+
+        .history-title {
+            font-size: 1.6rem;
+            font-weight: 600;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            background: var(--input-bg);
+            padding: 1rem;
+            border-radius: 1.4rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: #fdf8db;
+        }
+
+        .history-item:active {
+            transform: scale(0.98);
+        }
+
+        .history-item img.restaurant-logo {
+            width: 50px;
+            height: 50px;
+            border-radius: 0.5rem;
+            object-fit: cover;
+            margin-right: 1rem;
+        }
+
+        .history-item-name {
+            flex: 1;
+            font-size: 1.1rem;
+            font-weight: 500;
+
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+
+        .history-item img.arrow {
+            width: 24px;
+            height: 24px;
+        }
+
+        .no-history {
+            text-align: center;
+            color: #fdf8db;
+            opacity: 0.7;
+            margin-top: 2rem;
+            font-size: 0.95rem;
+        }
+
+        /* Animations */
+        @keyframes logoEntry {
+            from {
+                opacity: 0;
+                top: 50%;
+                height: 30%;
+                transform: translateY(-50%);
+            }
+            to {
+                opacity: 1;
+                top: 10%;
+                height: 11%;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes logoExpand {
+            0% {
+                opacity: 1;
+                top: 10%;
+                height: 11%;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 1;
+                top: 10%;
+                height: 25%;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes textEntry {
+            from {
+                opacity: 0;
+                transform: translateX(-80px);
+                filter: blur(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+                filter: blur(0);
+            }
+        }
+
+        @keyframes buttonEntry {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes sparkle {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes upDown {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            12.5%, 37.5%, 62.5%, 87.5% { transform: translateX(-6px); }
+            25%, 50%, 75% { transform: translateX(6px); }
+        }
+
+        @media (max-height: 549px) {
+            .login-description {
+                display: none;
+            }
+        }
+        @media (max-height: 449px) {
+            .greeting {
+                display: none;
+            }
+            .subtitle {
+                font-size: 2rem;
+            }
+        } 
+
+    </style>
+</head>
+<body>
+    <div class="bg-light light1"></div>
+    <div class="bg-light light2"></div>
+    <div class="bg-light light3"></div>
+
+    <section class="hero">
+        <div class="hero-content">
+            <div class="logo-container">
+                <img  id="logoSwap" class="logo theme-img" data-light="img/logo/1_light.png" data-dark="img/logo/1_dark.png" alt="Logo" id="logoSwap">
+            </div>
+            
+            <p class="subtitle">Ordina ciò che<br>desideri, <span class="italic-text">senza</span><br>alcuna parola</p>
+            
+            <button class="start-btn">Ordina ora!</button>
+        </div>
+    </section>
+    <div class="totemino-title">
+        <h1 class="totemino-title">Totemino</h1>
+    </div>
+
+    <div class="login-card">
+        <div class="sheet-first">
+            <div class="sheet-content">
+                <div>
+                    <h2 class="greeting" id="greeting"></h2>
+                    <p class="login-description">
+                        Hai già trovato il codice a 4 cifre?<br>
+                        Controlla sul tavolo o chiedi al personale.
+                    </p>
+                    
+                    <div class="pin-inputs">
+                        <input type="tel" autocomplete="off" maxlength="1" inputmode="numeric" />        
+                        <input type="tel" autocomplete="off" maxlength="1" inputmode="numeric" />   
+                        <input type="tel" autocomplete="off" maxlength="1" inputmode="numeric" />   
+                        <input type="tel" autocomplete="off" maxlength="1" inputmode="numeric" />   
+                    </div>
+
+                    <a class="recent-orders-link">Cosa hai visualizzato di recente</a>
+                </div>    
+                <div> <button class="submit-btn">Vai al Menu</button> </div>
+            </div>
+        </div>
+        <div class="sheet-history">
+            <div class="history-header">
+                <h3 class="history-title">Attività</h3>
+                <button class="back-btn"><img src="img/x_menu.png"></button>
+            </div>
+            <div class="history-list"></div>
+        </div>
+    </div>
+
+
+    <script src="theme.js"></script>
+    <script>
+
+        // Greeting
+        const now = new Date();
+        const utcHour = now.getUTCHours();
+        const gmt1Hour = (utcHour + 1) % 24;
+
+        let greeting = "";
+        if (gmt1Hour >= 5 && gmt1Hour < 12) {
+            greeting = "Buongiorno!";
+        } else if (gmt1Hour >= 12 && gmt1Hour < 18) {
+            greeting = "Buon pomeriggio!";
+        } else {
+            greeting = "Buonasera!";
+        }
+        document.getElementById("greeting").textContent = greeting;
+
+        // Elements
+        const startBtn = document.querySelector('.start-btn');
+        const logo = document.querySelector('.logo-container');
+        const loginCard = document.querySelector('.login-card');
+        const toteminoTitle = document.querySelector('.totemino-title h1');
+        const inputs = document.querySelectorAll('.pin-inputs input');
+        const submitBtn = document.querySelector('.submit-btn');
+        const recentOrdersLink = document.querySelector('.recent-orders-link');
+        const sheetFirst = document.querySelector('.sheet-first');
+        const sheetHistory = document.querySelector('.sheet-history');
+        const backBtn = document.querySelector('.back-btn');
+        const historyList = document.querySelector('.history-list');
+
+        // Start button click
+        startBtn.addEventListener('click', () => {
+            startBtn.classList.add('hidden');
+            loginCard.classList.add('active');
+            toteminoTitle.classList.add('active');
+            logo.classList.add('active');
+        });
+
+        // PIN input logic
+        function allInputsFilled() {
+            return Array.from(inputs).every(input => input.value.trim() !== '');
+        }
+
+        inputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                // Only allow numbers
+                e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                
+                if (input.value && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+                if (allInputsFilled()) {
+                    inputs[inputs.length - 1].blur();
+                }
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === "Backspace" && !input.value && index > 0) {
+                    inputs[index - 1].focus();
+                }
+            });
+        });
+
+        // Submit button
+        submitBtn.addEventListener('click', async () => {
+            const code = Array.from(inputs, i => i.value).join("");
+            
+            if (!/^\d{4}$/.test(code)) return;
+            
+            try {
+                const response = await fetch('userdata/users.json');
+                const users = await response.json();
+                const isValid = users[code];
+                
+                inputs.forEach((input, i) => {
+                    if (isValid) {
+                        setTimeout(() => {
+                            input.classList.add('success');
+                        }, i * 150);
+                    } else {
+                        input.classList.add('error');
+                    }
+                });
+                
+                setTimeout(() => {
+                    if (isValid) {
+                        window.location.href = `menu-select.html?id=${code}`;
+                    } else {
+                        inputs.forEach(i => {
+                            i.classList.remove('error');
+                            i.value = '';
+                        });
+                        inputs[0].focus();
+                    }
+                }, 1200);
+            } catch (error) {
+                console.error('Error validating code:', error);
+            }
+        });
+
+        // History management
+        async function loadHistory() {
+            const history = JSON.parse(localStorage.getItem('totemino_history') || '[]');
+            historyList.innerHTML = '';
+            
+            if (history.length === 0) {
+                historyList.innerHTML = '<p class="no-history">Qui troverai la tua cronologia!</p>';
+                return;
+            }
+            
+            for (const id of history) {
+                try {
+                    const response = await fetch(`IDs/${id}/settings.json`);
+                    const settings = await response.json();
+                    
+                    const item = document.createElement('a');
+                    item.className = 'history-item';
+                    item.href = `menu-select.html?id=${id}`;
+                    
+                    const logo = settings.restaurant?.logo || 'img/favicon.png';
+                    const name = settings.restaurant?.name || id;
+                    
+                    item.innerHTML = `
+                        <img class="restaurant-logo" src="${logo}" alt="${name}">
+                        <span class="history-item-name">${name}</span>
+                        <img class="arrow" src="img/arrow_select.png" alt="Vai">
+                    `;
+                    
+                    historyList.appendChild(item);
+                } catch (error) {
+                    const item = document.createElement('a');
+                    item.className = 'history-item';
+                    item.href = `menu-select.html?id=${id}`;
+                    
+                    item.innerHTML = `
+                        <img class="restaurant-logo" src="img/favicon.png" alt="${id}">
+                        <span class="history-item-name">${id}</span>
+                        <img class="arrow" src="img/arrow_select.png" alt="Vai">
+                    `;
+                    
+                    historyList.appendChild(item);
+                }
+            }
+        }
+
+        recentOrdersLink.addEventListener('click', () => {
+            loadHistory();
+            sheetFirst.classList.add('shifted');
+            sheetHistory.classList.add('active');
+        });
+
+        backBtn.addEventListener('click', () => {
+            sheetFirst.classList.remove('shifted');
+            sheetHistory.classList.remove('active');
+        });
+        function enableEnterSubmit() {
+            document.addEventListener('keydown', (e) => {
+                if (e.key === "Enter") {
+                    submitBtn.click();  
+                }
+            });
+        }
+
+        startBtn.addEventListener('click', () => {
+            enableEnterSubmit();
+        });
+    </script>
+    <script src="logo-pop.js"></script>
+</body>
+</html>

@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <script>
+        (function() {
+            const saved = localStorage.getItem('totemino_theme');
+            const theme = saved || 
+                (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted || performance.getEntriesByType('navigation')[0]?.type === 'back_forward') {
+              location.reload();
+            }
+        });
+    </script>
+    
+    <title>Gestione Codici Sconto - Totemino</title>
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    
+    <style>
+        @import url("menu-styles.css");
+               
+        html, body {
+            scrollbar-width: auto;
+        }
+        
+        .promo-list {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .promo-card {
+            background: var(--card-bg);
+            border: 2px solid var(--btn-secondary);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            transition: all 0.2s ease;
+        }
+        
+        .promo-card:hover {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 10px var(--selected-glow);
+        }
+        
+        .promo-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .promo-card h3 {
+            font-family: 'Klein-Bold';
+            font-size: 1.5rem;
+            color: var(--accent-gold);
+            margin: 0;
+            letter-spacing: 1px;
+        }
+        
+        .promo-card p {
+            color: var(--text-primary);
+            opacity: 0.8;
+            font-size: 1rem;
+            margin: 0.3rem 0;
+        }
+        
+        .promo-badge {
+            display: inline-block;
+            background: var(--accent-gold);
+            color: var(--text-primary);
+            padding: 0.3rem 0.8rem;
+            border-radius: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+        
+        .promo-card-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .promo-edit-btn, .promo-delete-btn {
+            background: var(--btn-secondary);
+            border: none;
+            border-radius: 50%;
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .promo-delete-btn {
+            border: 2px solid #ef4444;
+            background: transparent; 
+        }
+        
+        .promo-delete-btn:hover {
+            background: #ef444450;
+        }
+
+        .promo-edit-btn img, .promo-delete-btn img {
+            width: 1.3rem;
+            height: 1.3rem;
+        }
+        
+        [data-theme="dark"] .promo-edit-btn img {
+            filter: invert(1);
+        }
+        
+        .add-promo-section {
+            max-width: calc(800px - 2rem);
+            margin: 2rem auto;
+            padding: 1.5rem;
+            background: var(--card-bg);
+            border: 3px solid var(--card-border);
+            border-radius: 2rem;
+            box-shadow: 0 4px 12px var(--shadow-sm);
+        }
+        
+        .add-promo-section h2 {
+            font-family: 'Klein-Bold';
+            font-size: 1.8rem;
+            color: var(--text-accent);
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 2rem;
+        }
+        
+        .form-field label {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-field input {
+            padding: 0.7rem 1rem;
+            border: 2px solid var(--btn-secondary);
+            border-radius: 1rem;
+            background: var(--pill-bg);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+        
+        .form-field input:focus {
+            border-color: var(--accent-gold);
+            outline: none;
+        }
+        
+        .radio-group {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .radio-option {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .radio-option input[type="radio"] {
+            width: 1.2rem;
+            height: 1.2rem;
+            cursor: pointer;
+            accent-color: var(--accent-gold);
+        }
+        
+        .radio-option label {
+            margin: 0;
+            cursor: pointer;
+            padding-left: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .conditional-field {
+            display: none;
+            margin-top: 1.5rem;
+        }
+        
+        .conditional-field.show {
+            display: block;
+        }
+        
+        .save-promo-btn {
+            background: var(--accent-gold);
+            color: var(--text-primary);
+            border: none;
+            border-radius: 1.5rem;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            margin-top: 1rem;
+        }
+        
+        .save-promo-btn:hover {
+            filter: brightness(90%);
+        }
+        
+        .save-promo-btn:active {
+            transform: scale(1.05);
+        }
+        
+        .no-promos {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-primary);
+            opacity: 0.7;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 6rem;
+            right: 2rem;
+            background: var(--accent-gold);
+            color: var(--text-primary);
+            padding: 1rem 1.5rem;
+            border-radius: 1rem;
+            font-weight: 600;
+            z-index: 1001;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+        }
+        
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .notification.error {
+            background: #e53e3e;
+            color: white;
+        }
+        
+        @media (max-width: 800px) {
+            .add-promo-section {
+                max-width: calc(100% - 2rem);
+            }
+            
+            .radio-group {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-light light1"></div>
+    <div class="bg-light light2"></div>
+    <div class="bg-light light3"></div>
+
+    <div class="title">
+        <div class="logo_space">
+            <img class="theme-img" data-light="img/logo/1_light.png" data-dark="img/logo/1_dark.png" alt="Logo" id="logoSwap">
+            <a href="index.html"><h1>Totemino</h1></a>
+            <p>Codici Sconto</p>
+        </div>
+        <div>
+            <button id="back-btn" class="header-btn" type="button">
+                <img class="theme-img" data-light="img/exit_light.png" data-dark="img/exit_dark.png" alt="Indietro">
+            </button>
+            <button id="theme" class="header-btn" type="button">
+                <img class="theme-img" data-light="img/theme_light.png" data-dark="img/theme_dark.png" alt="Tema">
+            </button>
+        </div>
+    </div>
+
+    <div class="add-promo-section">
+        <h2 id="form-title">Crea Nuovo Codice Sconto</h2>
+        
+        <div class="form-field">
+            <label for="promo-code">Codice *</label>
+            <input type="text" id="promo-code" placeholder="Es. SCONTO20" style="text-transform: uppercase;">
+        </div>
+        
+        <div class="form-field">
+            <label>Tipo di Sconto *</label>
+            <div class="radio-group">
+                <div class="radio-option">
+                    <input type="radio" id="discount-percentage" name="discountType" value="percentage" checked>
+                    <label for="discount-percentage">Percentuale (%)</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" id="discount-fixed" name="discountType" value="fixed">
+                    <label for="discount-fixed">Euro (€)</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-field">
+            <label for="discount-value">Valore Sconto *</label>
+            <input type="number" id="discount-value" placeholder="Es. 20" min="0" step="0.01">
+        </div>
+        
+        <div class="form-field">
+            <label>Condizioni di Applicazione *</label>
+            <div class="radio-group">
+                <div class="radio-option">
+                    <input type="radio" id="condition-all" name="conditionType" value="all" checked>
+                    <label for="condition-all">Tutti gli ordini</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" id="condition-minimum" name="conditionType" value="minimum">
+                    <label for="condition-minimum">Minimo di spesa</label>
+                </div>
+            </div>
+            <div class="conditional-field" id="minimum-spend-field">
+                <input type="number" id="minimum-spend" placeholder="Es. 50" min="0" step="0.01">
+            </div>
+        </div>
+        
+        <button class="save-promo-btn" id="save-promo">Salva Codice</button>
+    </div>
+
+    <div class="promo-list" id="promo-list"></div>
+    
+    <div class="notification" id="notification"></div>
+
+    <script src="auth-protection.js"></script>
+    <script src="theme.js"></script>
+  <script src="logo-pop.js"></script>
+    <script>
+        let restaurantId = null;
+        let promos = [];
+        let editingIndex = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            restaurantId = params.get("id");
+            
+            if (!restaurantId) {
+                window.location.href = 'profile.html';
+                return;
+            }
+
+            document.getElementById('back-btn').addEventListener('click', () => {
+                window.location.href = `profile.html?id=${restaurantId}`;
+            });
+
+            // Forza maiuscolo e rimuove spazi dal codice
+            document.getElementById('promo-code').addEventListener('input', (e) => {
+                e.target.value = e.target.value.toUpperCase().replace(/\s/g, '');
+            });
+
+            // Mostra/nascondi campo minimo spesa
+            document.querySelectorAll('input[name="conditionType"]').forEach(radio => {
+                radio.addEventListener('change', toggleMinimumSpendField);
+            });
+
+            document.getElementById('save-promo').addEventListener('click', savePromo);
+            
+            await loadPromos();
+        });
+
+        function toggleMinimumSpendField() {
+            const minimumField = document.getElementById('minimum-spend-field');
+            const isMinimum = document.getElementById('condition-minimum').checked;
+            
+            if (isMinimum) {
+                minimumField.classList.add('show');
+            } else {
+                minimumField.classList.remove('show');
+                document.getElementById('minimum-spend').value = '';
+            }
+        }
+
+        async function loadPromos() {
+            try {
+                const response = await fetch(`/IDs/${restaurantId}/promo.json`);
+                if (response.ok) {
+                    promos = await response.json();
+                } else {
+                    promos = [];
+                }
+                renderPromos();
+            } catch (error) {
+                console.error('Errore caricamento codici sconto:', error);
+                promos = [];
+                renderPromos();
+            }
+        }
+
+        function renderPromos() {
+            const container = document.getElementById('promo-list');
+            container.innerHTML = '';
+
+            if (promos.length === 0) {
+                container.innerHTML = '<div class="no-promos">Nessun codice sconto creato</div>';
+                return;
+            }
+
+            promos.forEach((promo, index) => {
+                const card = document.createElement('div');
+                card.className = 'promo-card';
+                
+                const discountText = promo.discountType === 'percentage' 
+                    ? `${promo.discountValue}%` 
+                    : `€${promo.discountValue.toFixed(2)}`;
+                
+                const conditionText = promo.conditionType === 'all'
+                    ? 'Valido su tutti gli ordini'
+                    : `Minimo di spesa: €${promo.minimumSpend.toFixed(2)}`;
+                
+                card.innerHTML = `
+                    <div class="promo-card-header">
+                        <div>
+                            <h3>${promo.code}</h3>
+                            <p>Sconto: <strong>${discountText}</strong></p>
+                            <p>${conditionText}</p>
+                            <span class="promo-badge">${promo.discountType === 'percentage' ? 'Percentuale' : 'Importo Fisso'}</span>
+                        </div>
+                        <div class="promo-card-actions">
+                            <button class="promo-edit-btn" onclick="editPromo(${index})">
+                                <img src="img/edit.png" alt="Modifica">
+                            </button>
+                            <button class="promo-delete-btn" onclick="deletePromo(${index})">
+                                <img src="img/delete.png" alt="Elimina">
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        async function savePromo() {
+            const code = document.getElementById('promo-code').value.trim();
+            const discountType = document.querySelector('input[name="discountType"]:checked').value;
+            const discountValue = parseFloat(document.getElementById('discount-value').value);
+            const conditionType = document.querySelector('input[name="conditionType"]:checked').value;
+            const minimumSpend = conditionType === 'minimum' 
+                ? parseFloat(document.getElementById('minimum-spend').value) 
+                : 0;
+
+            // Validazioni
+            if (!code) {
+                showNotification('Inserisci un codice', 'error');
+                return;
+            }
+
+            if (isNaN(discountValue) || discountValue <= 0) {
+                showNotification('Inserisci un valore sconto valido', 'error');
+                return;
+            }
+
+            if (discountType === 'percentage' && discountValue > 100) {
+                showNotification('Lo sconto percentuale non può superare 100%', 'error');
+                return;
+            }
+
+            if (conditionType === 'minimum' && (isNaN(minimumSpend) || minimumSpend <= 0)) {
+                showNotification('Inserisci un minimo di spesa valido', 'error');
+                return;
+            }
+
+            // Controlla duplicati (solo se non in modifica o se il codice è cambiato)
+            const isDuplicate = promos.some((p, idx) => 
+                p.code === code && idx !== editingIndex
+            );
+
+            if (isDuplicate) {
+                showNotification('Codice già esistente', 'error');
+                return;
+            }
+
+            const promoData = {
+                code,
+                discountType,
+                discountValue,
+                conditionType,
+                minimumSpend
+            };
+
+            if (editingIndex !== null) {
+                promos[editingIndex] = promoData;
+                editingIndex = null;
+                document.getElementById('form-title').textContent = 'Crea Nuovo Codice Sconto';
+            } else {
+                promos.push(promoData);
+            }
+
+            try {
+                const response = await fetch(`/save-promo/${restaurantId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ promos })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    showNotification('Codice salvato!', 'success');
+                    resetForm();
+                    renderPromos();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('Errore salvataggio:', error);
+                showNotification('Errore nel salvataggio', 'error');
+            }
+        }
+
+        window.editPromo = function(index) {
+            editingIndex = index;
+            const promo = promos[index];
+            
+            document.getElementById('promo-code').value = promo.code;
+            document.getElementById('discount-value').value = promo.discountValue;
+            document.getElementById(`discount-${promo.discountType}`).checked = true;
+            document.getElementById(`condition-${promo.conditionType}`).checked = true;
+            
+            if (promo.conditionType === 'minimum') {
+                document.getElementById('minimum-spend').value = promo.minimumSpend;
+            }
+            
+            toggleMinimumSpendField();
+            document.getElementById('form-title').textContent = 'Modifica Codice Sconto';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.deletePromo = async function(index) {
+            if (!confirm('Eliminare questo codice sconto?')) return;
+
+            promos.splice(index, 1);
+
+            try {
+                const response = await fetch(`/save-promo/${restaurantId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ promos })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    showNotification('Codice eliminato', 'success');
+                    renderPromos();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('Errore eliminazione:', error);
+                showNotification('Errore nell\'eliminazione', 'error');
+            }
+        };
+
+        function resetForm() {
+            document.getElementById('promo-code').value = '';
+            document.getElementById('discount-value').value = '';
+            document.getElementById('minimum-spend').value = '';
+            document.getElementById('discount-percentage').checked = true;
+            document.getElementById('condition-all').checked = true;
+            toggleMinimumSpendField();
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

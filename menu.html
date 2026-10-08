@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<script>
+		(function() {
+			const saved = localStorage.getItem('totemino_theme');
+			const theme = saved || 
+			(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+			document.documentElement.setAttribute('data-theme', theme);
+
+			try {
+				const urlParams = new URLSearchParams(window.location.search);
+				const restaurantId = urlParams.get('id');
+				
+				if (!restaurantId) return;
+				
+				let history = [];
+				
+				try {
+				const stored = localStorage.getItem('totemino_history');
+				if (stored) {
+					const parsed = JSON.parse(stored);
+					if (Array.isArray(parsed)) {
+					history = parsed;
+					}
+				}
+				} catch (e) {
+				    history = [];
+				}
+				
+				history = history.filter(id => id !== restaurantId);
+				history.unshift(restaurantId);
+				
+				if (history.length > 5) {
+				    history = history.slice(0, 5);
+				}
+				
+				localStorage.setItem('totemino_history', JSON.stringify(history));
+				
+			} catch (error) {
+				console.error('Errore salvataggio history:', error);
+			}
+		})();
+	</script>
+
+	<title>Menu - Totemino</title>
+	<link rel="icon" type="image/png" href="img/favicon.png">
+	<link rel="stylesheet" href="cookie-banner.css"/>
+	<link rel="stylesheet" href="menu-styles.css"/>
+	<link rel="stylesheet" href="menu-customization-styles.css"/>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+	<style>
+		html.view-only .order,
+		html.view-only .cart,
+		html.view-only .next,
+		html.view-only .cart-popup {
+			display: none !important;
+		}
+	</style>
+</head>
+  <body>
+	<div class="bg-light light1"></div>
+	<div class="bg-light light2"></div>
+	<div class="bg-light light3"></div>
+	<div class="title">
+		<div>
+			<img id="logoSwap" class="theme-img" data-light="img/logo/1_light.png" data-dark="img/logo/1_dark.png" alt="Logo" id="logoSwap">
+			<a href="index-user.html"><h1>Totemino</h1></a>
+		</div>
+		<button id="theme" class="header-btn" type="button"><img class="theme-img" data-light="img/theme_light.png" data-dark="img/theme_dark.png" alt="Cambia tema"></button>
+	</div>
+	<nav class="categories"></nav>
+	<div class="items"></div>
+	<div class="order">	
+		<div>
+			<div class="cart">
+				<img src="img/cart_closed.png" alt="carrello">
+				<h3>0</h3>
+			</div>
+			<div class="text-wrapper">
+				<h2>Il tuo ordine</h2>
+				<h2 class="price">€0.00</h2>
+			</div>
+		</div>
+		<button class="next">Avanti</button>
+	</div>
+	<div class="cart-popup hidden"></div>
+
+	<div id="allergen-popup" class="hidden"></div>
+	<div class="popup hidden">
+		<div class="popup-content">
+		<button class="close-popup"><img src="img/x.png"></button>
+		<img class="popup-img" src="" alt="Prodotto">
+		<h2 class="popup-title"></h2>
+		<p class="popup-ingredients"></p>
+		<div class="popup-controls"></div>
+		<p id="titolo-allergeni">- Allergeni -</p>
+		<div class="popup-allergens"></div>
+		</div>
+	</div>
+  </body>
+	
+	<script src="cookie-banner.js"></script>
+	<script src="collect-user-info.js"></script>
+	<script src="add-banners.js"></script>
+	<script src="menu-script.js"></script>
+	<script src="theme.js"></script>
+    <script src="logo-pop.js"></script>
+</html>
+
+
+
+
+

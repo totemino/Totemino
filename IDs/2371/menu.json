@@ -1,0 +1,2740 @@
+{
+  "categories": [
+    {
+      "name": "Birre alla Spina",
+      "items": [
+        {
+          "name": "Augustiner Pils 5.6%",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/augu-pils-1200x1200.png",
+          "description": "Provenienza: Germania\nBirrificio: Augustiner Brau\nStile: Pilsner\nColore: chiara\nAlcol: 5.6%",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "menu-domicilios",
+            "menu-bar",
+            "default"
+          ],
+          "customizable": true,
+          "customizationGroup": "1"
+        },
+        {
+          "name": "Tipopils 5.2%",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/BI_tipopils_medaglione.png",
+          "description": "Provenienza: Italia\nBirrificio: Birrificio Italiano\nStile: Italian Pilsner\nColore: chiara\nAlcol: 5.2%",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-bar",
+            "menu-domicilios"
+          ],
+          "customizable": true,
+          "customizationGroup": "2"
+        },
+        {
+          "name": "Orfrumer Weisse 5.2%",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/unnamed.png",
+          "description": "Provenienza: Germania\nBirrificio: Orfrumer\nStile: Weisse\nColore: chiara torbida\nAlcol: 5.2%",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-bar",
+            "menu-domicilios"
+          ],
+          "customizable": true,
+          "customizationGroup": "3"
+        },
+        {
+          "name": "Asteroid IPA 6.6%",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/BI_asteroid56013_Fusto20l.png",
+          "description": "Provenienza: Italia\nBirrificio: Birrificio Italiano\nStile: Indian Pale Ale\nColore: arancio velato\nAlcol: 6.6%",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-bar",
+            "menu-domicilios"
+          ],
+          "customizable": true,
+          "customizationGroup": "4"
+        },
+        {
+          "name": "Strong Bock Hell 6.9%",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/Bock-Hell.png",
+          "description": "Provenienza: Germania\nBirrificio: Falkenturm\nStile: Strong Lager\nColore: chiara\nAlcol: 6.9%",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-bar",
+            "menu-domicilios"
+          ],
+          "customizable": true,
+          "customizationGroup": "5"
+        },
+        {
+          "name": "Sogno Lucido 7.5%",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/sogno_lucido_1711730308.png",
+          "description": "Provenienza: Italia\nBirrificio: Birrificio Italiano\nStile: Imperial Pils\nColore: chiara velata\nAlcol: 7.5%",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-bar",
+            "menu-domicilios"
+          ],
+          "customizable": true,
+          "customizationGroup": "6"
+        },
+        {
+          "name": "Guinness 4.2%",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/D6774.png",
+          "description": "Provenienza: Irlanda\nBirrificio: Arthur Guinness Son & Co.\nStile: Stout\nColore: nera\nAlcol: 4.2%",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-bar",
+            "menu-domicilios"
+          ],
+          "customizable": true,
+          "customizationGroup": "7"
+        },
+        {
+          "name": "Kwak 8.4%",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/bg,f8f8f8-flat,750x,075,f-pad,750x1000,f8f8f8.png",
+          "description": "Provenienza: Belgio\nBirrificio: Bosteels\nStile: Belgian Strong Ale\nColore: rossa\nAlcol: 8.4%",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-bar",
+            "menu-domicilios"
+          ],
+          "customizable": true,
+          "customizationGroup": "8"
+        },
+        {
+          "name": "Bush Triple Blonde 10.5%",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/beer-13563_79b60_hd.png",
+          "description": "Provenienza: Belgio\nBirrificio: Brasserie Dubuisson\nStile: Belgian Strong Ale\nColore: chiara velata\nAlcol: 10.5%",
+          "allergens": [],
+          "featured": true,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-bar",
+            "menu-domicilios"
+          ],
+          "customizable": true,
+          "customizationGroup": "9"
+        },
+        {
+          "name": "Belgica Quadrupule 10%",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/201872017519488_birra34_1761831080317.png",
+          "description": "Provenienza: Belgio\nBirrificio: Weize Van Roy\nStile: Quadrupule\nColore: ambrata\nAlcol: 10%",
+          "allergens": [],
+          "featured": true,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-bar",
+            "menu-domicilios"
+          ],
+          "customizable": true,
+          "customizationGroup": "10"
+        },
+        {
+          "name": "St. Bernardus ABT12 10%",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/STBERNARDUSABT12.png",
+          "description": "Provenienza: Belgio\nBirrificio: St. Bernard Brouwerij\nstile: Abbey Quadrupel\nColore: Scura",
+          "allergens": [],
+          "featured": true,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-bar",
+            "menu-domicilios"
+          ],
+          "customizable": true,
+          "customizationGroup": "22"
+        }
+      ]
+    },
+    {
+      "name": "Birre in Bottiglia",
+      "items": [
+        {
+          "name": "Isabella 4.9%",
+          "price": 6,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/birra-flea-isabella-golden-ale-gluten-free-33-cl.png",
+          "description": "33cl\nBirrificio: FLea, Italia\nStile: Lager\nColore: chiaro\nSenza glutine",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Enger Hell 0.0",
+          "price": 6,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/ENGEL-KELLER-ANALCOLICA.png",
+          "description": "33cl\nBirrificio: Maxlrainer, Germania\nStile: Lager\nColore: chiaro",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Lindemans Kriek Ciliegia 3.5%",
+          "price": 6,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/LINDEMANS-KRIEK.png",
+          "description": "25cl\nBirrificio: Lindemans, Belgio\nStile: Kriek, Fruit beer\nColore: rosso rubino",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Saison Dupont 6.5%",
+          "price": 6,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/dupont-dupont-saison-65-bottiglia-33-cl-394241.png",
+          "description": "33cl\nBirrificio: Dupont, Belgio\nStile: Saison\nColore: dorato opalescente",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Blomembier 7%",
+          "price": 6,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/BLOEMENBIER.png",
+          "description": "33cl\nBirrificio: De Proef Brouwerij, Belgio\nStile: Belgian Strong Ale\nColore: arancio opalescente",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Trappe Quadrupel 10%",
+          "price": 6.5,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/LA-TRAPPE-QUADRUPEL.png",
+          "description": "33cl\nBirrificio: La Trappe, Olanda\nStile: Quadrupel\nColore: rosso",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Bush Caractere Ambree 12%",
+          "price": 6.5,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/dub.caractere.ambre.png",
+          "description": "33cl\nBrasserie Dubuisson, Belgio\nStile: Belgian Strong Ale\nColore: rosso",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Trappistes 10 Rochefort 11.3%",
+          "price": 7,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/rochefort-10-belgian-brown-beer-113-33-cl_1761831177489.png",
+          "description": "33cl\nBrasserie Rochefort, Belgio\nStile: Quadrupel Trappista\nColore: scuro",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Moinette Blonde 8.5%",
+          "price": 15,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/birra-dupont-moinette-blonde-85-075-lt.png",
+          "description": "75cl\nBirrificio: Dupont\nStile: Blonde Ale\nColore: arancio carico\nTappo in sughero",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Lindemans Framboise Lamponi 2.5%",
+          "price": 6,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/lindemans_framboise.png",
+          "description": "25cl\nBirrificio: Lindemans, Belgio.\nStile: Franbuoise, Fruit beer\nColore: Rosso rubino",
+          "allergens": [],
+          "featured": true,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Moinette Blonde 8.5% Tappo in Sughero",
+          "price": 15,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/birra-la-trappe-quadruple-10-lt-075.png",
+          "description": "75cl\nBirrificio: La Trappe, Olanda.\nStile: Quadruple.\nColore: rossa",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        }
+      ]
+    },
+    {
+      "name": "Bibite",
+      "items": [
+        {
+          "name": "Acqua minerale Ferrarelle",
+          "price": 2.5,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/0002299_ferrarelle-lt-075-in-vetro.png",
+          "description": "50cl\nIn vetro",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Acqua naturale Natia",
+          "price": 2.5,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/natia-acqua-naturale-in-vetro-12-x-75-cl.png",
+          "description": "50cl\nIn vetro",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Coca Cola",
+          "price": 3,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/BB0315.png",
+          "description": "33cl\nIn vetro",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Coca Cola Zero",
+          "price": 3,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/coca-cola-vetro-zero.png",
+          "description": "33cl\nIn vetro",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Fanta",
+          "price": 2.5,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/5e70b3d64667a4001d708e24.png",
+          "description": "33cl\nIn vetro",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Sprite",
+          "price": 2.5,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/sprite-cl33-vap-x-24-bt.png",
+          "description": "33cl\nIn vetro",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Spezi",
+          "price": 4,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/TB00190PCL033.png",
+          "description": "33cl\nIn vetro",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        }
+      ]
+    },
+    {
+      "name": "Drink",
+      "items": [
+        {
+          "name": "Aperol Spritz",
+          "price": 7,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/spritz.png",
+          "description": "",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Campari Spritz",
+          "price": 7,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/campari-spritz.png",
+          "description": "",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Tanqueray",
+          "price": 7,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/71OioUyEOhL._UF350,350_QL80_.png",
+          "description": "A scelta tonica acqua brillante oppure Schweppes Lemon",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "21"
+        },
+        {
+          "name": "Tanqueray 0.0",
+          "price": 6,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/tanq0.png",
+          "description": "A scelta tonica acqua brillante oppure Schweppes Lemon",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "21"
+        },
+        {
+          "name": "Gin Mare",
+          "price": 9,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/gin-mare-701.png",
+          "description": "A scelta tonica acqua brillante oppure Schweppes Lemon",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "21"
+        },
+        {
+          "name": "Hendrick's",
+          "price": 9,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/Hendrick's_Gin_-_Bottle.png",
+          "description": "A scelta tonica acqua brillante oppure Schweppes Lemon",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "21"
+        },
+        {
+          "name": "Malfy Limone",
+          "price": 9,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/11-CON-LIMONI-GIN-TONICA.png",
+          "description": "A scelta tonica acqua brillante oppure Schweppes Lemon",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "21"
+        },
+        {
+          "name": "Malfy Arancia",
+          "price": 9,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/16-CON-ARANCIA-GIN-TONIC-1.png",
+          "description": "A scelta tonica acqua brillante oppure Schweppes Lemon",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "21"
+        },
+        {
+          "name": "Malfy Pompelmo Rosa",
+          "price": 9,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/13-GIN-ROSA-GIN-TONIC.png",
+          "description": "A scelta tonica acqua brillante oppure Schweppes Lemon",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "21"
+        },
+        {
+          "name": "Plymouth",
+          "price": 9,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/GPG41100.png",
+          "description": "A scelta tonica acqua brillante oppure Schweppes Lemon",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "21"
+        },
+        {
+          "name": "Portofino",
+          "price": 9,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/portofino-dry-gin-martini-cocktail-edition.png",
+          "description": "A scelta tonica acqua brillante oppure Schweppes Lemon",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "21"
+        },
+        {
+          "name": "Nordes",
+          "price": 9,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/fed05270d8a5498f1af04173330d3aa0_1558257.png",
+          "description": "A scelta tonica acqua brillante oppure Schweppes Lemon",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "21"
+        }
+      ]
+    },
+    {
+      "name": "Vini",
+      "items": [
+        {
+          "name": "Aglianico Jungano IGP 14,5%",
+          "price": 28,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/4654_1761831454300.png",
+          "description": "Bottiglia\nAzienda agricola San Salvatore IGP (Campania)",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Moio 57 14,5%",
+          "price": 20,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/3414_1761831458506.png",
+          "description": "Bottiglia\nCasa vinicola Michele Moio (Campania)",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Montepulciano D’Abruzzo DOCG 13%",
+          "price": 20,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/linea-classica-montepulciano-dabruzzo-doc-2021-masciarelli-498788_1761831808603.png",
+          "description": "Bottiglia\nMasciarelli tenute agricole (Abruzzo)",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Primitivo di Manduria DOP 14%",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/1008194016_001_1761831859949.png",
+          "description": "Cantine Varvaglione (Puglia)",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "12"
+        },
+        {
+          "name": "Chardonnay Torresella 12,5%",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/offertaFileFile-296702_1761831499621.png",
+          "description": "Cantone Torresella (Veneto)",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "13"
+        },
+        {
+          "name": "Sangue di Giuda DOC 7%",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/sangue-di-giuda-oltrepò-pavese-doc_8348_1761831552535.png",
+          "description": "Oltrepò Pavese (Lombardia)",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "14"
+        }
+      ]
+    },
+    {
+      "name": "Fritti",
+      "items": [
+        {
+          "name": "Patatine Dippers",
+          "price": 6,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/patatines_1762260340886.png",
+          "description": "Patatine fritte incavate, perfette per essere accompagnate da un condimento a scelta",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "23"
+        },
+        {
+          "name": "Speedy Banditos 250gr",
+          "price": 7.5,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/bandidos_1762260350379.png",
+          "description": "Straccetti di pollo impanati e fritti",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Buffalo Chik'n Wings 5pz",
+          "price": 7,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/buffalo_1762260354073.png",
+          "description": "Alette di pollo + salsa BBQ",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Chicken Donuts 4pz",
+          "price": 7,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/chicken_donut_1762260357145.png",
+          "description": "Ciambelle di pollo al bacon + salsa BBQ",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Double Stick 4pz",
+          "price": 7,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/gril-chick_1762260443040.png",
+          "description": "Filetti di pollo alla paprika dolce su bastoncini di bambù",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Crocchè 1pz",
+          "price": 3.5,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/croch_1762260449051.png",
+          "description": "Crocchè di patate e mozzarella.",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Crocché Speciale 1pz",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/crocche_sp_1762260900276.png",
+          "description": "Crocché farcito con Pulled pork, fonduta di cheddar e salsa BBQ oppure stracciata di mozzarella pugliese, mortadella e granella di pistacchi",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "16"
+        },
+        {
+          "name": "Crocchette Jalapenos 5pz",
+          "price": 8,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/japalegno_1762260463216.png",
+          "description": "Crocchette con formaggio e peperoncino Jalapenos",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Polpettine al Cheddar 8pz",
+          "price": 7,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/pallin_1762260473515.png",
+          "description": "Polpettine di pollo e tacchino ripiene di formaggio cheddar e bacon, servite con fonduta di cheddar",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Fiori di Zucca Pastellati 4pz",
+          "price": 8,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/fiori-zcu_1762260477909.png",
+          "description": "Fiori di zucca pastellati ripieni di ricotta",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Frittatina di Pasta 1pz",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/fritt_1762260487028.png",
+          "description": "Frittatina di pasta con ripieno a scelta",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "24"
+        },
+        {
+          "name": "Triangoli Patate e Speck 6pz",
+          "price": 7,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/triangl_1762261839137.png",
+          "description": "Triangoli patate e speck",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "15"
+        },
+        {
+          "name": "Anelli di Cipolla 10pz",
+          "price": 6,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/anelli_1762260504062.png",
+          "description": "Anelli di cipolla",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Frittatine di Pasta Mignon 8pz",
+          "price": 7,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/mignon_1762260642213.png",
+          "description": "Ripieno di Funghi porcini",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Patatine dolci",
+          "price": 6,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/dolcis_1762260882806.png",
+          "description": "Patate fritte dolci taglio steakhouse",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        }
+      ]
+    },
+    {
+      "name": "Panini",
+      "items": [
+        {
+          "name": "Maccaroni",
+          "price": 14,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/65663a6ae4b20_1762265548659.png",
+          "description": "Hamburger di Black Angus 200g, cheddar, bacon croccante, burgher di Mc'n cheese",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "menu-domicilios",
+            "menu-bar",
+            "default"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Albertone",
+          "price": 15,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/65663a614637c_1762265431631.png",
+          "description": "Porchetta di Ariccia 200g, friarielli, provola panata e fritta, fonduta di cacio e pepe, patate al forno",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Carbonara Burgher",
+          "price": 14,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/681ce190e0e51_1762265123815.png",
+          "description": "Crema carbonara, pepe, guanciale croccante stagionato al pepe, pecorino romano, hamburger di Black Angus 200g",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Mc Sorem'",
+          "price": 15,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/6843394f1eaff_1762265958631.png",
+          "description": "Hamburger di Black Angus 200g, provola panata, pomodori secchi, melanzane grigliate, pesto di basilico e tarallo sbriciolato",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "O’ Masaniello 2.0",
+          "price": 15,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/485800742_983545720588695_7572950690687601208_n_1762265292838.png",
+          "description": "Hamburger di Black Angus, Parmigiana di melanzane, provola di Agerola, pesto di basilico, polpette di manzo",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Crockburger",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/6548111567294.png",
+          "description": "Provola, Mortadella, Pesto di Basilico, Granella di Pistacchio, Crocchè di Patate",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "90"
+        },
+        {
+          "name": "Zappatore 2.0",
+          "price": 15,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/Senza titolo_1762264626099.png",
+          "description": "Provola, Salsa di Melanzane, Pomodori secchi, polpettine di manzo, crema di formaggio, pancetta, hamburger di Black Angus 200g",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "American Dream",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/6728b23942d72.png",
+          "description": "Cheddar fuso, Bacon, Patatine",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "91"
+        },
+        {
+          "name": "Baconburger",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/6728b241d7aff_2.png",
+          "description": "Formaggio svizzero fuso, Bacon, Cipolla caramellata di Tropea, Insalata, Pomodori",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "91"
+        },
+        {
+          "name": "Pulled Rock",
+          "price": 14,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/67cac46400fc3_1762265631969.png",
+          "description": "Pulled pork 200g, cheddar, bacon, insalata, anelli di cipolla, salsa barbecue",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Polpoburger",
+          "price": 18,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/pulp_1762264370984.png",
+          "description": "Doppio tentacolo di Polipo grigliato, stracciatella di Bufala e friariello spadellato",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Bismark",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/6728b1a3aa908_1.png",
+          "description": "Uovo alla Bismark, Emmenthal, Pomodori, doppio Bacon, Anelli di Cipolla",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "93"
+        },
+        {
+          "name": "Il Pistacchioso",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/pistacchios_1762266219187.png",
+          "description": "Burrata Pugliese 150gr, Granella di Pistacchio, Mortadella, Zucchine alla scapece, Rucola",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "94"
+        },
+        {
+          "name": "Via delle Zoccolette",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/653fb63daa2fd_1762266329201.png",
+          "description": "Fiore di zucca fritto ripieno di ricotta, guanciale stagionato al pepe, crema di cacio e pepe\nConsigliato con hamburger di Maialino nero beneventano",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "93"
+        },
+        {
+          "name": "O'Friariello",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/6728b1df3cb19_2.png",
+          "description": "Provola, patate al forno, broccoli \"sfritti\"",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "91"
+        },
+        {
+          "name": "Tarantè",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/653fbf950d270.png",
+          "description": "Cipolla caramellata di Tropea, Confettura di Pere, Radicchio, Pecorino, Lattuga",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "91"
+        },
+        {
+          "name": "Lo Stracchioso",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/Monari-Federzoni-Hamburger-con-cipolla-radicchio-stracciatella-e-zucchine-00.png",
+          "description": "Stracciata pugliese, Pesto di Basilico, Cipolla caramellata di Tropea e Radicchio grigliato in riduzione di Aceto balsamico di Modena",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "93"
+        },
+        {
+          "name": "O’ Sarracino",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/b61b08a2cb140088e6078acc98244796.png",
+          "description": "Provola, Melanzane a funghetto",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "90"
+        },
+        {
+          "name": "Je So Pazz",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/121212_1.png",
+          "description": "Provola, Speck, Melanzane grigliate",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "90"
+        },
+        {
+          "name": "O’ Surdato Nnamurat",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/20240202114553-mrdobelina-burger-funghi-cheese.png",
+          "description": "Provola, Funghi Champignon, Crema di Formaggio",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "92"
+        },
+        {
+          "name": "O’ Vesuvio",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/vesuvio.png",
+          "description": "Provola, Pancetta, Patatine",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "91"
+        },
+        {
+          "name": "Bufalotto",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/DSC08125.png",
+          "description": "Provola e Patatine",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "90"
+        }
+      ]
+    },
+    {
+      "name": "Piatti speciali",
+      "items": [
+        {
+          "name": "L' Americano",
+          "price": 16,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/american.png",
+          "description": "Doppio hamburger di Black Angus con Cheddar e doppio uovo in padella, bacon, patatine fritte dolci, insalata e pomodoro Sorrento",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Fagioli alla Messicana",
+          "price": 8.5,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/fagioli-alla-messicana.png",
+          "description": "Terrina di fagioli alla messicana con salsiccia di maialino nero, lardo di colonnata, peperoncino piccante e crostini di pane casereccio, sfumati con birra St. Bernardus Abt12",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Gnocchi Fritti",
+          "price": 6.5,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/gnocchi_1762260648742.png",
+          "description": "Mortadella, Stracciata di mozzarella e Granella di pistacchi",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Gnocchi Fritti Speciali",
+          "price": 8,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/gnocchispec_1762261307652.png",
+          "description": "Mortadella e Mozzarella, con contorno di Stracciatella di Mozzarella e Granella di Pistacchi",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Parmigiana di Melanzane",
+          "price": 10,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/Senza titolo.png",
+          "description": "Parmigiana di melanzane della tradizione con contorno di patate al forno",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Tagliata di Black Angus 400gr",
+          "price": 28,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/IMG_8903-pl6jw7944ilzgsg0r8kl9bfmazo63a27q7pbl8b938.png",
+          "description": "Contorno di pomodorini, rucola, scaglie di Parmigiano Reggiano e glassa di aceto balsamico",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Entrecote di Black Angus 400gr",
+          "price": 28,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/entrecote-300g-black.png",
+          "description": "Contorno di patate al forno",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Slow Ribs 600gr",
+          "price": 20,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/Slow Cooked BBQ Ribs_1.png",
+          "description": "Costine di maiale italiano 600g, cotte a bassa temperatura, con contorno di patate al forno e salsa BBQ",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Chianina Gran Gourmet 250gr",
+          "price": 16,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/cillo_1.png",
+          "description": "Hamburger con macina artigianale di 7 tagli di Chianina selezione “Cillo”, contorno di insalata mista, bacon croccante, burratina pugliese e patate al forno",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Pulled Pork",
+          "price": 16,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/pulled.png",
+          "description": "Sfilacciata di spalla di maiale, cottura a bassa temperatura, produzione “Cillo”, contorno di insalata mista, bacon croccante, burratina pugliese e patate al forno",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Il Beneventano 200gr",
+          "price": 14,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/IMG_6251.png",
+          "description": "Hamburger di Maialino nero beneventano 200gr, pomodori secchi, insalata mista, scaglie di pecorino, patate al forno",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "The Giant XXL 350gr",
+          "price": 15,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/aiease_1762276983629.png",
+          "description": "Hamburger di manzo 350gr, verdure grigliate, patate al forno e salsa BBQ",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Buttero 200gr",
+          "price": 13,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/copertina con sigla.png",
+          "description": "Hamburger di Chianina 200gr, patate al forno, burratina pugliese e salsa BBQ (servita a parte)",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Black Angus 200gr",
+          "price": 13,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/hamburger-al-forno-con-formaggio-filante-e-patate_1.png",
+          "description": "Hamburger di Black Angus 200gr, bacon con formaggio Cheddar fuso, patate al forno e salsa piccante Harissa (servita a parte)",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Piatto Kebab",
+          "price": 14,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/672a1da9246c8.png",
+          "description": "Carne Kebab piastrata su Pane Pita con contorno di insalata mista, patate al forno e salsa yogurt",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Burritos",
+          "price": 14,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/pngtree-tasty-shredded-beef-and-cheese-burrito-png-image_14407506.png",
+          "description": "Fagotto di Piadina con carne Chili, Cheddar, Provola, Asiago, Emmenthal, Parmigiano Reggiano con contorno di tortillas, salsa chili, salsa guacamole e anelli di cipolla fritti",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        }
+      ]
+    },
+    {
+      "name": "Contorni",
+      "items": [
+        {
+          "name": "Patatine Fritte",
+          "price": 4,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/friessss.png",
+          "description": "Porzione piccola da contorno",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Patate al Forno",
+          "price": 4,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/furns.png",
+          "description": "Porzione da contorno",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Insalata Verde",
+          "price": 4,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/insal.png",
+          "description": "",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Insalata Mista",
+          "price": 6,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/insal_spec.png",
+          "description": "",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Verdure Grigliate",
+          "price": 4,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/Grilled_Vegetables.png",
+          "description": "Melanzane, zucchine e radicchio",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Broccoli",
+          "price": 4.5,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/brocooli.png",
+          "description": "Broccoli saltati in padella, olio evo, aglio, peperoncino",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Parmigiana",
+          "price": 7,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/parmigiana.png",
+          "description": "",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "menu-domicilios",
+            "menu-bar",
+            "default"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Melanzane a Funghetto",
+          "price": 4.5,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/funheto.png",
+          "description": "",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Porcini Spadellati",
+          "price": 7,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/pocini.png",
+          "description": "Porcini spadellati con rucola e pomodorini",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Funghi Champignon",
+          "price": 4,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/funghs_2.png",
+          "description": "",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Purè di Patate",
+          "price": 4,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/pure.png",
+          "description": "",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        }
+      ]
+    },
+    {
+      "name": "Vegetariani",
+      "items": [
+        {
+          "name": "Piatto Light con Verdure Grigliate",
+          "price": 13,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/mixed.png",
+          "description": "Servita con verdure grigliate e patate al forno",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "17"
+        },
+        {
+          "name": "Piatto Light con Rucola e Parmigiano",
+          "price": 14,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/pomodo.png",
+          "description": "Servito con rucola, pomodorini, scaglie di Parmigiano Reggiano, glassa di aceto balsamico e patate al forno",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "17"
+        },
+        {
+          "name": "Burger Vegetariano di Avena e Verdure",
+          "price": 12,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/saut.png",
+          "description": "Hamburger vegetale di avena e verdure con contorno di verdure grigliate e funghi champignon",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Burger Vegano Beyond Meat",
+          "price": 14,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/beyond.png",
+          "description": "Hamburger vegano Beyond Meat con contorno di verdure grigliate e funghi champignon",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Insalatona con Pollo Grigliato",
+          "price": 10,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/1657166067582.png",
+          "description": "Filetti di petto di Pollo grigliato con lattuga, finocchi, pomodorini, carote, radicchio e mais",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Insalatona con Pollo, Mozzarella e Uovo",
+          "price": 12,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/insalata-pollo-classica-finale_2.png",
+          "description": "Filetti di petto di Pollo grigliato con lattuga, rucola, finocchio, stracciato di mozzarella, pomodorini, olive nere e uovo sodo",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        }
+      ]
+    },
+    {
+      "name": "Gluten Free & No Lattosio",
+      "items": [
+        {
+          "name": "Mozzarella senza lattosio",
+          "price": 0,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/image.png",
+          "description": "Da aggiungere a un piatto a scelta",
+          "allergens": [
+            "2"
+          ],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "menu-domicilios",
+            "menu-bar",
+            "default"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Panino senza glutine",
+          "price": 1,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/Panini-semi-di-sesamo.png",
+          "description": "Possibilità di pane senza glutine per tutti i panini con l'aggiunta di €1",
+          "allergens": [
+            "1"
+          ],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "menu-domicilios",
+            "menu-bar",
+            "default"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Triangoli Patate e Speck 6pz GF",
+          "price": 8,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/triangl_1762261839137_2.png",
+          "description": "Triangoli di patate e speck\nSenza glutine",
+          "allergens": [
+            "1"
+          ],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "menu-domicilios",
+            "menu-bar",
+            "default"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Misto Fritto 5pz + Patatine GF",
+          "price": 8,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/Immagine.png",
+          "description": "5 pezzi di frittura mista all'italiana più patatine\nSenza glutine",
+          "allergens": [
+            "1"
+          ],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "menu-domicilios",
+            "menu-bar",
+            "default"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Patatine Fritte GF",
+          "price": 7,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/0037_patatinefritte.png",
+          "description": "Patatine fritte taglio steakhouse\nSenza glutine",
+          "allergens": [
+            "1"
+          ],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "menu-domicilios",
+            "menu-bar",
+            "default"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Dolce GF",
+          "price": 7,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/970492191.png",
+          "description": "Dolce senza glutine a scelta",
+          "allergens": [
+            "1"
+          ],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "menu-domicilios",
+            "menu-bar",
+            "default"
+          ],
+          "customizable": true,
+          "customizationGroup": "25"
+        }
+      ]
+    },
+    {
+      "name": "Bruschettoni",
+      "items": [
+        {
+          "name": "Bruschettone 1",
+          "price": 7,
+          "imagePath": "",
+          "description": "Pomodorini, Origano, Sale e Olio EVO",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Bruschettone 2",
+          "price": 10,
+          "imagePath": "",
+          "description": "Bruschettone con carne a scelta, provola, Funghi Champignon e purea di Patate",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "18"
+        },
+        {
+          "name": "Bruschettone 3",
+          "price": 10,
+          "description": "Mozzarella, Melanzane a funghetto e sbriciolata di Maialino nero beneventano",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Bruschettone 4",
+          "price": 10,
+          "imagePath": "",
+          "description": "Mozzarella, Prosciutto crudo di Parma, Rucola, Pomodorini e scaglie di Parmigiano Reggiano",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Bruschettone 5",
+          "price": 10,
+          "imagePath": "",
+          "description": "Stracciatella di Mozzarella, Speck del Trentino, Rucola e pomodorini",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Bruschettone 6",
+          "price": 10,
+          "imagePath": "",
+          "description": "Provola, Speck del Trentino e Funghi Porcini",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Bruschettone 7",
+          "price": 10,
+          "description": "Provola, Patate al forno, Melanzane e Zucchine grigliate e Maialino nero beneventano",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Bruschettone 8",
+          "price": 10,
+          "imagePath": "",
+          "description": "Provola, salsiccia di maialino nero beneventano con broccoli e patate al forno",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Bruschettone 9",
+          "price": 10,
+          "imagePath": "",
+          "description": "Provola, porcini, purè di patate con crema di pistacchi, pancetta",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Bruschettone 10",
+          "price": 10,
+          "description": "Stracciata di mozzarella, granella di pistacchi e mortadella",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        }
+      ]
+    },
+    {
+      "name": "Pinse Romane",
+      "items": [
+        {
+          "name": "Pinsa 1",
+          "price": 8,
+          "description": "Pomodorini, Origano, Sale e Olio EVO",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Pinsa 2",
+          "price": 12,
+          "imagePath": "",
+          "description": "Servita con carne a scelta, provola, Funghi Champignon e purea di Patate",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "18"
+        },
+        {
+          "name": "Pinsa 3",
+          "price": 12,
+          "description": "Mozzarella, Melanzane a funghetto e sbriciolata di Maialino nero beneventano",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Pinsa 4",
+          "price": 12,
+          "description": "Mozzarella, Prosciutto crudo di Parma, Rucola, Pomodorini e scaglie di Parmigiano Reggiano",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Pinsa 5",
+          "price": 12,
+          "description": "Stracciatella di Mozzarella, Speck del Trentino, Rucola e pomodorini",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Pinsa 6",
+          "price": 12,
+          "description": "Provola, Speck del Trentino e Funghi Porcini",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Pinsa 7",
+          "price": 12,
+          "description": "Provola, Patate al forno, Melanzane e Zucchine grigliate e Maialino nero beneventano",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Pinsa 8",
+          "price": 12,
+          "description": "Provola, salsiccia di maialino nero beneventano con broccoli e patate al forno",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Pinsa 9",
+          "price": 12,
+          "description": "Provola, porcini, purè di patate con crema di pistacchi, pancetta",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Pinsa 10",
+          "price": 12,
+          "description": "Stracciata di mozzarella, granella di pistacchi e mortadella",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        }
+      ]
+    },
+    {
+      "name": "Piadine",
+      "items": [
+        {
+          "name": "Prosciutto e Provola",
+          "price": 8,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/piadina-crudo.png",
+          "description": "Prosciutto crudo, provola, pomodorini e lattuga",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Pollo e Verdure",
+          "price": 9,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/16437_image_it.png",
+          "description": "Servita con carne a scelta, provola, verdure grigliate e patate al forno",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "19"
+        },
+        {
+          "name": "Mozzarella e Insalata",
+          "price": 9,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/images.png",
+          "description": "Servita con carne a scelta, insalata mista, stracciata di mozzarella e pomodorini",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "19"
+        }
+      ]
+    },
+    {
+      "name": "Dessert",
+      "items": [
+        {
+          "name": "Torta Oreo Pie",
+          "price": 6,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/Cookies.png",
+          "description": "Con biscotti e scaglie di cioccolato",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Torta Snickers",
+          "price": 6,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/snikars.png",
+          "description": "Con nocciole, mandorle, caramello e Pan di Spagna",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Monoart Babà",
+          "price": 7,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/mono-babà-crema-420x300.png",
+          "description": "Cuore di babà al rum, crema Chantilly al limone, croccante al cioccolato bianco",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Monoart Tiramisù",
+          "price": 7,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/tiramisu-mono-blog-1.png",
+          "description": "",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Cheesecake New York",
+          "price": 6,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/cheesecake-senza-burro_4dba1f5b-8ca4-4a4d-8217-6bb590d6c353.png",
+          "description": "Cheescake di vari gusti, crema di formaggio fresco",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": true,
+          "customizationGroup": "20"
+        },
+        {
+          "name": "Crêpes al Cioccolato",
+          "price": 5,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/360_F_1200486426_XZgrIqoRsZJfnuaDj8ABPRKiHFFFequo.png",
+          "description": "",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Cheesecake Celiaca e Senza Lattosio",
+          "price": 7,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/624_Cheesecake.png",
+          "description": "Cheesecake ai frutti di bosco senza glutine e senza lattosio",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Tiramisù Senza Lattosio",
+          "price": 7,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/tiramisu-sg-sas-250g-735x735.png",
+          "description": "Dolce artigianale senza glutine e senza lattosio",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Torta Rocher Senza Lattosio",
+          "price": 7,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/rocher.png",
+          "description": "Dolce artigianale senza glutine e senza lattosio",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Torta Panna e Fragole Senza Lattosio",
+          "price": 7,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/fetta-torta-panna-e-fragole-def.png",
+          "description": "Dolce artigianale senza glutine e senza lattosio",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        }
+      ]
+    },
+    {
+      "name": "Rum & Whisky",
+      "items": [
+        {
+          "name": "Rum Diplomatico",
+          "price": 8,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/rum-diplomatico-reserva-exclusiva-cl70-rum.png",
+          "description": "",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Rum Don Papa",
+          "price": 7,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/Don-Papa-Baroko-70cl-Bottle-of-Italy.png",
+          "description": "",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Rum J. Bally 7",
+          "price": 15,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/J.Bally-Pyramid-7ans.png",
+          "description": "",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Rum Santa Teresa",
+          "price": 9,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/SANTA-TERESA-SOLERA-1796-70CL.png",
+          "description": "",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Rum Zacapa 23",
+          "price": 10,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/51LuRQK49eL.png",
+          "description": "",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Whisky Jameson IPA Edition",
+          "price": 5,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/JamesonCaskmatesIPA.png",
+          "description": "",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Whisky Knob Creek Bourbon",
+          "price": 7,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/71JfDy-FK3L.png",
+          "description": "",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Whisky Lagavulin 16",
+          "price": 15,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/Whisky-Lagavulin-16-Yo-70-cl-bottle-of-italy.png",
+          "description": "",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Whisky Nikka Barrel",
+          "price": 9,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/51TwEiVoL7L._AC_UF1000,1000_QL80_.png",
+          "description": "",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        },
+        {
+          "name": "Whisky Talisker 10",
+          "price": 8,
+          "imagePath": "https://totemino.s3.eu-west-3.amazonaws.com/2371/img/talisker-10-years.png",
+          "description": "",
+          "allergens": [],
+          "featured": false,
+          "visible": true,
+          "menuType": [
+            "default",
+            "menu-domicilios",
+            "menu-bar"
+          ],
+          "customizable": false,
+          "customizationGroup": null
+        }
+      ]
+    }
+  ]
+}

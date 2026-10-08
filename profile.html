@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profilo - Totemino</title>
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    <link rel="stylesheet" href="profile-styles.css"/>
+</head>
+<body>
+    <!-- Background lights -->
+    <div class="bg-light light1"></div>
+    <div class="bg-light light2"></div>
+    <div class="bg-light light3"></div>
+    
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img class="theme-img" data-light="img/logo/1_light.png" data-dark="img/logo/1_dark.png" alt="Totemino Logo" id="logoSwap">
+                <a href="index.html"><h1>Totemino</h1></a>
+            </div>
+            <div class="nav-actions">
+                <button id="theme" class="nav-btn theme-btn" type="button">
+                    <img class="theme-img" data-light="img/theme_light.png" data-dark="img/theme_dark.png" alt="Tema">
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <!-- Hero Card -->
+        <section class="hero-card">
+            <div class="code-section">
+                <div class="code-label">Codice Univoco Ristorante:</div>
+                <div class="code-display" id="codeDisplay"></div>
+            </div>
+            
+            <div class="plan-section">
+                <div class="plan-card" id="planCard">
+                    <div class="plan-label">Piano attuale</div>
+                    <div class="plan-name" id="planName">Free</div>
+                </div>
+                <button class="btn-manage" id="manageBillingBtn">Migliora il tuo piano</button>
+            </div>
+        </section>
+
+        <!-- Menu Gestione -->
+        <h2 class="section-title">Generali</h2>
+        <nav class="menu-card">
+            <a href="#" class="menu-item" id="gestioneCard">
+                <div class="menu-left">
+                    <div class="menu-icon">
+                        <img class="theme-img" data-light="img/profile/settings_light.png" data-dark="img/profile/settings_dark.png" alt="Impostazioni">
+                    </div>
+                    <span>I tuoi ordini</span>
+                </div>
+                <span class="menu-arrow">›</span>
+            </a>
+            
+            <a href="#" class="menu-item" id="menuCard">
+                <div class="menu-left">
+                    <div class="menu-icon">
+                        <img class="theme-img" data-light="img/profile/menu_light.png" data-dark="img/profile/menu_dark.png" alt="Menu">
+                    </div>
+                    <span>Modifica il menù</span>
+                </div>
+                <span class="menu-arrow">›</span>
+            </a>
+
+            <a href="#" class="menu-item" id="statsCard">
+                <div class="menu-left">
+                    <div class="menu-icon">
+                        <img class="theme-img" data-light="img/profile/stats_light.png" data-dark="img/profile/stats_dark.png" alt="Statistics">
+                    </div>
+                    <span>Statistiche</span>
+                </div>
+                <span class="menu-arrow">›</span>
+            </a>
+        </nav>
+
+        <!-- Menu Configurazione -->
+        <h2 class="section-title">Configurazione</h2>
+        <nav class="menu-card">
+            <a href="#" class="menu-item" id="informazioniCard">
+                <div class="menu-left">
+                    <div class="menu-icon">
+                        <img class="theme-img" data-light="img/profile/info_light.png" data-dark="img/profile/info_dark.png" alt="Informazioni">
+                    </div>
+                    <span>Informazioni sul ristorante</span>
+                </div>
+                <span class="menu-arrow">›</span>
+            </a>
+
+            <a href="#" class="menu-item" id="prenotazioniCard">
+                <div class="menu-left">
+                    <div class="menu-icon">
+                        <img class="theme-img" data-light="img/profile/calendar_light.png" data-dark="img/profile/calendar_dark.png" alt="Prenotazioni">
+                    </div>
+                    <span>Prenotazioni</span>
+                </div>
+                <span class="menu-arrow">›</span>
+            </a>
+            
+            <a href="#" class="menu-item" id="bannersCard">
+                <div class="menu-left">
+                    <div class="menu-icon">
+                        <img class="theme-img" data-light="img/profile/ads_light.png" data-dark="img/profile/ads_dark.png" alt="Banner pubblicitari">
+                    </div>
+                    <span>Banner pubblicitari</span>
+                </div>
+                <span class="menu-arrow">›</span>
+            </a>
+
+            <a href="#" class="menu-item" id="promoCard">
+                <div class="menu-left">
+                    <div class="menu-icon">
+                        <img class="theme-img" data-light="img/profile/promo_light.png" data-dark="img/profile/promo_dark.png" alt="Promozioni">
+                    </div>
+                    <span>Promozioni e codici sconto</span>
+                </div>
+                <span class="menu-arrow">›</span>
+            </a>
+
+            <a href="#" class="menu-item" id="themeCard">
+                <div class="menu-left">
+                    <div class="menu-icon">
+                        <img class="theme-img" data-light="img/profile/palette_light.png" data-dark="img/profile/palette_dark.png" alt="Cambia Tema">
+                    </div>
+                    <span>Cambia Tema</span>
+                </div>
+                <span class="menu-arrow">›</span>
+            </a>
+        </nav>
+
+        <!-- Menu Anteprima -->
+        <h2 class="section-title">Anteprima</h2>
+        <nav class="menu-card">
+            <a href="#" class="menu-item" id="previewCard">
+                <div class="menu-left">
+                    <div class="menu-icon">
+                        <img class="theme-img" data-light="img/profile/preview_light.png" data-dark="img/profile/preview_dark.png" alt="Anteprima">
+                    </div>
+                    <span>Visualizza il menù</span>
+                </div>
+                <span class="menu-arrow">›</span>
+            </a>
+            
+            <a href="#" class="menu-item" id="qrCard">
+                <div class="menu-left">
+                    <div class="menu-icon">
+                        <img class="theme-img" data-light="img/profile/qr_light.png" data-dark="img/profile/qr_dark.png" alt="QR Code">
+                    </div>
+                    <span>Il tuo QR</span>
+                </div>
+                <span class="menu-arrow">›</span>
+            </a>
+        </nav>
+
+        <!-- Logout Button -->
+        <div class="logout-section">
+            <button class="btn-logout" id="logoutBtn">Esci dal Profilo</button>
+        </div>
+    </main>
+
+    <!-- Logout Popup -->
+    <div class="qr-popup-overlay" id="logoutPopup">
+        <div class="qr-popup">
+            <div class="qr-popup-header">
+                <h1>Sei sicuro?</h1>
+                <p>Stai per uscire dal profilo.</p>
+            </div>
+            <div class="qr-popup-actions">
+                <button id="cancelLogout">Annulla</button>
+                <button id="confirmLogout" class="btn-danger">Esci</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- QR Menu Selection Popup -->
+    <div class="qr-popup-overlay" id="qrMenuPopup">
+        <div class="qr-popup">
+            <div class="qr-popup-header">
+                <h1>Seleziona Menu</h1>
+                <p>Scegli quale menu visualizzare nel QR</p>
+            </div>
+            <div class="qr-menu-list" id="qrMenuList"></div>
+            <div class="qr-popup-actions">
+                <button id="closeMenuSelect">Chiudi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Code Display Popup -->
+    <div class="qr-popup-overlay" id="qrDisplayPopup">
+        <div class="qr-popup">
+            <div class="qr-popup-header">
+                <h1>Il tuo QR Code</h1>
+                <p id="qrMenuName">Scansiona per accedere al menù</p>
+            </div>
+            <div class="qr-container">
+                <div id="qrCanvas"></div>
+            </div>
+            <div class="qr-popup-actions">
+                <button id="closeQR">Chiudi</button>
+                <button id="downloadQR" class="btn-primary">Scarica QR</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="auth-protection.js"></script>
+    <script src="theme.js"></script>
+    <script src="logo-pop.js"></script>
+    <script src="profile-script.js"></script>
+</body>
+
+</html>

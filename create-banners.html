@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <script>
+        (function() {
+            const saved = localStorage.getItem('totemino_theme');
+            const theme = saved || 
+                (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted || performance.getEntriesByType('navigation')[0]?.type === 'back_forward') {
+              location.reload();
+            }
+        });
+    </script>
+    
+    <title>Gestione Banner - Totemino</title>
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    
+    <style>
+        @import url("menu-styles.css");
+                
+        html, body {
+            scrollbar-width: auto;
+        }
+
+        .banner-list {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .banner-card {
+            background: var(--card-bg);
+            border: 2px solid var(--btn-secondary);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            transition: all 0.2s ease;
+        }
+        
+        .banner-card:hover {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 10px var(--selected-glow);
+        }
+        
+        .banner-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .banner-card h3 {
+            font-family: 'Klein-Bold';
+            font-size: 1.3rem;
+            color: var(--text-accent);
+            margin: 0;
+        }
+        
+        .banner-card p {
+            color: var(--text-primary);
+            opacity: 0.8;
+            font-size: 1rem;
+            margin: 0.5rem 0 0 0;
+        }
+        
+        .banner-card-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .banner-edit-btn, .banner-delete-btn {
+            background: var(--btn-secondary);
+            border: none;
+            border-radius: 50%;
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .banner-delete-btn {
+            border: 2px solid #ef4444;
+            background: transparent; 
+        }
+        
+        .banner-delete-btn:hover {
+            background: #ef444450;
+        }
+
+        .banner-edit-btn img, .banner-delete-btn img {
+            width: 1.3rem;
+            height: 1.3rem;
+        }
+        
+        [data-theme="dark"] .banner-edit-btn img {
+            filter: invert(1);
+        }
+        
+        .add-banner-section {
+            max-width: calc(800px - 2rem);
+            margin: 2rem auto;
+            padding: 1.5rem;
+            background: var(--card-bg);
+            border: 3px solid var(--card-border);
+            border-radius: 2rem;
+            box-shadow: 0 4px 12px var(--shadow-sm);
+        }
+        
+        .add-banner-section h2 {
+            font-family: 'Klein-Bold';
+            font-size: 1.8rem;
+            color: var(--text-accent);
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 1rem;
+        }
+        
+        .form-field label {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-field input, .form-field textarea {
+            padding: 0.7rem 1rem;
+            border: 2px solid var(--btn-secondary);
+            border-radius: 1rem;
+            background: var(--pill-bg);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+        
+        .form-field input:focus, .form-field textarea:focus {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 10px var(--selected-glow);
+            outline: none;
+        }
+        
+        .form-field textarea {
+            min-height: 4rem;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        .save-banner-btn {
+            background: var(--accent-gold);
+            color: var(--text-primary);
+            border: none;
+            border-radius: 1.5rem;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            margin-top: 1rem;
+        }
+        
+        .save-banner-btn:hover {
+            filter: brightness(90%);
+        }
+        
+        .save-banner-btn:active {
+            transform: scale(1.05);
+        }
+        
+        .no-banners {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-primary);
+            opacity: 0.7;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 6rem;
+            right: 2rem;
+            background: var(--accent-gold);
+            color: var(--text-primary);
+            padding: 1rem 1.5rem;
+            border-radius: 1rem;
+            font-weight: 600;
+            z-index: 1001;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+        }
+        
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .notification.error {
+            background: #e53e3e;
+            color: white;
+        }
+        @media (max-width: 800px) {
+            .add-banner-section {
+                max-width: calc(100% - 2rem);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-light light1"></div>
+    <div class="bg-light light2"></div>
+    <div class="bg-light light3"></div>
+
+    <div class="title">
+        <div class="logo_space">
+            <img class="theme-img" data-light="img/logo/1_light.png" data-dark="img/logo/1_dark.png" alt="Logo" id="logoSwap">
+            <a href="index.html"><h1>Totemino</h1></a>
+            <p>Banner</p>
+        </div>
+        <div>
+            <button id="back-btn" class="header-btn" type="button">
+                <img class="theme-img" data-light="img/exit_light.png" data-dark="img/exit_dark.png" alt="Indietro">
+            </button>
+            <button id="theme" class="header-btn" type="button">
+                <img class="theme-img" data-light="img/theme_light.png" data-dark="img/theme_dark.png" alt="Tema">
+            </button>
+        </div>
+    </div>
+
+    <div class="add-banner-section">
+        <h2 id="form-title">Crea Nuovo Banner</h2>
+        <div class="form-field">
+            <label for="banner-title">Titolo *</label>
+            <input type="text" id="banner-title" placeholder="Es. Venerdi Serata Speciale">
+        </div>
+        <div class="form-field">
+            <label for="banner-subtitle">Sottotitolo *</label>
+            <textarea id="banner-subtitle" placeholder="Es. Non mancare. Clicca qui per prenotare il tuo tavolo"></textarea>
+        </div>
+        <button class="save-banner-btn" id="save-banner">Salva Banner</button>
+    </div>
+
+    <div class="banner-list" id="banner-list"></div>
+    
+    <div class="notification" id="notification"></div>
+
+    <script src="auth-protection.js"></script>
+    <script src="theme.js"></script>
+  <script src="logo-pop.js"></script>
+    <script>
+        let restaurantId = null;
+        let banners = [];
+        let editingIndex = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            restaurantId = params.get("id");
+            
+            if (!restaurantId) {
+                window.location.href = 'profile.html';
+                return;
+            }
+
+            document.getElementById('back-btn').addEventListener('click', () => {
+                window.location.href = `profile.html?id=${restaurantId}`;
+            });
+
+            document.getElementById('save-banner').addEventListener('click', saveBanner);
+            
+            await loadBanners();
+        });
+
+        async function loadBanners() {
+            try {
+                const response = await fetch(`/IDs/${restaurantId}/banners.json`);
+                if (response.ok) {
+                    banners = await response.json();
+                } else {
+                    banners = [];
+                }
+                renderBanners();
+            } catch (error) {
+                console.error('Errore caricamento banner:', error);
+                banners = [];
+                renderBanners();
+            }
+        }
+
+        function renderBanners() {
+            const container = document.getElementById('banner-list');
+            container.innerHTML = '';
+
+            if (banners.length === 0) {
+                container.innerHTML = '<div class="no-banners">Nessun banner creato</div>';
+                return;
+            }
+
+            banners.forEach((banner, index) => {
+                const card = document.createElement('div');
+                card.className = 'banner-card';
+                card.innerHTML = `
+                    <div class="banner-card-header">
+                        <h3>${banner.title}</h3>
+                        <div class="banner-card-actions">
+                            <button class="banner-edit-btn" onclick="editBanner(${index})">
+                                <img src="img/edit.png" alt="Modifica">
+                            </button>
+                            <button class="banner-delete-btn" onclick="deleteBanner(${index})">
+                                <img src="img/delete.png" alt="Elimina">
+                            </button>
+                        </div>
+                    </div>
+                    <p>${banner.subtitle}</p>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        async function saveBanner() {
+            const title = document.getElementById('banner-title').value.trim();
+            const subtitle = document.getElementById('banner-subtitle').value.trim();
+
+            if (!title || !subtitle) {
+                showNotification('Compila tutti i campi', 'error');
+                return;
+            }
+
+            const bannerData = { title, subtitle };
+
+            if (editingIndex !== null) {
+                banners[editingIndex] = bannerData;
+                editingIndex = null;
+                document.getElementById('form-title').textContent = 'Crea Nuovo Banner';
+            } else {
+                banners.push(bannerData);
+            }
+
+            try {
+                const response = await fetch(`/save-banners/${restaurantId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ banners })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    showNotification('Banner salvato!', 'success');
+                    document.getElementById('banner-title').value = '';
+                    document.getElementById('banner-subtitle').value = '';
+                    renderBanners();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('Errore salvataggio:', error);
+                showNotification('Errore nel salvataggio', 'error');
+            }
+        }
+
+        window.editBanner = function(index) {
+            editingIndex = index;
+            const banner = banners[index];
+            document.getElementById('banner-title').value = banner.title;
+            document.getElementById('banner-subtitle').value = banner.subtitle;
+            document.getElementById('form-title').textContent = 'Modifica Banner';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.deleteBanner = async function(index) {
+            if (!confirm('Eliminare questo banner?')) return;
+
+            banners.splice(index, 1);
+
+            try {
+                const response = await fetch(`/save-banners/${restaurantId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ banners })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    showNotification('Banner eliminato', 'success');
+                    renderBanners();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('Errore eliminazione:', error);
+                showNotification('Errore nell\'eliminazione', 'error');
+            }
+        };
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+
+</html>

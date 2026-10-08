@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+      (function() {
+        const saved = localStorage.getItem('totemino_theme');
+        const theme = saved || 
+          (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+        window.addEventListener('pageshow', function(event) {
+          if (event.persisted || performance.getEntriesByType('navigation')[0]?.type === 'back_forward') {
+            location.reload();
+          }
+        });
+      })();
+    </script>
+    <title>Accesso Sicuro - Totemino</title>
+    <link rel="icon" type="image/png" href="img/favicon.png">
+	<link rel="stylesheet" href="cookie-banner.css"/>
+    <link rel="stylesheet" href="menu-styles.css"/>
+    <link rel="stylesheet" href="billing-styles.css"/>
+    <link rel="stylesheet" href="login-styles.css"/>
+    
+</head>
+<body>
+    <div class="bg-light light1"></div>
+    <div class="bg-light light2"></div>
+    <div class="bg-light light3"></div>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img class="theme-img" data-light="img/logo/1_light.png" data-dark="img/logo/1_dark.png" alt="Totemino Logo" id="logoSwap">
+                <a href="index.html"><h1>Totemino</h1></a>
+            </div>
+            <div class="nav-actions">
+                <button id="theme" class="nav-btn theme-btn" type="button">
+                    <img class="theme-img" data-light="img/theme_light.png" data-dark="img/theme_dark.png" alt="Tema">
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Nuovo wrapper per il testo -->
+    <div class="login-text-wrapper">
+        <h2 class="login-title">Bentornato al tuo Totemino.</h2>
+        <p class="login-subtitle">Crea il tuo menu, ricevi ordini dal tavolo e monitora il tuo locale… in un'unica piattaforma!</p>
+    </div>
+
+    <section class="login-section">
+        <div class="login-container">
+            <!-- Toggle separato -->
+            <div class="login-toggle-container">
+                <div class="login-toggle" id="loginTabs">
+                    <button class="login-toggle-btn active" data-tab="login">Accedi</button>
+                    <button class="login-toggle-btn" data-tab="register">Registrati</button>
+                </div>
+            </div>
+
+            <!-- Card principale -->
+            <div class="login-card">
+                <div id="message-container"></div>
+
+                <!-- SEZIONE LOGIN -->
+                <div id="login-section" class="form-section active">
+                    <form id="loginForm" autocomplete="off">
+                        <div class="form-group">
+                            <label for="loginUserCode">ID Utente (4 cifre)</label>
+                            <input 
+                                type="text" 
+                                id="loginUserCode" 
+                                placeholder="0000" 
+                                maxlength="4" 
+                                pattern="[0-9]{4}" 
+                                autocomplete="username"
+                                required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="loginPassword">Password</label>
+                            <div class="password-input">
+                                <input 
+                                    type="password" 
+                                    id="loginPassword" 
+                                    placeholder="Inserisci password" 
+                                    autocomplete="current-password"
+                                    required>
+                                <button type="button" class="password-toggle" data-target="loginPassword">
+                                    <div class="eye-icon">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                            <circle cx="12" cy="12" r="3"/>
+                                            <line class="eye-slash" x1="1" y1="1" x2="23" y2="23"/>
+                                        </svg>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-solid" id="loginBtn">
+                            Accedi
+                        </button>
+                    </form>
+                </div>
+
+                <!-- SEZIONE REGISTRAZIONE -->
+                <div id="register-section" class="form-section">
+                    <form id="registerForm" autocomplete="off">
+                        <div class="form-group">
+                            <label for="newUserCode">ID Utente (4 cifre)</label>
+                            <input 
+                                type="text" 
+                                id="newUserCode" 
+                                placeholder="0000" 
+                                maxlength="4" 
+                                pattern="[0-9]{4}" 
+                                autocomplete="username"
+                                required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="newUserPassword">Password</label>
+                            <div class="password-input">
+                                <input 
+                                    type="password" 
+                                    id="newUserPassword" 
+                                    placeholder="Inserisci password" 
+                                    autocomplete="new-password"
+                                    required>
+                                <button type="button" class="password-toggle" data-target="newUserPassword">
+                                    <div class="eye-icon">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                            <circle cx="12" cy="12" r="3"/>
+                                            <line class="eye-slash" x1="1" y1="1" x2="23" y2="23"/>
+                                        </svg>
+                                    </div>
+                                </button>
+                            </div>
+                            <div id="passwordRequirements" class="password-requirements">
+                                <div class="requirement" data-req="length">• Almeno 8 caratteri</div>
+                                <div class="requirement" data-req="number">• Almeno un numero</div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="confirmPassword">Conferma Password</label>
+                            <div class="password-input">
+                                <input 
+                                    type="password" 
+                                    id="confirmPassword" 
+                                    placeholder="Ripeti password" 
+                                    autocomplete="new-password"
+                                    required>
+                                <button type="button" class="password-toggle" data-target="confirmPassword">
+                                    <div class="eye-icon">
+                                        <svg viewBox="0 0 24 24">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                            <circle cx="12" cy="12" r="3"/>
+                                            <line class="eye-slash" x1="1" y1="1" x2="23" y2="23"/>
+                                        </svg>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-solid" id="registerBtn">
+                            Registrati
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Scripts -->
+    <script src="theme.js"></script>
+  <script src="logo-pop.js"></script>
+    <script src="cookie-banner.js"></script>
+    <script src="login-script.js"></script>
+</body>
+
+</html>
