@@ -729,17 +729,6 @@ async function loadMenu() {
     }
   }
 
-  const typeConfig = availableMenuTypes.find(t => t.id === requestedType);
-
-  if (typeConfig) {
-    menuTypeFilter = requestedType;
-  } else {
-    const newUrl = new URL(window.location.href);
-    newUrl.searchParams.set('type', 'default');
-    window.location.replace(newUrl.toString());
-    return;
-  }
-  
   menuJson.categories = menuJson.categories
   .map(cat => ({
     ...cat,

@@ -22,10 +22,20 @@ const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 const PBKDF2_ITERATIONS = 100000; // massimo consentito da Workers
 
 const ID_RE = /^[\w-]{1,20}$/;
+const DEFAULT_MENU_TYPES = {
+  menuTypes: [{
+    id: 'default',
+    name: 'Menu Intero',
+    copertoPrice: 0,
+    checkoutMethods: { table: true, delivery: true, takeaway: true, show: true },
+    visibility: true,
+    icon: 1
+  }]
+};
 const JSON_FILES = {
-  'menu.json': null,
-  'settings.json': null,
-  'menuTypes.json': { copertoPrice: 0 },
+  'menu.json': { categories: [] },
+  'settings.json': {},
+  'menuTypes.json': DEFAULT_MENU_TYPES,
   'customizations.json': {},
   'banners.json': [],
   'promo.json': []
@@ -273,22 +283,13 @@ function handleLogout() {
 async function serveData(request, env, restaurantId, file) {
   const r2 = await env.BUCKET.get(`IDs/${restaurantId}/${file}`);
   if (r2) {
-    return new Response(r2.body, {
-      headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-cache' }
+    return new Response(request.method === 'HEAD' ? null : r2.body, {
+      headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }
     });
   }
-
-  // seed incluso nel sito
-  const asset = await env.ASSETS.fetch(request);
-  if (asset.ok) {
-    const res = new Response(asset.body, asset);
-    res.headers.set('Cache-Control', 'no-cache');
-    return res;
-  }
-
-  const fallback = JSON_FILES[file];
-  if (fallback !== null) return json(fallback, 200, { 'Cache-Control': 'no-cache' });
-  return new Response('Not found', { status: 404 });
+  // Non ancora salvato: valore di default (MAI passare da ASSETS: senza 404.html
+  // Pages risponde 200 con index.html e il client prova a parsarlo come JSON)
+  return json(JSON_FILES[file], 200);
 }
 
 async function serveImage(request, env, restaurantId, file) {
@@ -302,7 +303,7 @@ async function serveImage(request, env, restaurantId, file) {
       }
     });
   }
-  return env.ASSETS.fetch(request);
+  return new Response('Not found', { status: 404 });
 }
 
 // ==================== SALVATAGGIO DATI ====================
