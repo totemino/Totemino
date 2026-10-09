@@ -29,39 +29,9 @@ let customizationData = {};
 let isViewOnlyMode = false;
 let isAnimating = false;
 
-async function initializeViewMode() {
-  const params = new URLSearchParams(window.location.search);
-  const restaurantId = params.get('id');
-  const requestedType = params.get('type') || 'default';
-  
-  if (!restaurantId) return;
-  
-  try {
-    const settingsRes = await fetch(`IDs/${restaurantId}/menuTypes.json`);
-    if (!settingsRes.ok) return;
-    
-    const settings = await settingsRes.json();
-    const typeConfig = settings.menuTypes?.find(t => t.id === requestedType);
-    
-    if (typeConfig) {
-      // View-only se TUTTI i checkoutMethods sono false
-      const checkoutMethods = typeConfig.checkoutMethods || {};
-      const hasAnyCheckout = checkoutMethods.table || checkoutMethods.delivery || checkoutMethods.takeaway || checkoutMethods.show;
-      
-      if (!hasAnyCheckout) {
-        isViewOnlyMode = true;
-        document.documentElement.classList.add('view-only');
-      }
-    }
-  } catch (e) {
-    console.warn("Errore caricamento settings:", e);
-  }
-}
-
-// Chiamata asincrona all'avvio
-(async () => {
-  await initializeViewMode();
-})();
+// Menu SEMPRE in sola visualizzazione: niente carrello, niente selezione, niente ordine.
+isViewOnlyMode = true;
+document.documentElement.classList.add('view-only');
 
 //helper
 function prependToMap(map, key, value) {
@@ -268,6 +238,7 @@ function sortItemsByCategory(selectedItems) {
 
 // === PERSISTENZA ===
 function saveSelectionToStorage() {
+  return; // sola visualizzazione
   const sortedItems = sortItemsByCategory(selectedItems);
   const arr = [];
   const notesArr = [];
@@ -298,6 +269,7 @@ function saveSelectionToStorage() {
 }
 
 function loadSelectionFromStorage() {
+  return; // sola visualizzazione: nessuna selezione salvata
   const saved = localStorage.getItem("totemino_selected");
   const savedNotes = JSON.parse(localStorage.getItem("totemino_notes") || "[]");
   
@@ -1309,10 +1281,5 @@ if (itemsContainer) {
     }
   });
 }
-
-(async () => {
-  await initializeViewMode();
-  await loadMenu();
-})();
 
 loadMenu();
