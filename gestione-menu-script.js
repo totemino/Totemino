@@ -606,20 +606,58 @@ function deleteItem() {
 }
 
 // ===== IMAGE =====
+const IMG_SIZE = 256;
+
+// Quadrato trasparente 256x256, immagine centrata e adattata (mai tagliata).
+// Riduzione a gradini (max 2x per volta) per mantenere la qualità, con pochi MB di RAM.
+async function toSquareBlob(file) {
+  let src = await createImageBitmap(file);
+  const scale = Math.min(IMG_SIZE / src.width, IMG_SIZE / src.height);
+  const w = Math.max(1, Math.round(src.width * scale));
+  const h = Math.max(1, Math.round(src.height * scale));
+
+  let cur = src, cw = src.width, ch = src.height;
+  while (cw / 2 > w && ch / 2 > h) {
+    const nw = Math.ceil(cw / 2), nh = Math.ceil(ch / 2);
+    const tmp = document.createElement('canvas');
+    tmp.width = nw; tmp.height = nh;
+    const t = tmp.getContext('2d');
+    t.imageSmoothingQuality = 'high';
+    t.drawImage(cur, 0, 0, nw, nh);
+    if (cur.close) cur.close();
+    cur = tmp; cw = nw; ch = nh;
+  }
+
+  const out = document.createElement('canvas');
+  out.width = out.height = IMG_SIZE;
+  const ctx = out.getContext('2d');
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(cur, Math.round((IMG_SIZE - w) / 2), Math.round((IMG_SIZE - h) / 2), w, h);
+  if (cur.close) cur.close();
+
+  // WebP con trasparenza (leggero); se il browser non lo supporta ripiega su PNG
+  const blob = await new Promise(r => out.toBlob(r, 'image/webp', 0.92));
+  out.width = out.height = 0; // libera memoria
+  return blob;
+}
+
 async function processImage(file) {
   try {
+    const blob = await toSquareBlob(file);
+    const ext = blob.type === 'image/webp' ? 'webp' : 'png';
+    const baseName = file.name.replace(/\.[^.]+$/, '');
     const base64 = await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result);
       reader.onerror = reject;
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(blob);
     });
-    
+
     const res = await fetch('/upload-image', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        fileName: file.name,
+        fileName: `${baseName}.${ext}`,
         fileData: base64,
         restaurantId,
         oldImageUrl: currentEdit.item?.image
