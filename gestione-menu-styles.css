@@ -228,7 +228,6 @@ body.popup-open {
 .item-image {
   height: 150px;
   object-fit: contain;
-  border-radius: 1rem;
   margin: 1rem 0;
 }
 
