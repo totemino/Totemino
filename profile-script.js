@@ -19,6 +19,8 @@ if (!restaurantId) {
 // ===== PROFILE (foto + nome) =====
 const AVATAR_SIZE = 256;
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_EXT = /\.(jpe?g|png|webp)$/i;
 
 let currentSettings = null;   // settings.json completo (serve per non perdere gli altri dati al salvataggio)
 let currentName = '';
@@ -210,8 +212,9 @@ logoInput.addEventListener('change', async () => {
     const file = logoInput.files[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-        toast('Seleziona un\'immagine valida', 'error');
+    if (!ALLOWED_TYPES.includes(file.type) && !(file.type === '' && ALLOWED_EXT.test(file.name))) {
+        toast('Formato non supportato: usa JPG, PNG o WebP', 'error');
+        logoInput.value = '';
         return;
     }
     if (file.size > MAX_FILE_SIZE) {
