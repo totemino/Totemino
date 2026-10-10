@@ -460,6 +460,14 @@
   .container {
     padding: 0 10rem;
   }
+  .profile-header {
+    flex-direction: row;
+  }
+  .profile-avatar {
+    width: 5rem;
+    height: 5rem;
+    font-size: 2rem;
+  }
 }
 
 @media (min-width: 1200px) {
