@@ -162,10 +162,10 @@ svg.ic { width: 16px; height: 16px; flex-shrink: 0; }
 #edit-popup .management-popup { height: min(86vh, 700px); }
 .management-popup .close-popup { z-index: 2; }
 .management-popup .popup-title { margin: 0; padding: 18px 52px 10px 20px; flex-shrink: 0; font-family: 'Klein-Bold'; font-size: 20px; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pop-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-gutter: stable; padding: 4px 20px 14px; }
+.pop-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-gutter: stable; padding: 4px 20px 14px; width: 100%; }
 .popup-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
 .popup-actions .btn-danger { margin-right: auto; }
-.management-popup > .popup-actions { flex-shrink: 0; width: 100%; margin: 0; padding: 12px 20px; border-top: 1px solid var(--btn-secondary); }
+.management-popup > .popup-actions { flex-shrink: 0; width: 100%; margin: 0; padding: 15px 20px 20px; border-top: 1px solid var(--btn-secondary); }
 .management-popup .form-field input, .management-popup .form-field textarea { width: 100%; height: auto; margin: 0; font-size: 13.5px; padding: 8px 10px; }
 .management-popup .form-field input { height: 34px; }
 .management-popup .lbl:first-child { margin-top: 0; }
@@ -190,21 +190,21 @@ svg.ic { width: 16px; height: 16px; flex-shrink: 0; }
 .checkbox-label input:checked + .checkmark.incomplete { background: color-mix(in srgb, var(--accent-gold) 40%, var(--card-bg) 60%) !important; border-color: color-mix(in srgb, var(--accent-gold) 40%, var(--card-bg) 60%) !important; }
 .checkbox-label input:checked + .checkmark::after { content: '✓'; color: var(--text-primary); font-size: 12px; font-weight: 700; }
 .checkbox-label input:disabled + .checkmark { opacity: .6; }
-.checkbox-text { font-size: 13.5px; font-weight: 500; color: var(--text-primary); }
+.checkbox-text { font-size: 13.5px; padding: 7px 0; font-weight: 500; color: var(--text-primary); }
 
 .chk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
 .chk-grid .checkbox-label { padding: 8px 10px; border: 1px solid var(--btn-secondary); border-radius: 10px; background: var(--card-bg); }
 .chk-grid .checkbox-label:hover { border-color: var(--accent-gold); }
 
-.allergens-grid { display: grid; grid-template-columns: repeat(auto-fill, 76px); gap: 6px; }
+.allergens-grid { display: grid; grid-template-columns: repeat(auto-fill, 76px); gap: 7px; }
 .allergen-item { width: 76px; height: 76px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 4px; border: 1px solid var(--btn-secondary); border-radius: 12px; background: var(--pill-bg); cursor: pointer; transition: all .15s; }
 .allergen-item:hover { border-color: var(--accent-gold); }
-.allergen-item.selected { background: var(--accent-gold); border-color: var(--accent-gold); box-shadow: 0 0 8px var(--selected-glow); }
-.allergen-item img { width: 28px; height: 28px; border-radius: 50%; }
+.allergen-item.selected { background: var(--accent-gold); border-color: var(--accent-gold)!important; box-shadow: 0 0 8px var(--selected-glow); }
+.allergen-item img { width: 36px; height: 36px; border-radius: 50%; }
 .allergen-item span { max-width: 100%; font-size: 10px; line-height: 1.15; text-align: center; color: var(--text-primary); display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
 .allergen-item.selected span { font-weight: 700; }
 
-.btn-group-id-display { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 0; border-radius: 50%; background: var(--accent-pink); color: #fff; font-weight: 700; cursor: pointer; }
+.btn-group-id-display { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 0; border-radius: 50%; background: var(--accent-pink); color: #fff; font-weight: 700; cursor: pointer; }
 
 /* tipo menu */
 .icon-row { display: flex; gap: 14px; align-items: flex-start; }
