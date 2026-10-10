@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    (function() {
+      const saved = localStorage.getItem('totemino_theme');
+      const theme = saved || 
+      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+    window.addEventListener('pageshow', function(event) {
+      if (event.persisted || performance.getEntriesByType('navigation')[0]?.type === 'back_forward') {
+        location.reload();
+      }
+    });
+  </script>
+  <title>Impostazioni Ristorante - Totemino</title>
+  <link rel="icon" type="image/png" href="img/favicon.png">
+  <link rel="stylesheet" href="info-styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+  <!-- ===== SFONDO LUMINOSO ===== -->
+  <div class="bg-light light1"></div>
+  <div class="bg-light light2"></div>
+  <div class="bg-light light3"></div>
+
+  <!-- ===== SEZIONE HEADER ===== -->
+  <div class="title">
+    <div class="logo_space">
+      <img class="theme-img" data-light="img/logo/1_light.png" data-dark="img/logo/1_dark.png" alt="Logo" id="logoSwap">
+      <a href="index.html"><h1>Totemino</h1></a>
+      <p>Info</p>
+    </div>
+    <div>
+      <button id="back-btn" class="header-btn" type="button">
+        <img class="theme-img" data-light="img/exit_light.png" data-dark="img/exit_dark.png" alt="Torna al Profilo">
+      </button>
+      <button id="theme" class="header-btn" type="button">
+        <img class="theme-img" data-light="img/theme_light.png" data-dark="img/theme_dark.png" alt="Cambia tema">
+      </button>
+    </div>
+  </div>
+
+  <div class="settings-container">
+    <!-- 1. DATI DEL RISTORANTE -->
+    <div class="settings-section">
+      <h2 class="section-title">Dati del Ristorante</h2>
+      <div class="form-row-2 special-2">
+        <div class="form-group logo-group">
+          <label>Logo</label>
+          <div class="logo-preview" id="logo-preview" onclick="document.getElementById('logo-input').click()">
+            <div class="logo-preview-placeholder">Carica logo</div>
+            <input type="file" id="logo-input" accept="image/*" style="display: none;">
+          </div>
+        </div>
+        <div style="display:flex; flex-direction: column; gap: 1.5rem;">
+          <div class="form-group">
+            <label for="restaurant-name">Nome del Ristorante *</label>
+            <input type="text" id="restaurant-name" placeholder="Es. Pizzeria da Mario" required>
+          </div>
+          <div class="form-group">
+            <label for="owner-name">Nome del Titolare</label>
+            <input type="text" id="owner-name" placeholder="Es. Giacomo Esposito" required>
+          </div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="restaurant-street">Via *</label>
+          <input type="text" id="restaurant-street" placeholder="Via Roma" required>
+        </div>
+        <div class="form-group form-group-small">
+          <label for="restaurant-number">N° *</label>
+          <input type="text" id="restaurant-number" placeholder="123" required>
+        </div>
+        <div class="form-group form-group-small">
+          <label for="restaurant-cap">CAP *</label>
+          <input type="text" id="restaurant-cap" placeholder="80100" required>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. CONTATTI E NOTIFICHE -->
+    <div class="settings-section">
+      <h2 class="section-title">Contatti e Notifiche</h2>
+      
+      <div class="form-group">
+        <label for="phone">Telefono</label>
+        <input type="tel" id="phone" placeholder="Es. 321 456 7890">
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="Es. info@ristorante.it">
+      </div>
+
+      <div class="form-group">
+        <label>Modalità Notifica Nuovi Ordini</label>
+        <div class="notification-options">
+          <label class="option-card">
+            <input type="checkbox" id="notify-app" class="square-checkbox" checked>
+            <div class="option-content">
+              <i class="fas fa-bell"></i>
+              <span>Notifica via App</span>
+            </div>
+          </label>
+          <label class="option-card disabled">
+            <input type="checkbox" id="notify-whatsapp" class="square-checkbox" disabled>
+            <div class="option-content">
+              <i class="fab fa-whatsapp"></i>
+              <span>WhatsApp</span>
+            </div>
+          </label>
+          <label class="option-card disabled">
+            <input type="checkbox" id="notify-printer" class="square-checkbox" disabled>
+            <div class="option-content">
+              <i class="fas fa-print"></i>
+              <span>Stampante</span>
+            </div>
+          </label>
+        </div>
+        <div id="whatsapp-numbers-section" style="display: none; margin-top: 1rem;">
+          <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">
+            Numeri WhatsApp (max 5)
+          </label>
+          <div id="whatsapp-numbers-list" style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <!-- I numeri verranno aggiunti dinamicamente qui -->
+          </div>
+          <button class="btn-secondary" onclick="addWhatsAppNumber()" style="margin-top: 0.5rem;" id="add-whatsapp-btn">
+            + Aggiungi Numero
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. ORARI E DISPONIBILITÀ -->
+    <div class="settings-section">
+      <h2 class="section-title">Fasce orarie e Ferie</h2>
+      
+      <div class="form-group">
+        <div class="hours-container" id="opening-hours"></div>
+      </div>
+
+      <div class="form-group">
+        <div class="exceptional-closures" id="exceptional-closures"></div>
+        <button class="btn-secondary add-closure-btn" onclick="addClosure()">+ Aggiungi Chiusura</button>
+      </div>
+    </div>
+
+    <!-- 3.5 PRENOTAZIONI -->
+    <div class="settings-section">
+      <h2 class="section-title">Prenotazioni</h2>
+      
+      <div class="checkbox-label">
+        <input type="checkbox" id="reservations-enabled" class="like-square">
+        <label for="reservations-enabled">
+          Abilita sistema di prenotazioni
+        </label>
+      </div>
+
+      <div id="reservations-settings" style="display: none;">
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="max-people-per-slot">Persone massime ogni Fascia Oraria</label>
+            <input type="number" id="max-people-per-slot" min="1" step="1" placeholder="Es. 40">
+          </div>
+
+          <div class="form-group">
+            <label for="slot-duration">Durata Fascia Oraria (minuti)</label>
+            <input type="number" id="slot-duration" min="15" step="15" placeholder="Es. 90">
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="advance-booking-days">Preavviso Massimo Prenotazione (giorni)</label>
+            <input type="number" id="advance-booking-days" min="1" step="1" placeholder="Es. 14">
+            <small style="opacity: 0.7; font-size: 0.85rem; display: block; margin-top: 0.3rem;">
+              Fino a quanti giorni prima è possibile prenotare
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label for="min-advance-minutes">Preavviso Minimo Prenotazione (minuti)</label>
+            <input type="number" id="min-advance-minutes" min="0" step="1" placeholder="Es. 15">
+            <small style="opacity: 0.7; font-size: 0.85rem; display: block; margin-top: 0.3rem;">
+              Quanti minuti prima bisogna prenotare
+            </small>
+          </div>
+        </div>
+
+        <!-- GESTIONE TAVOLI -->
+        <div class="form-group">
+          <div class="checkbox-label" style="margin-bottom: 0.5rem;">
+            <input type="checkbox" id="tables-enabled" class="like-square" >
+            <label for="tables-enabled" style="font-weight: 400;">
+              Abilita gestione tavoli (opzionale)
+            </label>
+          </div>
+          <small style="opacity: 0.7; font-size: 0.85rem; display: block;">
+            Se abilitato, i clienti potranno scegliere un tavolo specifico durante la prenotazione
+          </small>
+        </div>
+
+        <div id="tables-management" style="display: none; margin-top: 1.5rem;">
+          <label style="display: block; margin-bottom: 1rem; font-weight: 600;">
+            Tavoli Disponibili
+          </label>
+          
+          <div id="tables-list" style="display: flex; flex-direction: column; gap: 0.8rem;">
+            <!-- I tavoli verranno aggiunti dinamicamente qui -->
+          </div>
+          
+          <button class="btn-secondary" onclick="addTable()" style="margin: 1rem auto;" id="add-table-btn">
+            + Aggiungi Tavolo
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. IMPOSTAZIONI DI CONSEGNA -->
+    <div class="settings-section">
+      <h2 class="section-title">Consegna a domicilio</h2>
+      
+      <div class="form-row-2">
+        <div class="form-group">
+          <label for="prep-time">Tempo Stimato di Preparazione (in minuti)</label>
+          <input type="number" id="prep-time" min="0" step="5" placeholder="Es. 15">
+        </div>
+
+        <div class="form-group">
+          <label for="delivery-radius">Raggio Massimo di Consegna (in km)</label>
+          <input type="number" id="delivery-radius" min="0" step="0.5" placeholder="Es. 5">
+        </div>
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label for="delivery-cost-type">Calcolo del costo della consegna</label>
+          <select id="delivery-cost-type">
+            <option value="distance">In base alla distanza</option>
+            <option value="fixed">Costo Fisso</option>
+          </select>
+        </div>
+        
+        <div class="form-group" id="cost-fixed-group" style="display: none;">
+          <label for="delivery-cost-fixed">Costo Fisso (€)</label>
+          <input type="number" id="delivery-cost-fixed" min="0" step="0.5" placeholder="Es. 3.50">
+        </div>
+
+        <div class="form-group" id="cost-per-km-group">
+          <label for="delivery-cost-per-km">Costo per Km (€)</label>
+          <input type="number" id="delivery-cost-per-km" min="0" step="0.1" placeholder="Es. 0.50">
+        </div>
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label for="min-order">Spesa Minima per la Consegna (€)</label>
+          <input type="number" id="min-order" min="0" step="1" placeholder="Es. 0 (consigliato)">
+        </div>
+
+        <div class="form-group">
+          <label for="free-delivery-threshold">Consegna Gratuita da (€)</label>
+          <input type="number" id="free-delivery-threshold" min="0" step="1" placeholder="Es. 60 (opzionale)">
+        </div>
+      </div>
+
+      <div class="checkbox-label">
+        <input type="checkbox" id="same-hours-delivery" class="like-square" checked>
+        <label for="same-hours-delivery">
+          Orari della consegna uguali agli orari di apertura
+        </label>
+      </div>
+
+
+      <div id="delivery-hours-container" style="display: none;">
+        <div class="form-group">
+          <div class="hours-container" id="delivery-hours"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. PAGAMENTI -->
+    <div class="settings-section">
+      <h2 class="section-title">Pagamenti</h2>
+      
+      <div class="form-group">
+        <label>Tipi di Pagamento Accettati</label>
+        <div class="payment-options">
+          <label class="option-card">
+            <input type="checkbox" id="payment-cash" class="square-checkbox" checked>
+            <div class="option-content">
+              <i class="fas fa-money-bill-wave"></i>
+              <span>Contanti</span>
+            </div>
+          </label>
+          
+          <label class="option-card">
+            <input type="checkbox" id="payment-card" class="square-checkbox">
+            <div class="option-content">
+              <i class="fas fa-credit-card"></i>
+              <span>POS alla consegna</span>
+            </div>
+          </label>
+          
+          <label class="option-card">
+            <input type="checkbox" id="payment-stripe" class="square-checkbox" disabled>
+            <div class="option-content">
+              <i class="fab fa-stripe"></i>
+              <span>Pagamento in-App</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group" id="stripe-connect-section">
+        <label>Stripe Connect</label>
+        <button class="btn-secondary" onclick="connectStripe()">Collega Stripe Account</button>
+        <p style="margin-top: 0.5rem; font-size: 0.9rem; opacity: 0.7;">
+          Riceverai automaticamente i pagamenti sul tuo conto Stripe dopo commissione % della banca
+        </p>
+      </div>
+    </div>
+
+    <div class="save-btn-container">
+      <button class="btn-primary save-settings-btn" onclick="saveSettings()">Salva Impostazioni</button>
+    </div>
+  </div>
+
+  <!-- Notification -->
+  <div id="notification" class="notification"></div>
+  
+  <script src="auth-protection.js"></script>
+  <script src="theme.js"></script>
+  <script src="logo-pop.js"></script>
+  <script src="info-script.js"></script>
+</body>
+
+</html>
+
