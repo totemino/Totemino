@@ -81,7 +81,6 @@ function updatePlanDisplay(plan, userData) {
 
 // Set menu links
 function setMenuLinks() {
-    document.getElementById('gestioneCard').href = `gestione.html?id=${restaurantId}`;
     document.getElementById('menuCard').href = `gestione-menu.html?id=${restaurantId}`;
     document.getElementById('statsCard').href = `statistics.html?id=${restaurantId}`;
 
