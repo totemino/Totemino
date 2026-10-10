@@ -88,110 +88,143 @@
   gap: 1.5rem;
 }
 
-/* Code Section */
-.code-section {
+/* Profile Header */
+.profile-header {
   width: 100%;
-  max-width: 333px;
-  text-align: center;
-  margin: 0 auto;
-  padding-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
 }
 
-.code-label {
-  color: var(--text-primary);
-  font-weight: 500;
-  margin-bottom: 0.75rem;
-}
-
-.code-display {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.75rem;
-  max-width: 280px;
-  margin: 0 auto;
-}
-
-.code-digit {
-  background: linear-gradient(135deg, #f4c430, #ffdb58);
-  aspect-ratio: 1;
-  border-radius: 1rem;
+.profile-avatar {
+  width: 9rem;
+  height: 9rem;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--input-bg);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: 'Klein-Bold', sans-serif;
-  font-size: 1.7rem;
-  color: #3a0f24;
+  font-size: 3.5rem;
+  color: var(--text-accent);
 }
 
-/* Plan Section */
-.plan-section {
-  width: 100%;  
-  max-width: 333px;
-  margin: 0 auto;
-}
-
-.plan-card {
-  background: var(--input-bg);
-  padding: 1.25rem 1.5rem;
-  border-radius: 1rem;
-  margin-bottom: 0.75rem;
-}
-
-.plan-card.hobby {
-  background-color: #694300; /* base legno scuro */
-  background-image:
-    url("https://www.transparenttextures.com/patterns/wood-pattern.png"),
-    linear-gradient(135deg, #7a4d00, #5c3400);
-  
-  background-blend-mode: overlay;
-  color: #fdf8db;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-  
-  background-size: cover;
-}
-
-.plan-card.premium {
-  background: linear-gradient(135deg, #c9a961, #d4b76a, #e6d5a0, #d4b76a, #b8965f, #9d7e4a);
-  color: #2a2012;
-  box-shadow: 0 1px 0 rgba(255,255,255,0.4) inset, 0 -1px 0 rgba(0,0,0,0.2) inset, 0 5px 15px rgba(0,0,0,0.2);
-}
-
-.plan-card.pro {
-  background: linear-gradient(125deg, rgba(255,255,255,0.95), rgba(240,248,255,0.95), rgba(255,240,255,0.95), rgba(240,255,250,0.95), rgba(255,255,255,0.95));
-  color: #3f3150;
-  box-shadow: 0 1px 0 rgba(255,255,255,0.8) inset, 0 3px 10px rgba(0,0,0,0.15);
-}
-
-.plan-card.trial {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.plan-label {
-  margin-bottom: 0.5rem;
-}
-
-.plan-name {
-  font-family: 'CalSans', sans-serif;
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-.btn-manage {
+.profile-avatar img {
   width: 100%;
-  background: var(--index-btn);
-  color: white;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.profile-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  max-width: 100%;
+}
+
+.profile-name {
+  font-family: 'Klein-Bold', sans-serif;
+  font-size: 1.6rem;
+  color: var(--text-primary);
+  margin: 0;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.btn-edit {
+  flex-shrink: 0;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 1rem;
   border: none;
-  padding: 0.85rem;
-  border-radius: 0.75rem;
-  font-size: 1rem;
-  font-weight: 600;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   transition: opacity 0.2s;
 }
 
-.btn-manage:hover {
-  opacity: 0.9;
+.btn-edit:hover {
+  opacity: 0.8;
+}
+
+/* Edit Profile Popup */
+.edit-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.edit-avatar {
+  position: relative;
+  cursor: pointer;
+}
+
+.edit-avatar-badge {
+  position: absolute;
+  right: 0.2rem;
+  bottom: 0.2rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  background: var(--index-btn);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px var(--shadow-sm);
+}
+
+.edit-input {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  border: none;
+  border-radius: 1rem;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 500;
+  text-align: center;
+  outline: none;
+}
+
+.edit-input.error {
+  box-shadow: 0 0 0 2px hsl(0, 67%, 55%);
+}
+
+.profile-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 2rem;
+  transform: translate(-50%, 1rem);
+  padding: 0.85rem 1.5rem;
+  border-radius: 1rem;
+  background: var(--card-bg);
+  color: var(--text-primary);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  font-weight: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 20000;
+}
+
+.profile-toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.profile-toast.error {
+  background: hsl(0, 67%, 55%);
+  color: white;
 }
 
 /* Section Title */

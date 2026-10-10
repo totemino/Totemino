@@ -16,74 +16,222 @@ if (!restaurantId) {
         .catch(() => window.location.href = 'index.html');
 }
 
-// Display code digits
-function displayCode() {
-    const codeDigits = restaurantId.toString().padStart(4, '0').split('');
-    const codeDisplay = document.getElementById('codeDisplay');
-    
-    codeDisplay.innerHTML = codeDigits
-        .map(digit => `<div class="code-digit">${digit}</div>`)
-        .join('');
+// ===== PROFILE (foto + nome) =====
+const AVATAR_SIZE = 256;
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+let currentSettings = null;   // settings.json completo (serve per non perdere gli altri dati al salvataggio)
+let currentName = '';
+let currentLogo = null;
+let pendingLogoDataUrl = null; // foto 256x256 scelta ma non ancora salvata
+
+const profileAvatar = document.getElementById('profileAvatar');
+const profileName = document.getElementById('profileName');
+const editProfilePopup = document.getElementById('editProfilePopup');
+const editAvatar = document.getElementById('editAvatar');
+const editAvatarPreview = document.getElementById('editAvatarPreview');
+const logoInput = document.getElementById('logoInput');
+const nameInput = document.getElementById('nameInput');
+const saveEdit = document.getElementById('saveEdit');
+const cancelEdit = document.getElementById('cancelEdit');
+const editProfileBtn = document.getElementById('editProfileBtn');
+
+let toastTimeout;
+function toast(msg, type = 'success') {
+    const el = document.getElementById('profileToast');
+    clearTimeout(toastTimeout);
+    el.className = `profile-toast ${type}`;
+    el.textContent = msg;
+    void el.offsetWidth;
+    el.classList.add('show');
+    toastTimeout = setTimeout(() => el.classList.remove('show'), 3000);
 }
 
-// Load user plan
-async function loadUserPlan() {
-    try {
-        const response = await fetch('/api/auth/me');
-        const data = await response.json();
-        
-        if (!data.success || data.requireLogin) {
-            window.location.href = 'index.html';
-            return;
-        }
-        
-        const userPlan = data.user.planType || 'free';
-        updatePlanDisplay(userPlan, data.user);
-        
-    } catch (error) {
-        console.error('Error loading user plan:', error);
-        updatePlanDisplay('free', null);
-    }
-}
-
-function updatePlanDisplay(plan, userData) {
-    const planCard = document.getElementById('planCard');
-    const planName = document.getElementById('planName');
-    const manageBillingBtn = document.getElementById('manageBillingBtn');
-    
-    planCard.classList.remove('free', 'premium', 'pro', 'trial');
-    
-    const displayPlan = plan.toLowerCase();
-    
-    if (displayPlan === 'free' && userData?.isTrialActive) {
-        planCard.classList.add('trial');
-        planName.textContent = `Prova gratuita Pro (${userData.trialDaysLeft}g)`;
+function renderAvatar(container, src, name) {
+    container.innerHTML = '';
+    if (src) {
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = 'Foto profilo';
+        img.onerror = () => renderAvatar(container, null, name);
+        container.appendChild(img);
     } else {
-        const planNames = {
-            'free': 'Free',
-            'hobby': 'Hobby',
-            'premium': 'Premium',
-            'pro': 'Pro',
-            'trial': 'Prova gratuita'
-        };
-        
-        planCard.classList.add(displayPlan);
-        planName.textContent = planNames[displayPlan] || 'Free';
-    }
-    
-    // Update button for Pro plan
-    if (displayPlan === 'pro') {
-        manageBillingBtn.textContent = 'Hai il piano migliore!';
-        manageBillingBtn.onclick = (e) => e.preventDefault();
-        manageBillingBtn.setAttribute('href', '#');
+        container.textContent = (name || '?').trim().charAt(0).toUpperCase();
     }
 }
+
+function renderProfile() {
+    profileName.textContent = currentName || 'Il tuo ristorante';
+    renderAvatar(profileAvatar, currentLogo, currentName);
+}
+
+async function loadProfile() {
+    try {
+        const res = await fetch(`/IDs/${restaurantId}/settings.json?t=${Date.now()}`);
+        if (res.ok) {
+            currentSettings = await res.json();
+            currentName = currentSettings.restaurant?.name || '';
+            currentLogo = currentSettings.restaurant?.logo || null;
+        }
+    } catch (err) {
+        console.error('Errore caricamento profilo:', err);
+    }
+    renderProfile();
+}
+
+// Rende l'immagine quadrata 1:1 aggiungendo bordi trasparenti sui lati corti, poi la porta a 256x256
+function squareAndResize(file) {
+    return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => {
+            URL.revokeObjectURL(url);
+            const canvas = document.createElement('canvas');
+            canvas.width = AVATAR_SIZE;
+            canvas.height = AVATAR_SIZE;
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingQuality = 'high';
+
+            // Il lato lungo diventa 256, quello corto viene centrato (resto trasparente)
+            const scale = AVATAR_SIZE / Math.max(img.naturalWidth, img.naturalHeight);
+            const w = Math.round(img.naturalWidth * scale);
+            const h = Math.round(img.naturalHeight * scale);
+            ctx.drawImage(img, Math.round((AVATAR_SIZE - w) / 2), Math.round((AVATAR_SIZE - h) / 2), w, h);
+
+            resolve(canvas.toDataURL('image/png')); // PNG per mantenere la trasparenza
+        };
+        img.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject(new Error('Immagine non valida'));
+        };
+        img.src = url;
+    });
+}
+
+function openEditPopup() {
+    pendingLogoDataUrl = null;
+    nameInput.value = currentName;
+    nameInput.classList.remove('error');
+    renderAvatar(editAvatarPreview, currentLogo, currentName);
+    editProfilePopup.classList.add('show');
+}
+
+function closeEditPopup() {
+    editProfilePopup.classList.remove('show');
+    logoInput.value = '';
+}
+
+async function uploadLogo(dataUrl) {
+    const res = await fetch('/upload-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            fileName: `logo-${restaurantId}.png`,
+            fileData: dataUrl,
+            restaurantId: restaurantId,
+            oldImageUrl: currentLogo || null
+        })
+    });
+    if (!res.ok) throw new Error('Errore upload immagine');
+    const result = await res.json();
+    if (!result.success) throw new Error(result.message || 'Upload fallito');
+    return result.imageUrl;
+}
+
+async function saveProfile() {
+    const name = nameInput.value.trim();
+    if (!name) {
+        nameInput.classList.add('error');
+        nameInput.focus();
+        return;
+    }
+
+    saveEdit.disabled = true;
+    saveEdit.textContent = 'Salvataggio...';
+
+    try {
+        let logoUrl = currentLogo;
+        if (pendingLogoDataUrl) {
+            logoUrl = await uploadLogo(pendingLogoDataUrl);
+        }
+
+        // Rileggo le impostazioni più recenti per non sovrascrivere altri dati
+        let settings = currentSettings || {};
+        try {
+            const res = await fetch(`/IDs/${restaurantId}/settings.json?t=${Date.now()}`);
+            if (res.ok) settings = await res.json();
+        } catch (_) {}
+
+        settings.restaurant = { ...(settings.restaurant || {}), name, logo: logoUrl };
+
+        const saveRes = await fetch(`/save-settings/${restaurantId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ settings })
+        });
+        const result = await saveRes.json();
+        if (!result.success) throw new Error(result.message || 'Errore salvataggio');
+
+        currentSettings = settings;
+        currentName = name;
+        currentLogo = logoUrl;
+        renderProfile();
+        closeEditPopup();
+        toast('Profilo aggiornato!');
+    } catch (err) {
+        console.error('Errore salvataggio profilo:', err);
+        toast(err.message || 'Errore salvataggio', 'error');
+    } finally {
+        saveEdit.disabled = false;
+        saveEdit.textContent = 'Salva';
+    }
+}
+
+editProfileBtn.addEventListener('click', openEditPopup);
+cancelEdit.addEventListener('click', closeEditPopup);
+saveEdit.addEventListener('click', saveProfile);
+editProfilePopup.addEventListener('click', (e) => {
+    if (e.target === editProfilePopup) closeEditPopup();
+});
+nameInput.addEventListener('input', () => nameInput.classList.remove('error'));
+nameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') saveProfile();
+});
+
+editAvatar.addEventListener('click', () => logoInput.click());
+editAvatar.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        logoInput.click();
+    }
+});
+
+logoInput.addEventListener('change', async () => {
+    const file = logoInput.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        toast('Seleziona un\'immagine valida', 'error');
+        return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+        toast('Immagine troppo grande (max 5MB)', 'error');
+        return;
+    }
+
+    try {
+        pendingLogoDataUrl = await squareAndResize(file);
+        renderAvatar(editAvatarPreview, pendingLogoDataUrl, currentName);
+    } catch (err) {
+        console.error('Errore elaborazione immagine:', err);
+        toast('Impossibile leggere l\'immagine', 'error');
+    }
+});
 
 // Set menu links
 
 function setMenuLinks() {
     document.getElementById('menuCard').href = `gestione-menu.html?id=${restaurantId}`;
-    document.getElementById('informazioniCard').href = `info.html?id=${restaurantId}`;
     document.getElementById('bannersCard').href = `create-banners.html?id=${restaurantId}`;
     document.getElementById('themeCard').href = `custom-theme.html?id=${restaurantId}`;
 
@@ -279,19 +427,6 @@ function initQRCode() {
     });
 }
 
-// Manage billing
-document.getElementById('manageBillingBtn').addEventListener('click', async () => {
-    const response = await fetch('/api/auth/me');
-    const data = await response.json();
-    const userPlan = data.user?.planType?.toLowerCase();
-    
-    if (userPlan === 'pro') {
-        return;
-    }
-    
-    window.location.href = 'upgrade.html';
-});
-
 // Logout functionality
 const logoutBtn = document.getElementById('logoutBtn');
 const logoutPopup = document.getElementById('logoutPopup');
@@ -333,8 +468,7 @@ confirmLogout.addEventListener('click', async () => {
 
 // Initialize
 if (restaurantId) {
-    displayCode();
-    loadUserPlan();
+    loadProfile();
     setMenuLinks();
 }
 
