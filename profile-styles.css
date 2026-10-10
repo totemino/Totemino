@@ -98,8 +98,8 @@
 }
 
 .profile-avatar {
-  width: 9rem;
-  height: 9rem;
+  width: 7rem;
+  height: 7rem;
   border-radius: 50%;
   overflow: hidden;
   background: var(--input-bg);
@@ -107,7 +107,7 @@
   align-items: center;
   justify-content: center;
   font-family: 'Klein-Bold', sans-serif;
-  font-size: 3.5rem;
+  font-size: 3rem;
   color: var(--text-accent);
 }
 
@@ -128,7 +128,7 @@
 
 .profile-name {
   font-family: 'Klein-Bold', sans-serif;
-  font-size: 1.6rem;
+  font-size: 1.2rem;
   color: var(--text-primary);
   margin: 0;
   overflow-wrap: anywhere;
@@ -137,9 +137,9 @@
 
 .btn-edit {
   flex-shrink: 0;
-  width: 2.4rem;
-  height: 2.4rem;
-  border-radius: 1rem;
+  width: 3.2rem;
+  height: 2rem;
+  border-radius: 2rem;
   border: none;
   background: var(--input-bg);
   color: var(--text-primary);
