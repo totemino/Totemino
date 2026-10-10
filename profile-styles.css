@@ -98,8 +98,8 @@
 }
 
 .profile-avatar {
-  width: 7rem;
-  height: 7rem;
+  width: 6.5rem;
+  height: 6.5rem;
   border-radius: 50%;
   overflow: hidden;
   background: var(--input-bg);
@@ -107,7 +107,7 @@
   align-items: center;
   justify-content: center;
   font-family: 'Klein-Bold', sans-serif;
-  font-size: 3rem;
+  font-size: 2.8rem;
   color: var(--text-accent);
 }
 
