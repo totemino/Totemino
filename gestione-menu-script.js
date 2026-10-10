@@ -1,1093 +1,611 @@
 // ===== STATE =====
-let menuData = {};
-let categories = [];
-let restaurantId = null;
-let currentEdit = { item: null, category: null, index: null };
-let uploadedImage = null;
-let hasChanges = false;
-let menuTypes = [];
-let filterType = '';
-let editingCategoryName = null;
-let editingCategoryItems = [];
-let menuIconIndex = 1;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const store = {
+  get: (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
+  set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { } }
+};
 
+let menuData = {}, categories = [], menuTypes = [], restaurantId = null;
+let currentEdit = { category: null, index: null }, uploadedImage = null, hasChanges = false;
+let filterType = '', query = '', view = 'grid', collapsed = new Set();
+let editingCat = null, editingItems = [], editingTypeIdx = null, iconIdx = 1, dragFrom = null;
+
+const METHODS = ['table', 'delivery', 'takeaway', 'show'];
 const allergens = {
-  "1": "No Glutine", "2": "No Lattosio", "3": "Soia", "4": "Latte", "5": "Uova",
-  "6": "Pesce", "7": "Glutine", "8": "Arachidi", "9": "Frutta a guscio",
-  "10": "Semi di sesamo", "11": "Sedano", "12": "Senape",
-  "13": "Anidride solforosa", "14": "Crostacei", "15": "Lupino", "16": "Molluschi"
+  "1": "No Glutine", "2": "No Lattosio", "3": "Soia", "4": "Latte", "5": "Uova", "6": "Pesce", "7": "Glutine", "8": "Arachidi",
+  "9": "Frutta a guscio", "10": "Semi di sesamo", "11": "Sedano", "12": "Senape", "13": "Anidride solforosa", "14": "Crostacei", "15": "Lupino", "16": "Molluschi"
+};
+
+const svg = p => `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const I = {
+  chev: svg('<path d="m6 9 6 6 6-6"/>'), plus: svg('<path d="M12 5v14M5 12h14"/>'),
+  more: svg('<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>'),
+  eye: svg('<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'),
+  eyeOff: svg('<path d="M3 3l18 18M10.6 6.1A10 10 0 0 1 12 6c6.5 0 10 6 10 6a17 17 0 0 1-3.2 3.9M6.6 6.6A17 17 0 0 0 2 12s3.5 7 10 7a9.7 9.7 0 0 0 4.4-1"/>'),
+  edit: svg('<path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'),
+  trash: svg('<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>'),
+  copy: svg('<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>'),
+  up: svg('<path d="m18 15-6-6-6 6"/>'), down: svg('<path d="m6 9 6 6 6-6"/>'),
+  grid: svg('<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>'),
+  list: svg('<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>'),
+  expand: svg('<path d="m7 15 5 5 5-5M7 9l5-5 5 5"/>'), collapse: svg('<path d="m7 20 5-5 5 5M7 4l5 5 5-5"/>')
 };
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', async () => {
-  
-  restaurantId = new URLSearchParams(window.location.search).get("id") || "default";
-  
-  // Event listeners
-  document.getElementById('back-btn').onclick = () => location.href = `profile.html?id=${restaurantId}`;
-  document.getElementById('close-edit-popup').onclick = closePopup;
-  document.getElementById('cancel-edit').onclick = closePopup;
-  document.getElementById('save-item').onclick = saveItem;
-  document.getElementById('delete-item').onclick = () => showConfirm();
-  document.getElementById('cancel-delete').onclick = hideConfirm;
-  document.getElementById('confirm-delete').onclick = deleteItem;
-  document.getElementById('save-menu').onclick = saveMenu;
-    document.getElementById('edit-method-table')?.addEventListener('change', (e) => {
-      const form = document.querySelector('#edit-menu-type-popup #coperto-form');
-      form.style.display = e.target.checked ? 'block' : 'none';
+  restaurantId = new URLSearchParams(location.search).get('id') || 'default';
+  collapsed = new Set(store.get(`gm_collapsed_${restaurantId}`, []));
+  view = store.get('gm_view', 'grid');
+  $('view-grid').innerHTML = I.grid; $('view-list').innerHTML = I.list;
 
-      if (!e.target.checked) {
-          document.getElementById('menu-type-coperto-edit').value = 0;
-      }
-  });
-  document.getElementById('new-method-table')?.addEventListener('change', (e) => {
-      const form = document.querySelector('#add-menu-type-popup #coperto-form');
-      form.style.display = e.target.checked ? 'block' : 'none';
+  $('search').oninput = e => { query = e.target.value.trim().toLowerCase(); render(); };
+  $('menu-type-filter').onchange = e => { filterType = e.target.value === 'default' ? '' : e.target.value; render(); };
+  $('m-table').onchange = syncCoperto;
+  $('category-menu-types').onchange = e => toggleCatType(e.target.value, e.target.checked);
+  $('allergens-grid').onclick = e => e.target.closest('.allergen-item')?.classList.toggle('selected');
 
-      if (!e.target.checked) {
-          document.getElementById('new-menu-type-coperto').value = 0;
-      }
+  const area = $('product-image-area');
+  area.onclick = () => $('product-image').click();
+  area.ondragover = e => { e.preventDefault(); area.classList.add('dragover'); };
+  area.ondragleave = () => area.classList.remove('dragover');
+  area.ondrop = e => { e.preventDefault(); area.classList.remove('dragover'); const f = e.dataTransfer.files[0]; if (f?.type.startsWith('image/')) processImage(f); };
+  $('product-image').onchange = e => e.target.files[0] && processImage(e.target.files[0]);
+
+  const list = $('draggable-items-list');
+  list.ondragstart = e => { dragFrom = +e.target.closest('.row')?.dataset.i; };
+  list.ondragover = e => e.preventDefault();
+  list.ondrop = e => {
+    const to = +e.target.closest('.row')?.dataset.i;
+    if (isNaN(to) || dragFrom == null || isNaN(dragFrom)) return;
+    editingItems.splice(to, 0, editingItems.splice(dragFrom, 1)[0]); dragFrom = null; renderRows();
+  };
+
+  document.addEventListener('click', onClick);
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); if (hasChanges) saveMenu(); }
+    if (e.key === 'Escape') [...document.querySelectorAll('.popup:not(.hidden)')].pop()?.querySelector('.close-popup, .btn-secondary')?.click();
   });
-  document.getElementById('menu-type-filter').onchange = () => {
-    filterType = document.getElementById('menu-type-filter').value;
-    render();
-  };
-  
-  // Image upload
-  const imgArea = document.getElementById('product-image-area');
-  imgArea.onclick = () => document.getElementById('product-image').click();
-  imgArea.ondragover = e => { e.preventDefault(); e.currentTarget.classList.add('dragover'); };
-  imgArea.ondragleave = e => { e.preventDefault(); e.currentTarget.classList.remove('dragover'); };
-  imgArea.ondrop = e => {
-    e.preventDefault();
-    e.currentTarget.classList.remove('dragover');
-    const file = e.dataTransfer.files[0];
-    if (file?.type.startsWith('image/')) processImage(file);
-  };
-  document.getElementById('product-image').onchange = e => {
-    const file = e.target.files[0];
-    if (file) processImage(file);
-  };
-  
-  // Popup close on click outside
-  document.getElementById('edit-popup').onclick = e => { if (e.target === e.currentTarget) closePopup(); };
-  document.getElementById('delete-popup').onclick = e => { if (e.target === e.currentTarget) hideConfirm(); };
-  
+  addEventListener('scroll', hideCtx, true); addEventListener('resize', hideCtx);
+  addEventListener('error', e => { const i = e.target; if (i.tagName === 'IMG' && !i.src.endsWith('placeholder.png')) i.src = 'img/placeholder.png'; }, true);
   window.onbeforeunload = e => hasChanges ? (e.returnValue = 'Modifiche non salvate') : null;
-  
+
   await loadMenu();
   await loadCustomizations();
 });
 
-// ===== VERIFICA SETTINGS PER DELIVERY =====
-async function checkDeliverySettings() {
-  try {
-    const res = await fetch(`IDs/${restaurantId}/settings.json`);
-    if (!res.ok) return false;
-    
-    const settings = await res.json();
-    
-    // Campi obbligatori per abilitare delivery
-    const required = [
-      settings.restaurant?.name,
-      settings.restaurant?.street,
-      settings.restaurant?.number,
-      settings.restaurant?.cap,
-      settings.restaurant?.phone,
-      settings.restaurant?.email,
-      settings.delivery?.radius,
-      settings.delivery?.costType,
-      settings.delivery?.prepTime
-    ];
-    
-    return required.every(field => field !== null && field !== undefined && field !== '');
-  } catch (err) {
-    return false;
+// ===== EVENTI (delegati) =====
+function onClick(e) {
+  const t = e.target.closest('[data-act]');
+  if (t) { const a = t.dataset.act; if (a !== 'ctx' && a !== 'cat-menu') hideCtx(); return actions[a]?.(t, e); }
+  hideCtx();
+
+  const locked = e.target.closest('.checkbox-label.locked');
+  if (locked) {
+    e.preventDefault();
+    return ask('Consegna non configurata', 'Le impostazioni di consegna non sono complete. Vuoi configurarle ora?', 'Configura').then(ok => {
+      if (!ok) return;
+      window.open(`info.html?id=${restaurantId}`, '_blank');
+      addEventListener('focus', async () => lockDelivery(await checkDeliverySettings()), { once: true });
+    });
   }
+  const item = e.target.closest('.item');
+  if (item) return openPopup(+item.dataset.i, item.closest('.cat').dataset.cat);
+  const head = e.target.closest('.cat-head');
+  if (head) return toggleCollapse(head.closest('.cat'));
+  if (e.target.classList.contains('popup') && ['edit-popup', 'confirm-popup'].includes(e.target.id)) e.target.querySelector('.close-popup, .btn-secondary')?.click();
 }
 
-function updateDeliveryCheckboxState(checkboxId, canEnable) {
-  const checkbox = document.getElementById(checkboxId);
-  const label = checkbox.closest('.checkbox-label');
-  
-  if (!canEnable) {
-    checkbox.disabled = true;
-    checkbox.checked = false;
-    label.style.opacity = '0.5';
-    label.style.cursor = 'not-allowed';
-    label.title = 'Configura le impostazioni di consegna per abilitare';
-    
-    // Aggiungi handler per aprire settings
-    label.onclick = (e) => {
-      e.preventDefault();
-      if (confirm('Le impostazioni di consegna non sono configurate. Vuoi configurarle ora?')) {
-        const newWindow = window.open(`info.html?id=${restaurantId}`, '_blank');
-        
-        // Ricarica quando la finestra viene chiusa o quando si ritorna su questa tab
-        const checkInterval = setInterval(() => {
-          if (newWindow.closed) {
-            clearInterval(checkInterval);
-            location.reload();
-          }
-        }, 500);
-        
-        // Ricarica anche quando l'utente torna su questa tab
-        window.addEventListener('focus', () => {
-          location.reload();
-        }, { once: true });
-      }
-    };
-  } else {
-    checkbox.disabled = false;
-    label.style.opacity = '1';
-    label.style.cursor = 'pointer';
-    label.title = '';
-    label.onclick = null;
-  }
+const catOf = el => el.closest('.cat').dataset.cat;
+const idxOf = el => +el.closest('.item').dataset.i;
+const actions = {
+  back: () => location.href = `profile.html?id=${restaurantId}`,
+  close: t => t.dataset.p === 'edit-popup' ? closeItemPopup() : hide(t.dataset.p),
+  view: t => { view = t.dataset.v; store.set('gm_view', view); render(); },
+  'toggle-all': () => {
+    collapsed = categories.every(c => collapsed.has(c)) ? new Set() : new Set(categories);
+    store.set(`gm_collapsed_${restaurantId}`, [...collapsed]); render();
+  },
+  'add-cat': () => openCatPopup(null),
+  'clear-filter': () => { filterType = ''; query = ''; $('search').value = ''; render(); },
+  'save-menu': saveMenu,
+  discard: async () => { if (await ask('Scartare le modifiche?', 'Le modifiche non salvate andranno perse.', 'Scarta')) { hasChanges = false; setDirty(false); await loadMenu(); } },
+
+  'cat-add': t => openPopup(null, catOf(t)),
+  'cat-vis': t => toggleCategoryVisibility(catOf(t)),
+  'cat-menu': t => {
+    const c = catOf(t), i = categories.indexOf(c), hidden = allHidden(c);
+    openCtx(t, [
+      [I.edit + 'Modifica categoria', () => openCatPopup(c)],
+      [(hidden ? I.eye + 'Mostra' : I.eyeOff + 'Nascondi') + ' tutti gli elementi', () => toggleCategoryVisibility(c)],
+      i > 0 && [I.up + 'Sposta su', () => moveCat(c, -1)],
+      i < categories.length - 1 && [I.down + 'Sposta giù', () => moveCat(c, 1)],
+      [I.trash + 'Elimina categoria', () => deleteCategory(c), 'danger']
+    ].filter(Boolean));
+  },
+  ctx: t => { const fn = $('ctx')._e[t.dataset.i][1]; hideCtx(); fn(); },
+
+  'item-vis': t => { const it = menuData[catOf(t)][idxOf(t)]; it.visible = it.visible === false; setDirty(true); render(); },
+  'item-dup': t => {
+    const c = catOf(t), i = idxOf(t), src = menuData[c][i];
+    let name = `${src.name} (copia)`, n = 2;
+    while (nameExists(name)) name = `${src.name} (copia ${n++})`;
+    menuData[c].splice(i + 1, 0, { ...src, name, allergens: [...src.allergens], menuType: [...(src.menuType || [])] });
+    setDirty(true); render(); notify('Elemento duplicato');
+  },
+  'item-save': saveItem,
+  'item-delete': deleteItem,
+  'remove-image': () => { uploadedImage = null; setPreview(''); },
+
+  'type-new': () => openTypePopup(null),
+  'type-edit': t => openTypePopup(+t.dataset.i),
+  'type-save': saveType,
+  'type-delete': deleteType,
+  'type-icon': t => { iconIdx = t.dataset.d === 'next' ? (iconIdx % 20) + 1 : (iconIdx === 1 ? 20 : iconIdx - 1); setIcon(iconIdx); },
+
+  'cat-save': saveCategory,
+  'row-up': t => moveRow(+t.closest('.row').dataset.i, -1),
+  'row-down': t => moveRow(+t.closest('.row').dataset.i, 1)
+};
+
+// ===== UI HELPERS =====
+const show = id => { $(id).classList.remove('hidden'); document.body.classList.add('popup-open'); };
+const hide = id => { $(id).classList.add('hidden'); if (!document.querySelector('.popup:not(.hidden)')) document.body.classList.remove('popup-open'); };
+const setDirty = v => { hasChanges = v; $('savebar').classList.toggle('show', v); };
+const nameExists = n => Object.values(menuData).flat().some(i => i.name.toLowerCase() === n.toLowerCase());
+const allHidden = c => (menuData[c] || []).length > 0 && menuData[c].every(i => i.visible === false);
+
+let notifyTimeout;
+function notify(msg, type = 'success') {
+  const el = $('save-notification');
+  clearTimeout(notifyTimeout);
+  el.className = `notification ${type}`; el.textContent = msg;
+  void el.offsetWidth; el.classList.add('show');
+  notifyTimeout = setTimeout(() => el.classList.remove('show'), 3000);
 }
+
+function ask(title, text, ok = 'Elimina') {
+  return new Promise(res => {
+    $('confirm-title').textContent = title; $('confirm-text').textContent = text; $('confirm-ok').textContent = ok;
+    const done = v => { hide('confirm-popup'); res(v); };
+    $('confirm-ok').onclick = () => done(true); $('confirm-cancel').onclick = () => done(false);
+    show('confirm-popup');
+  });
+}
+
+function openCtx(btn, entries) {
+  const c = $('ctx');
+  c._e = entries;
+  c.innerHTML = entries.map(([label, , cls], i) => `<button class="${cls || ''}" data-act="ctx" data-i="${i}">${label}</button>`).join('');
+  c.classList.remove('hidden');
+  const r = btn.getBoundingClientRect();
+  c.style.left = `${Math.max(8, Math.min(r.right - c.offsetWidth, innerWidth - c.offsetWidth - 8))}px`;
+  c.style.top = `${r.bottom + c.offsetHeight + 8 > innerHeight ? r.top - c.offsetHeight - 4 : r.bottom + 4}px`;
+}
+const hideCtx = () => $('ctx')?.classList.add('hidden');
 
 // ===== LOAD =====
 async function loadMenu() {
   try {
-    const [menuRes, settingsRes] = await Promise.all([
-      fetch(`IDs/${restaurantId}/menu.json`),
-      fetch(`IDs/${restaurantId}/menuTypes.json`).catch(() => ({ ok: false }))
-    ]);
-    
-    const menu = await menuRes.json();
-    const settings = settingsRes.ok ? await settingsRes.json() : { menuTypes: [] };
-    
-    menuData = {};
-    categories = [];
-    
-    menu.categories.forEach(cat => {
+    const [menuRes, typesRes] = await Promise.all([fetch(`IDs/${restaurantId}/menu.json`), fetch(`IDs/${restaurantId}/menuTypes.json`).catch(() => ({ ok: false }))]);
+    const menu = menuRes.ok ? await menuRes.json() : { categories: [] };
+    const settings = typesRes.ok ? await typesRes.json() : {};
+
+    menuData = {}; categories = [];
+    (menu.categories || []).forEach(cat => {
       categories.push(cat.name);
-      menuData[cat.name] = cat.items.map(item => ({
-        name: item.name,
-        price: item.price,
-        image: item.imagePath,
-        description: item.description || '',
-        allergens: item.allergens || [],
-        isNew: item.featured || false,
-        visible: item.visible !== false,
-        menuType: item.menuType || [],
-        customizable: item.customizable || false,
-        customizationGroup: item.customizationGroup || null
+      menuData[cat.name] = (cat.items || []).map(i => ({
+        name: i.name, price: i.price, image: i.imagePath, description: i.description || '', allergens: i.allergens || [],
+        isNew: i.featured || false, visible: i.visible !== false, menuType: i.menuType || [],
+        customizable: i.customizable || false, customizationGroup: i.customizationGroup || null
       }));
     });
-    
+
     menuTypes = (settings.menuTypes || []).map(t => ({
-      id: t.id,
-      name: t.name,
-      coperto: t.copertoPrice || 0,
-      methods: t.checkoutMethods || { table: true, delivery: true, takeaway: true, show: true },
-      visible: t.visibility !== false,
-      icon: t.icon || 1  // AGGIUNTO QUESTA RIGA
+      id: t.id, name: t.name, coperto: t.copertoPrice || 0, visible: t.visibility !== false, icon: t.icon || 1,
+      methods: t.checkoutMethods || { table: true, delivery: true, takeaway: true, show: true }
     }));
-    
-    if (!menuTypes.some(t => t.id === 'default')) {
-      menuTypes.unshift({
-        id: 'default',
-        name: 'Menu Intero',
-        coperto: 0,
-        methods: { table: true, delivery: true, takeaway: true, show: true },
-        visible: true,
-        icon: 1  // AGGIUNTO QUESTA RIGA
-      });
-    }
-    
-    render();
-  } catch (err) {
-    console.error('Load error:', err);
-    render();
-  }
+    if (!menuTypes.some(t => t.id === 'default'))
+      menuTypes.unshift({ id: 'default', name: 'Menu Intero', coperto: 0, visible: true, icon: 1, methods: { table: true, delivery: true, takeaway: true, show: true } });
+  } catch (err) { console.error('Load error:', err); }
+  render();
 }
 
 // ===== RENDER =====
 function render() {
-  renderMenuTypes();
-  renderFilter();
-  renderCategories();
+  renderTypes(); renderFilter(); renderCats();
+  const items = Object.values(menuData).flat();
+  $('stats').textContent = `${categories.length} categorie · ${items.length} elementi · ${items.filter(i => i.visible === false).length} nascosti`;
+  $('view-grid').setAttribute('aria-pressed', view === 'grid'); $('view-list').setAttribute('aria-pressed', view === 'list');
+  $('toggle-all').innerHTML = categories.length && categories.every(c => collapsed.has(c)) ? I.expand + '<span>Espandi</span>' : I.collapse + '<span>Comprimi</span>';
 }
 
-function renderMenuTypes() {
-  const container = document.getElementById('menu-types-cards');
-  if (!container) return;
-  
-  container.innerHTML = menuTypes.length ? menuTypes.map((t, i) => `
-    <div class="group-card" onclick="openEditMenuTypePopup(${i})" style="cursor: pointer;">
-      <div class="group-card-header">
-        <h3>${t.name}</h3>
-      </div>
-      <p class="group-sections">ID: ${t.id}</p>
-    </div>
-  `).join('') : '<p class="no-groups-message">Nessun tipo di menu</p>';
-}
-
-async function openEditMenuTypePopup(idx) {
-  const type = menuTypes[idx];
-  const methods = type.methods || { table: true };
-
-  menuIconIndex = type.icon || 1;
-  updateMenuIconDisplay();
-
-  document.getElementById('editing-menu-type-id').value = idx;
-  document.getElementById('menu-type-name-edit').value = type.name;
-  document.getElementById('menu-type-coperto-edit').value = type.coperto || 0;
-
-  document.getElementById('edit-method-table').checked = methods.table !== false;
-  document.getElementById('edit-method-delivery').checked = methods.delivery !== false;
-  document.getElementById('edit-method-takeaway').checked = methods.takeaway !== false;
-  document.getElementById('edit-method-show').checked = methods.show !== false;
-  document.getElementById('menu-type-visibility-edit').checked = type.visible !== false;
-
-  const canEnableDelivery = await checkDeliverySettings();
-  updateDeliveryCheckboxState('edit-method-delivery', canEnableDelivery);
-
-  // Mostra/nascondi correttamente il coperto
-  const copertoForm = document.querySelector('#edit-menu-type-popup #coperto-form');
-  const isTableEnabled = methods.table !== false;
-
-  copertoForm.style.display = isTableEnabled ? 'block' : 'none';
-  if (!isTableEnabled) {
-    copertoForm.querySelector('input').value = 0;
-  }
-
-  const deleteBtn = document.querySelector('#edit-menu-type-popup .btn-danger');
-  if (deleteBtn) {
-    deleteBtn.style.display = type.id === 'default' ? 'none' : 'inline-block';
-  }
-
-  document.getElementById('edit-menu-type-popup').classList.remove('hidden');
-}
-
-function closeEditMenuTypePopup() {
-  document.getElementById('edit-menu-type-popup').classList.add('hidden');
-}
-
-async function saveMenuTypeChanges() {
-  const idx = parseInt(document.getElementById('editing-menu-type-id').value);
-  const name = document.getElementById('menu-type-name-edit').value.trim();
-  const coperto = parseFloat(document.getElementById('menu-type-coperto-edit').value) || 0;
-  
-  if (!name) return notify('Nome obbligatorio', 'error');
-  
-  menuTypes[idx] = {
-    ...menuTypes[idx],
-    name,
-    coperto: parseFloat(coperto.toFixed(2)),
-    methods: {
-      table: document.getElementById('edit-method-table').checked,
-      delivery: document.getElementById('edit-method-delivery').checked,
-      takeaway: document.getElementById('edit-method-takeaway').checked,
-      show: document.getElementById('edit-method-show').checked
-    },
-    visible: document.getElementById('menu-type-visibility-edit').checked,
-    icon: menuIconIndex  // AGGIUNTO: Salva l'icona corrente
-  };
-  
-  await saveSettings();
-  closeEditMenuTypePopup();
-  render();
-  notify('Tipo menu aggiornato!');
-}
-
-async function deleteMenuTypeFromPopup() {
-  const idx = parseInt(document.getElementById('editing-menu-type-id').value);
-  const type = menuTypes[idx];
-  
-  if (type.id === 'default') {
-    notify('Il menu default può essere solo nascosto', 'error');
-    return;
-  }
-  
-  const inUse = Object.values(menuData).flat().some(item => item.menuType?.includes(type.id));
-  
-  if (inUse && !confirm(`"${type.name}" è in uso. Eliminare comunque?`)) return;
-  
-  menuTypes.splice(idx, 1);
-  await saveSettings();
-  closeEditMenuTypePopup();
-  render();
-  notify('Tipo menu eliminato');
-}
-
-function deleteMenuTypeFromCard(idx) {
-  const type = menuTypes[idx];
-  
-  if (type.id === 'default') {
-    notify('Il menu default può essere solo nascosto', 'error');
-    return;
-  }
-  
-  const inUse = Object.values(menuData).flat().some(item => item.menuType?.includes(type.id));
-  
-  if (inUse && !confirm(`"${type.name}" è in uso. Eliminare comunque?`)) return;
-  
-  menuTypes.splice(idx, 1);
-  saveSettings();
-  render();
-  notify('Tipo menu eliminato');
+function renderTypes() {
+  $('types-count').textContent = menuTypes.length;
+  $('menu-types-cards').innerHTML = menuTypes.map((t, i) => {
+    const n = Object.values(menuData).flat().filter(it => it.menuType?.includes(t.id)).length;
+    return `<button class="chip ${t.id === 'default' ? 'main' : ''} ${t.visible ? '' : 'off'}" data-act="type-edit" data-i="${i}" title="ID: ${esc(t.id)}${t.visible ? '' : ' · non visibile'}">
+      <img src="img/menu_icons/${t.icon || 1}.png" alt=""><span>${esc(t.name)}</span><small>${n}</small></button>`;
+  }).join('') + `<button class="chip add" data-act="type-new">${I.plus}Nuovo</button>`;
 }
 
 function renderFilter() {
-  const select = document.getElementById('menu-type-filter');
-  if (!select) return;
-  
-  const defaultMenu = menuTypes.find(t => t.id === 'default');
-  const otherMenus = menuTypes.filter(t => t.id !== 'default');
-  
-  let options = '';
-  if (defaultMenu) {
-    options += `<option value="default" ${filterType === 'default' || !filterType ? 'selected' : ''}>${defaultMenu.name}</option>`;
-  }
-  options += otherMenus.map(t => 
-    `<option value="${t.id}" ${filterType === t.id ? 'selected' : ''}>${t.name}</option>`
-  ).join('');
-  
-  select.innerHTML = options;
+  const sorted = [...menuTypes.filter(t => t.id === 'default'), ...menuTypes.filter(t => t.id !== 'default')];
+  $('menu-type-filter').innerHTML = sorted.map(t => `<option value="${esc(t.id)}" ${(filterType || 'default') === t.id ? 'selected' : ''}>${esc(t.name)}</option>`).join('');
 }
 
-function renderCategories() {
-  const container = document.getElementById('menu-sections');
-  container.innerHTML = '';
-  
+function visibleItems(cat) {
+  return (menuData[cat] || []).map((item, i) => ({ item, i })).filter(({ item }) =>
+    (!filterType || item.menuType?.includes(filterType)) &&
+    (!query || `${item.name} ${item.description}`.toLowerCase().includes(query)));
+}
+
+function renderCats() {
+  const box = $('menu-sections'), filtering = filterType || query;
+  box.className = `menu-sections ${view === 'list' ? 'list-view' : ''}`;
   if (!categories.length) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <h2>Menu vuoto</h2>
-        <p>Aggiungi una categoria</p>
-        <button class="btn-primary" onclick="addCategory()">+ Aggiungi nuova Categoria</button>
-      </div>`;
+    box.innerHTML = `<div class="empty"><h2>Menu vuoto</h2><p>Inizia aggiungendo una categoria</p><button class="btn-primary" data-act="add-cat">+ Aggiungi categoria</button></div>`;
     return;
   }
-  
-  let visible = 0;
-  categories.forEach((cat, idx) => {
-    const items = (menuData[cat] || []).filter(item => 
-      !filterType || (item.menuType && item.menuType.includes(filterType))
-    );
-    
-    if (!items.length && filterType) return;
-    visible++;
-    
-    const section = document.createElement('div');
-    section.className = 'category-section';
-    section.innerHTML = `
-      <div class="category-header">
-        <h2 class="category-title">${cat}</h2>
-        <div>
-          <button class="delete-category-btn" onclick="deleteCategory('${cat}')" title="Elimina">
-            <img src="img/delete.png">
-          </button>
-          <button class="visibility-category-btn" onclick="toggleCategoryVisibility('${cat}')" title="Visibilità categoria">
-            <img src="img/eye.png">
-          </button>
-          <button class="edit-category-btn" onclick="openEditCategoryPopup('${cat}')" title="Modifica">
-            <img src="img/edit.png">
-          </button>
-          <button class="add-item-btn" onclick="openPopup(null, '${cat}')" title="Aggiungi">+</button>
+  const html = categories.map(cat => {
+    const total = (menuData[cat] || []).length, vis = visibleItems(cat);
+    if (filtering && !vis.length) return '';
+    const hid = allHidden(cat);
+    return `<section class="cat ${query || !collapsed.has(cat) ? '' : 'collapsed'}" data-cat="${esc(cat)}">
+      <header class="cat-head">
+        <span class="chev">${I.chev}</span><h2 class="cat-title">${esc(cat)}</h2>
+        <span class="count">${filtering ? vis.length + '/' : ''}${total}</span>${hid ? '<span class="tag t-hid">Nascosta</span>' : ''}
+        <div class="cat-actions">
+          <button class="btn-primary btn-sm" data-act="cat-add" title="Aggiungi elemento">${I.plus}<span>Elemento</span></button>
+          <button class="icon-btn" data-act="cat-vis" title="${hid ? 'Mostra' : 'Nascondi'} categoria">${hid ? I.eyeOff : I.eye}</button>
+          <button class="icon-btn" data-act="cat-menu" title="Altre azioni">${I.more}</button>
         </div>
-      </div>
-      <div class="menu-items-grid">${items.map((item, i) => createCard(item, cat, i)).join('')}</div>
-    `;
-    container.appendChild(section);
-  });
-  
-  if (filterType && !visible) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <h2>Nessun risultato</h2>
-        <button class="btn-secondary" onclick="clearFilter()">Rimuovi Filtro</button>
-      </div>`;
-  } else {
-    const btn = document.createElement('button');
-    btn.className = 'btn-primary';
-    btn.textContent = '+ Aggiungi nuova Categoria';
-    btn.onclick = addCategory;
-    btn.style.cssText = 'margin: 2rem auto; display: block;';
-    container.appendChild(btn);
-  }
+      </header>
+      <div class="cat-body">${vis.length ? `<div class="grid">${vis.map(v => card(v.item, v.i)).join('')}</div>` : '<p class="muted">Nessun elemento: usa “Elemento” per aggiungerne uno.</p>'}</div>
+    </section>`;
+  }).join('');
+  box.innerHTML = html || `<div class="empty"><h2>Nessun risultato</h2><button class="btn-secondary" data-act="clear-filter">Azzera filtri</button></div>`;
 }
 
-function createCard(item, cat, idx) {
-  const realIdx = menuData[cat].indexOf(item);
-
-  const badges = [];
-  if (item.isNew) badges.push(`<span class="badge item-new" title="Novità">Novità</span>`);
-  if (item.customizationGroup) badges.push(`<span class="badge item-group" title="Gruppo ${item.customizationGroup}">${item.customizationGroup}</span>`);
-  if (item.visible === true) badges.push(`<span class="badge item-shown" title="Elemento visibile">Visibile</span>`);
-  if (item.visible === false) badges.push(`<span class="badge item-hidden" title="Elemento nascosto">Nascosto</span>`);
-
-  const badgeRow = badges.length ? `<div class="badges-row">${badges.join('')}</div>` : '';
-
-  return `
-    <div class="menu-item-card" onclick="openPopup(${realIdx}, '${cat}')" style="cursor: pointer; position: relative;">
-      ${badgeRow}
-      
-      <div class="item-header">
-        <div class="item-info">
-          <h3 class="item-name">${item.name}</h3>
-          <p class="item-price">€${(item.price || 0).toFixed(2)}</p>
-        </div>
-      </div>
-
-      <img class="item-image" src="${item.image || 'img/placeholder.png'}" alt="${item.name || ''}" onerror="this.src='img/placeholder.png'">
-      <p class="item-description">${item.description || ''}</p>
-
-      <div class="item-allergens">
-        ${(item.allergens || []).map(a => `<img class="allergen-icon" src="img/allergeni/${a}.png" alt="${allergens[a] || ''}" title="${allergens[a] || ''}">`).join('')}
+function card(it, i) {
+  const price = it.price > 0 ? `€${it.price.toFixed(2)}` : it.customizable ? 'Su scelta' : '€0.00';
+  return `<article class="item ${it.visible === false ? 'hid' : ''}" data-i="${i}">
+    <img class="thumb" src="${esc(it.image || 'img/placeholder.png')}" alt="" loading="lazy">
+    <div class="meta">
+      <div class="name" title="${esc(it.name)}">${esc(it.name)}</div>
+      ${it.description ? `<div class="desc">${esc(it.description).replace(/\n+/g, ' · ')}</div>` : ''}
+      <div class="tags">
+        ${it.isNew ? '<span class="tag t-new">Novità</span>' : ''}
+        ${it.customizationGroup ? `<span class="tag t-grp" title="Gruppo ${esc(it.customizationGroup)}">Gr. ${esc(it.customizationGroup)}</span>` : ''}
+        ${it.visible === false ? '<span class="tag t-hid">Nascosto</span>' : ''}
+        ${(it.allergens || []).map(a => `<img class="al" src="img/allergeni/${esc(a)}.png" alt="" title="${esc(allergens[a] || '')}">`).join('')}
       </div>
     </div>
-  `;
+    <div class="price">${price}</div>
+    <div class="quick">
+      <button class="icon-btn sm" data-act="item-vis" title="${it.visible === false ? 'Mostra' : 'Nascondi'}">${it.visible === false ? I.eyeOff : I.eye}</button>
+      <button class="icon-btn sm" data-act="item-dup" title="Duplica">${I.copy}</button>
+    </div>
+  </article>`;
 }
 
-// ===== POPUP =====
+function toggleCollapse(sec) {
+  const c = sec.dataset.cat;
+  collapsed.has(c) ? collapsed.delete(c) : collapsed.add(c);
+  sec.classList.toggle('collapsed', collapsed.has(c));
+  store.set(`gm_collapsed_${restaurantId}`, [...collapsed]);
+  render();
+}
+
+// ===== ELEMENTO =====
+function setPreview(src) {
+  const p = $('product-preview');
+  src ? p.src = src : p.removeAttribute('src');
+  p.classList.toggle('hidden', !src);
+  $('product-placeholder').classList.toggle('hidden', !!src);
+  $('remove-image').classList.toggle('hidden', !src);
+}
+
 function openPopup(idx, cat) {
-  const isNew = idx === null;
-  currentEdit = { item: isNew ? null : menuData[cat][idx], category: cat, index: idx };
-  
-  document.getElementById('popup-title').textContent = isNew ? `Aggiungi a "${cat}"` : `Modifica "${currentEdit.item.name}"`;
-  document.getElementById('delete-item').classList.toggle('hidden', isNew);
-  
-  document.getElementById('item-name').value = currentEdit.item?.name || '';
-  document.getElementById('item-price').value = currentEdit.item?.price !== undefined ? currentEdit.item.price : '';
-  document.getElementById('item-description').value = currentEdit.item?.description || '';
-  document.getElementById('item-new').checked = currentEdit.item?.isNew || false;
-  document.getElementById('hide-item').checked = currentEdit.item?.visible === false;
-  
-  document.getElementById('item-customizable').checked = currentEdit.item?.customizable || false;
-  document.getElementById('customization-group-id').value = currentEdit.item?.customizationGroup || '';
-  updateCustomizationVisibility();
-  updateGroupIdButton();
-  
-  const preview = document.getElementById('product-preview');
-  const placeholder = document.getElementById('product-placeholder');
-  if (currentEdit.item?.image) {
-    preview.src = currentEdit.item.image;
-    preview.classList.remove('hidden');
-    placeholder.classList.add('hidden');
-  } else {
-    preview.classList.add('hidden');
-    placeholder.classList.remove('hidden');
-  }
-  
-  uploadedImage = null;
-  
-  const grid = document.getElementById('allergens-grid');
-  grid.innerHTML = Object.entries(allergens).map(([id, name]) => `
-    <div class="allergen-item ${currentEdit.item?.allergens?.includes(id) ? 'selected' : ''}" 
-         data-allergen-id="${id}" 
-         onclick="this.classList.toggle('selected')">
-      <img src="img/allergeni/${id}.png" alt="${name}">
-      <span>${name}</span>
-    </div>
-  `).join('');
-  
-  const typesContainer = document.getElementById('menu-types-checkboxes');
-  typesContainer.innerHTML = menuTypes.length ? menuTypes.map(t => {
-    const isDefault = t.id === 'default';
-    const isChecked = isDefault || (currentEdit.item?.menuType?.includes(t.id) || false);
-    
-    return `
-      <label class="checkbox-label">
-        <input type="checkbox" 
-               value="${t.id}" 
-               ${isChecked ? 'checked' : ''} 
-               ${isDefault ? 'disabled onclick="return false;"' : ''}>
-        <span class="checkmark"></span>
-        <span class="checkbox-text">${t.name}</span>
-      </label>
-    `;
-  }).join('') : '<p style="opacity: 0.7;">Nessun tipo menu disponibile</p>';
-  
-  const scrollY = window.pageYOffset;
-  document.body.dataset.scrollY = scrollY;
-  document.body.style.top = `-${scrollY}px`;
-  document.body.classList.add('popup-open');
-  document.getElementById('edit-popup').classList.remove('hidden');
+  const it = idx === null ? null : menuData[cat][idx];
+  currentEdit = { category: cat, index: idx }; uploadedImage = null;
+
+  $('popup-title').textContent = it ? `Modifica “${it.name}”` : `Nuovo elemento in “${cat}”`;
+  $('delete-item').classList.toggle('hidden', !it);
+  $('item-name').value = it?.name || '';
+  $('item-price').value = it?.price ?? '';
+  $('item-description').value = it?.description || '';
+  $('item-new').checked = !!it?.isNew;
+  $('hide-item').checked = it?.visible === false;
+  $('item-customizable').checked = !!it?.customizable;
+  $('customization-group-id').value = it?.customizationGroup || '';
+  updateCustomizationVisibility(); updateGroupIdButton();
+  setPreview(it?.image || '');
+
+  $('allergens-grid').innerHTML = Object.entries(allergens).map(([id, name]) => `
+    <div class="allergen-item ${it?.allergens?.includes(id) ? 'selected' : ''}" data-allergen-id="${id}">
+      <img src="img/allergeni/${id}.png" alt=""><span title="${name}">${name}</span></div>`).join('');
+
+  $('menu-types-checkboxes').innerHTML = menuTypes.map(t => {
+    const isDef = t.id === 'default', on = isDef || it?.menuType?.includes(t.id) || (!it && filterType === t.id);
+    return `<label class="checkbox-label"><input type="checkbox" value="${esc(t.id)}" ${on ? 'checked' : ''} ${isDef ? 'disabled' : ''}>
+      <span class="checkmark"></span><span class="checkbox-text">${esc(t.name)}</span></label>`;
+  }).join('');
+
+  $('edit-popup').querySelector('.management-popup').scrollTop = 0;
+  show('edit-popup');
 }
 
-function closePopup() {
-  document.getElementById('edit-popup').classList.add('hidden');
-  
-  const scrollY = parseInt(document.body.dataset.scrollY || '0');
-  document.body.classList.remove('popup-open');
-  document.body.style.top = '';
-  delete document.body.dataset.scrollY;
-  window.scrollTo(0, scrollY);
-  
-  currentEdit = { item: null, category: null, index: null };
-}
+function closeItemPopup() { hide('edit-popup'); currentEdit = { category: null, index: null }; }
 
-async function saveItem() {
-  const name = document.getElementById('item-name').value.trim();
-  const price = parseFloat(document.getElementById('item-price').value);
-  const description = document.getElementById('item-description').value.trim();
-  
+function saveItem() {
+  const name = $('item-name').value.trim(), price = parseFloat($('item-price').value);
   if (!name) return notify('Nome obbligatorio', 'error');
   if (isNaN(price) || price < 0) return notify('Prezzo non valido', 'error');
-  
-  const isDupe = Object.entries(menuData).some(([cat, items]) => 
-    items.some((item, idx) => {
-      if (cat === currentEdit.category && idx === currentEdit.index) {
-        return false;
-      }
-      return item.name.toLowerCase() === name.toLowerCase();
-    })
-  );
-  if (isDupe) return notify(`"${name}" già esistente`, 'error');
-  
-  const selectedAllergens = [...document.querySelectorAll('.allergen-item.selected')].map(el => el.dataset.allergenId);
-  
-  const selectedTypes = [...document.querySelectorAll('#menu-types-checkboxes input:checked:not([disabled])')].map(cb => cb.value);
-  
-  if (!selectedTypes.includes('default')) {
-    selectedTypes.push('default');
-  }
-  
-  let image = '';
-  const preview = document.getElementById('product-preview');
-  if (!preview.classList.contains('hidden')) {
-    image = uploadedImage || currentEdit.item?.image || '';
-  }
 
-  const isCustomizable = document.getElementById('item-customizable').checked;
-  const itemData = {
-    name,
-    price,
-    image,
-    description,
-    allergens: selectedAllergens,
-    isNew: document.getElementById('item-new').checked,
-    visible: !document.getElementById('hide-item').checked,
-    menuType: selectedTypes,
-    customizable: isCustomizable,
-    customizationGroup: isCustomizable ? (document.getElementById('customization-group-id').value || null) : null
+  const dupe = Object.entries(menuData).some(([cat, items]) => items.some((it, i) =>
+    !(cat === currentEdit.category && i === currentEdit.index) && it.name.toLowerCase() === name.toLowerCase()));
+  if (dupe) return notify(`"${name}" già esistente`, 'error');
+
+  const old = currentEdit.index === null ? null : menuData[currentEdit.category][currentEdit.index];
+  const types = [...document.querySelectorAll('#menu-types-checkboxes input:checked:not(:disabled)')].map(c => c.value);
+  const custom = $('item-customizable').checked;
+  const data = {
+    name, price,
+    image: $('product-preview').classList.contains('hidden') ? '' : uploadedImage || old?.image || '',
+    description: $('item-description').value.trim(),
+    allergens: [...document.querySelectorAll('.allergen-item.selected')].map(e => e.dataset.allergenId),
+    isNew: $('item-new').checked, visible: !$('hide-item').checked,
+    menuType: ['default', ...types], customizable: custom,
+    customizationGroup: custom ? $('customization-group-id').value || null : null
   };
-  
-  if (currentEdit.index === null) {
-    menuData[currentEdit.category].push(itemData);
-  } else {
-    menuData[currentEdit.category][currentEdit.index] = itemData;
+  old ? menuData[currentEdit.category][currentEdit.index] = data : menuData[currentEdit.category].push(data);
+
+  setDirty(true); closeItemPopup(); render(); notify('Elemento salvato, ricorda di salvare il menu');
+}
+
+async function deleteItem() {
+  if (!(await ask('Eliminare questo elemento?', 'L’operazione non può essere annullata.'))) return;
+  const { category: cat, index } = currentEdit;
+  menuData[cat].splice(index, 1);
+  if (!menuData[cat].length && await ask('Categoria vuota', `"${cat}" è vuota. Vuoi rimuoverla?`, 'Rimuovi')) {
+    delete menuData[cat]; categories = categories.filter(c => c !== cat);
   }
-  
-  hasChanges = true;
-  closePopup();
-  render();
-  notify('Salvato! Ricorda di salvare il menu');
+  setDirty(true); closeItemPopup(); render(); notify('Elemento eliminato');
 }
 
-function showConfirm() {
-  document.getElementById('delete-popup').classList.remove('hidden');
-}
-
-function hideConfirm() {
-  document.getElementById('delete-popup').classList.add('hidden');
-}
-
-function deleteItem() {
-  if (!currentEdit.item) return;
-  
-  menuData[currentEdit.category].splice(currentEdit.index, 1);
-  
-  if (!menuData[currentEdit.category].length) {
-    if (confirm(`"${currentEdit.category}" è vuota. Rimuoverla?`)) {
-      delete menuData[currentEdit.category];
-      categories = categories.filter(c => c !== currentEdit.category);
-    }
-  }
-  
-  hasChanges = true;
-  hideConfirm();
-  closePopup();
-  render();
-  notify('Eliminato! Ricorda di salvare');
-}
-
-// ===== IMAGE =====
+// ===== IMMAGINE =====
 const IMG_SIZE = 256;
-
-// Quadrato trasparente 256x256, immagine centrata e adattata (mai tagliata).
-// Riduzione a gradini (max 2x per volta) per mantenere la qualità, con pochi MB di RAM.
+// Quadrato trasparente 256x256, immagine centrata e mai tagliata; riduzione a gradini per qualità e poca RAM.
 async function toSquareBlob(file) {
-  let src = await createImageBitmap(file);
-  const scale = Math.min(IMG_SIZE / src.width, IMG_SIZE / src.height);
-  const w = Math.max(1, Math.round(src.width * scale));
-  const h = Math.max(1, Math.round(src.height * scale));
-
+  const src = await createImageBitmap(file);
+  const s = Math.min(IMG_SIZE / src.width, IMG_SIZE / src.height);
+  const w = Math.max(1, Math.round(src.width * s)), h = Math.max(1, Math.round(src.height * s));
   let cur = src, cw = src.width, ch = src.height;
   while (cw / 2 > w && ch / 2 > h) {
-    const nw = Math.ceil(cw / 2), nh = Math.ceil(ch / 2);
     const tmp = document.createElement('canvas');
-    tmp.width = nw; tmp.height = nh;
-    const t = tmp.getContext('2d');
-    t.imageSmoothingQuality = 'high';
-    t.drawImage(cur, 0, 0, nw, nh);
-    if (cur.close) cur.close();
-    cur = tmp; cw = nw; ch = nh;
+    tmp.width = Math.ceil(cw / 2); tmp.height = Math.ceil(ch / 2);
+    const t = tmp.getContext('2d'); t.imageSmoothingQuality = 'high'; t.drawImage(cur, 0, 0, tmp.width, tmp.height);
+    cur.close?.(); cur = tmp; cw = tmp.width; ch = tmp.height;
   }
-
-  const out = document.createElement('canvas');
-  out.width = out.height = IMG_SIZE;
-  const ctx = out.getContext('2d');
-  ctx.imageSmoothingQuality = 'high';
+  const out = document.createElement('canvas'); out.width = out.height = IMG_SIZE;
+  const ctx = out.getContext('2d'); ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(cur, Math.round((IMG_SIZE - w) / 2), Math.round((IMG_SIZE - h) / 2), w, h);
-  if (cur.close) cur.close();
-
-  // WebP con trasparenza (leggero); se il browser non lo supporta ripiega su PNG
+  cur.close?.();
   const blob = await new Promise(r => out.toBlob(r, 'image/webp', 0.92));
-  out.width = out.height = 0; // libera memoria
+  out.width = out.height = 0;
   return blob;
 }
 
 async function processImage(file) {
+  const area = $('product-image-area');
+  area.classList.add('busy');
   try {
     const blob = await toSquareBlob(file);
     const ext = blob.type === 'image/webp' ? 'webp' : 'png';
-    const baseName = file.name.replace(/\.[^.]+$/, '');
-    const base64 = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-
+    const base64 = await new Promise((ok, ko) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = ko; r.readAsDataURL(blob); });
+    const old = currentEdit.index === null ? null : menuData[currentEdit.category][currentEdit.index];
     const res = await fetch('/upload-image', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fileName: `${baseName}.${ext}`,
-        fileData: base64,
-        restaurantId,
-        oldImageUrl: currentEdit.item?.image
-      })
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fileName: `${file.name.replace(/\.[^.]+$/, '')}.${ext}`, fileData: base64, restaurantId, oldImageUrl: old?.image })
     });
-    
-    const result = await res.json();
-    if (!result.success) throw new Error(result.message);
-    
-    uploadedImage = result.imageUrl || `img/${result.fileName}`;
-    
-    const preview = document.getElementById('product-preview');
-    preview.src = base64;
-    preview.classList.remove('hidden');
-    document.getElementById('product-placeholder').classList.add('hidden');
-    
-  } catch (err) {
-    console.error(err);
-    notify('Errore caricamento immagine', 'error');
-  }
+    const r = await res.json();
+    if (!r.success) throw new Error(r.message);
+    uploadedImage = r.imageUrl || `img/${r.fileName}`;
+    setPreview(base64);
+  } catch (err) { console.error(err); notify('Errore caricamento immagine', 'error'); }
+  area.classList.remove('busy'); $('product-image').value = '';
 }
 
-// ===== CATEGORIES =====
-function addCategory() {
-  const name = prompt('Nome categoria:');
-  if (!name?.trim()) return;
-  
-  if (categories.includes(name.trim())) return notify('Categoria esistente', 'error');
-  
-  categories.push(name.trim());
-  menuData[name.trim()] = [];
-  hasChanges = true;
-  render();
-  notify('Categoria aggiunta!');
+// ===== CATEGORIE =====
+function openCatPopup(cat) {
+  editingCat = cat;
+  editingItems = cat ? menuData[cat].map(i => ({ ...i, menuType: [...(i.menuType || [])] })) : [];
+  $('cat-title').textContent = cat ? 'Modifica categoria' : 'Nuova categoria';
+  $('cat-name').value = cat || '';
+  $('cat-extra').classList.toggle('hidden', !cat);
+  renderCatTypes(); renderRows(); show('edit-category-popup');
+  if (!cat) $('cat-name').focus();
 }
 
-function renameCategory(oldName) {
-  const newName = prompt('Nuovo nome:', oldName);
-  if (!newName?.trim() || newName === oldName) return;
-  
-  if (categories.includes(newName)) return notify('Nome già esistente', 'error');
-  
-  menuData[newName] = menuData[oldName];
-  delete menuData[oldName];
-  categories[categories.indexOf(oldName)] = newName;
-  hasChanges = true;
-  render();
-  notify('Categoria rinominata!');
+function renderCatTypes() {
+  $('category-menu-types').innerHTML = menuTypes.filter(t => t.visible).map(t => {
+    const n = editingItems.filter(i => i.menuType?.includes(t.id)).length, isDef = t.id === 'default';
+    return `<label class="checkbox-label"><input type="checkbox" value="${esc(t.id)}" ${n ? 'checked' : ''} ${isDef ? 'disabled' : ''}>
+      <span class="checkmark ${!isDef && n && n < editingItems.length ? 'incomplete' : ''}"></span><span class="checkbox-text">${esc(t.name)}</span></label>`;
+  }).join('');
 }
 
-function deleteCategory(name) {
-  if (!confirm(`Eliminare "${name}" e tutti gli elementi?`)) return;
-  
-  delete menuData[name];
-  categories = categories.filter(c => c !== name);
-  hasChanges = true;
-  render();
-  notify('Categoria eliminata!');
+function toggleCatType(id, on) {
+  editingItems.forEach(i => { i.menuType = on ? [...new Set([...(i.menuType || []), id])] : (i.menuType || []).filter(t => t !== id); });
+  renderCatTypes();
 }
 
-// ===== MENU TYPES =====
-async function openAddMenuTypePopup() {
-  menuIconIndex = 1;
-  document.getElementById('new-menu-type-name').value = '';
-  document.getElementById('new-menu-type-coperto').value = '0.00';
-  document.getElementById('new-method-table').checked = false;
-  document.getElementById('new-method-delivery').checked = false;
-  document.getElementById('new-method-takeaway').checked = false;
-  document.getElementById('new-method-show').checked = false;
-  document.getElementById('new-menu-type-visibility').checked = true;
-
-  updateMenuIconDisplay();
-
-  const canEnableDelivery = await checkDeliverySettings();
-  updateDeliveryCheckboxState('new-method-delivery', canEnableDelivery);
-
-  // Mostra/nascondi correttamente il coperto
-  const copertoForm = document.querySelector('#add-menu-type-popup #coperto-form');
-  const isTableEnabled = document.getElementById('new-method-table').checked;
-
-  copertoForm.style.display = isTableEnabled ? 'block' : 'none';
-  if (!isTableEnabled) {
-    copertoForm.querySelector('input').value = 0;
-  }
-
-  document.getElementById('add-menu-type-popup').classList.remove('hidden');
+function renderRows() {
+  $('draggable-items-list').innerHTML = editingItems.map((it, i) => `
+    <div class="row" draggable="true" data-i="${i}">
+      <div class="arrows">
+        <button class="reorder-btn" data-act="row-up" ${i === 0 ? 'disabled' : ''}><img src="img/arrow-up.png" alt="Su"></button>
+        <button class="reorder-btn" data-act="row-down" ${i === editingItems.length - 1 ? 'disabled' : ''}><img src="img/arrow-down.png" alt="Giù"></button>
+      </div>
+      <img src="${esc(it.image || 'img/placeholder.png')}" alt="">
+      <div class="info"><b>${esc(it.name)}</b><small>€${(it.price || 0).toFixed(2)}</small></div>
+    </div>`).join('') || '<p class="muted">Nessun elemento</p>';
 }
 
-
-// ===== AGGIUNGI QUESTA FUNZIONE PER CAMBIARE ICONA NELLA POPUP DI CREAZIONE =====
-
-function changeNewMenuIcon(direction) {
-  if (direction === 'next') {
-    menuIconIndex = menuIconIndex === 20 ? 1 : menuIconIndex + 1;
-  } else if (direction === 'prev') {
-    menuIconIndex = menuIconIndex === 1 ? 20 : menuIconIndex - 1;
-  }
-  updateNewMenuIconDisplay();
+function moveRow(i, d) {
+  const j = i + d;
+  if (j < 0 || j >= editingItems.length) return;
+  [editingItems[i], editingItems[j]] = [editingItems[j], editingItems[i]];
+  renderRows();
 }
 
-function updateNewMenuIconDisplay() {
-  const img = document.getElementById('new-menu-icon-preview');
-  if (img) {
-    img.src = `img/menu_icons/${menuIconIndex}.png`;
-    img.onerror = () => { img.src = 'img/placeholder.png'; };
-  }
-}
-
-function updateMenuIconDisplay() {
-  const img = document.getElementById('menu-icon-preview');
-  img.src = `img/menu_icons/${menuIconIndex}.png`;
-  img.onerror = () => { img.src = 'img/placeholder.png'; };
-}
-
-function changeMenuIcon(direction) {
-  if (direction === 'next') {
-    menuIconIndex = menuIconIndex === 20 ? 1 : menuIconIndex + 1;
-  } else if (direction === 'prev') {
-    menuIconIndex = menuIconIndex === 1 ? 20 : menuIconIndex - 1;
-  }
-  updateMenuIconDisplay();
-}
-
-function closeAddMenuTypePopup() {
-  document.getElementById('add-menu-type-popup').classList.add('hidden');
-}
-
-function autoGenerateId() {
-  const name = document.getElementById('new-menu-type-name').value.trim();
-  const id = name.toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '');
-  document.getElementById('new-menu-type-id').value = id;
-}
-
-async function createNewMenuType() {
-  const name = document.getElementById('new-menu-type-name').value.trim();
-  const coperto = parseFloat(document.getElementById('new-menu-type-coperto').value) || 0;
-  
+function saveCategory() {
+  const name = $('cat-name').value.trim();
   if (!name) return notify('Nome obbligatorio', 'error');
-  
-  const id = name.toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '');
-  
+  if (name !== editingCat && categories.includes(name)) return notify('Categoria già esistente', 'error');
+
+  if (editingCat === null) {
+    categories.push(name); menuData[name] = [];
+  } else {
+    if (name !== editingCat) {
+      menuData[name] = menuData[editingCat]; delete menuData[editingCat];
+      categories[categories.indexOf(editingCat)] = name;
+      if (collapsed.delete(editingCat)) collapsed.add(name);
+    }
+    menuData[name] = editingItems;
+  }
+  setDirty(true); hide('edit-category-popup'); render();
+  notify(editingCat === null ? 'Categoria aggiunta' : 'Categoria aggiornata');
+}
+
+async function deleteCategory(name) {
+  if (!(await ask(`Eliminare “${name}”?`, `Verranno eliminati anche i ${menuData[name].length} elementi contenuti.`))) return;
+  delete menuData[name]; categories = categories.filter(c => c !== name);
+  setDirty(true); render(); notify('Categoria eliminata');
+}
+
+function moveCat(name, d) {
+  const i = categories.indexOf(name), j = i + d;
+  if (j < 0 || j >= categories.length) return;
+  [categories[i], categories[j]] = [categories[j], categories[i]];
+  setDirty(true); render();
+}
+
+function toggleCategoryVisibility(cat) {
+  const items = menuData[cat] || [], hideAll = items.some(i => i.visible !== false);
+  items.forEach(i => i.visible = !hideAll);
+  setDirty(true); render();
+  notify(hideAll ? `Categoria "${cat}" nascosta per TUTTI i menu` : `Categoria "${cat}" mostrata per TUTTI i menu`);
+}
+
+// ===== TIPI DI MENU =====
+async function checkDeliverySettings() {
+  try {
+    const r = await fetch(`IDs/${restaurantId}/settings.json`);
+    if (!r.ok) return false;
+    const { restaurant: a = {}, delivery: d = {} } = await r.json();
+    return [a.name, a.street, a.number, a.cap, a.phone, a.email, d.radius, d.costType, d.prepTime].every(v => v != null && v !== '');
+  } catch { return false; }
+}
+
+function lockDelivery(canEnable) {
+  const cb = $('m-delivery');
+  cb.disabled = !canEnable; if (!canEnable) cb.checked = false;
+  cb.closest('.checkbox-label').classList.toggle('locked', !canEnable);
+  cb.closest('.checkbox-label').title = canEnable ? '' : 'Configura le impostazioni di consegna per abilitare';
+}
+
+function syncCoperto() {
+  const on = $('m-table').checked;
+  $('type-coperto-form').style.display = on ? '' : 'none';
+  if (!on) $('type-coperto').value = '0.00';
+}
+
+function setIcon(n) { iconIdx = n; $('type-icon').src = `img/menu_icons/${n}.png`; }
+
+async function openTypePopup(idx) {
+  editingTypeIdx = idx;
+  const t = idx === null ? { name: '', coperto: 0, visible: true, icon: 1, methods: {} } : menuTypes[idx];
+  $('type-title').textContent = idx === null ? 'Nuovo tipo menu' : 'Modifica tipo menu';
+  setIcon(t.icon || 1);
+  $('type-name').value = t.name;
+  $('type-coperto').value = (t.coperto || 0).toFixed(2);
+  METHODS.forEach(m => $('m-' + m).checked = idx !== null && t.methods?.[m] !== false);
+  $('type-visible').checked = t.visible !== false;
+  $('type-delete').classList.toggle('hidden', idx === null || t.id === 'default');
+  syncCoperto(); show('type-popup');
+  lockDelivery(await checkDeliverySettings());
+}
+
+async function saveType() {
+  const name = $('type-name').value.trim();
+  if (!name) return notify('Nome obbligatorio', 'error');
+  const isNew = editingTypeIdx === null;
+  const id = isNew ? name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') : menuTypes[editingTypeIdx].id;
   if (!id) return notify('Nome non valido', 'error');
-  if (menuTypes.some(t => t.id === id)) return notify('Un menu con questo nome esiste già', 'error');
-  
-  menuTypes.push({
-    id,
-    name,
-    coperto: parseFloat(coperto.toFixed(2)),
-    methods: {
-      table: document.getElementById('new-method-table').checked,
-      delivery: document.getElementById('new-method-delivery').checked,
-      takeaway: document.getElementById('new-method-takeaway').checked,
-      show: document.getElementById('new-method-show').checked
-    },
-    visible: document.getElementById('new-menu-type-visibility').checked,
-    icon: menuIconIndex // Salva l'indice dell'icona
-  });
-  
-  await saveSettings();
-  closeAddMenuTypePopup();
-  render();
-  notify('Tipo menu aggiunto!');
+  if (isNew && menuTypes.some(t => t.id === id)) return notify('Un menu con questo nome esiste già', 'error');
 
-  Object.keys(menuData).forEach(cat => {
-    menuData[cat].forEach(item => {
-      if (!item.menuType) item.menuType = [];
-      if (!item.menuType.includes(id)) {
-        item.menuType.push(id);
-      }
-    });
-  });
+  const type = {
+    id, name, icon: iconIdx, visible: $('type-visible').checked,
+    coperto: parseFloat((parseFloat($('type-coperto').value) || 0).toFixed(2)),
+    methods: Object.fromEntries(METHODS.map(m => [m, $('m-' + m).checked]))
+  };
+  if (isNew) {
+    menuTypes.push(type);
+    Object.values(menuData).flat().forEach(it => { it.menuType = [...new Set([...(it.menuType || []), id])]; });
+    setDirty(true);
+  } else menuTypes[editingTypeIdx] = type;
+
+  await saveSettings(); hide('type-popup'); render();
+  notify(isNew ? 'Tipo menu aggiunto' : 'Tipo menu aggiornato');
 }
 
-async function deleteMenuType(idx) {
-  const type = menuTypes[idx];
-  const inUse = Object.values(menuData).flat().some(item => item.menuType?.includes(type.id));
-  
-  if (inUse && !confirm(`"${type.name}" è in uso. Eliminare comunque?`)) return;
-  
-  menuTypes.splice(idx, 1);
-  await saveSettings();
-  render();
-  notify('Tipo menu eliminato');
+async function deleteType() {
+  const t = menuTypes[editingTypeIdx];
+  if (t.id === 'default') return notify('Il menu default può essere solo nascosto', 'error');
+  const items = Object.values(menuData).flat(), inUse = items.some(i => i.menuType?.includes(t.id));
+  if (!(await ask(`Eliminare “${t.name}”?`, inUse ? 'Questo menu è in uso: verrà rimosso da tutti gli elementi.' : 'L’operazione non può essere annullata.'))) return;
+  items.forEach(i => { i.menuType = (i.menuType || []).filter(x => x !== t.id); });
+  if (inUse) setDirty(true);
+  menuTypes.splice(editingTypeIdx, 1);
+  if (filterType === t.id) filterType = '';
+  await saveSettings(); hide('type-popup'); render(); notify('Tipo menu eliminato');
 }
 
-// ===== SAVE =====
+// ===== SALVATAGGIO =====
+async function post(url, body) {
+  const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const r = await res.json();
+  if (!r.success) throw new Error(r.message);
+}
+
 async function saveMenu() {
   try {
-    const menuJson = {
-      categories: categories.map(cat => ({
-        name: cat,
-        items: (menuData[cat] || []).map(item => ({
-          name: item.name,
-          price: item.price,
-          imagePath: item.image,
-          description: item.description,
-          allergens: item.allergens,
-          featured: item.isNew,
-          visible: item.visible,
-          menuType: item.menuType?.length ? item.menuType : undefined,
-          customizable: item.customizable || false,
-          customizationGroup: item.customizationGroup || null
+    await post(`/save-menu/${restaurantId}`, {
+      menuContent: {
+        categories: categories.map(cat => ({
+          name: cat,
+          items: (menuData[cat] || []).map(i => ({
+            name: i.name, price: i.price, imagePath: i.image, description: i.description, allergens: i.allergens,
+            featured: i.isNew, visible: i.visible, menuType: i.menuType?.length ? i.menuType : undefined,
+            customizable: i.customizable || false, customizationGroup: i.customizationGroup || null
+          }))
         }))
-      }))
-    };
-    
-    const res = await fetch(`/save-menu/${restaurantId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ menuContent: menuJson })
+      }
     });
-    
-    const result = await res.json();
-    if (!result.success) throw new Error(result.message);
-    
-    hasChanges = false;
-    notify('Menu salvato!');
-  } catch (err) {
-    console.error(err);
-    notify('Errore salvataggio', 'error');
-  }
+    setDirty(false); notify('Menu salvato!');
+  } catch (err) { console.error(err); notify('Errore salvataggio', 'error'); }
 }
 
 async function saveSettings() {
   try {
-    const res = await fetch(`/save-menu-types/${restaurantId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        menuTypes: menuTypes.map(t => ({
-          id: t.id,
-          name: t.name,
-          copertoPrice: t.coperto || 0,
-          checkoutMethods: t.methods || { table: true, delivery: true, takeaway: true, show: true },
-          visibility: t.visible !== false,
-          icon: t.icon || 1  // AGGIUNTO: Salva l'icona
-        }))
-      })
+    await post(`/save-menu-types/${restaurantId}`, {
+      menuTypes: menuTypes.map(t => ({
+        id: t.id, name: t.name, copertoPrice: t.coperto || 0, visibility: t.visible !== false, icon: t.icon || 1,
+        checkoutMethods: t.methods || { table: true, delivery: true, takeaway: true, show: true }
+      }))
     });
-    
-    const result = await res.json();
-    if (!result.success) throw new Error('Errore salvataggio menu types');
     return true;
-  } catch (err) {
-    console.error(err);
-    notify('Errore salvataggio menu types', 'error');
-    return false;
-  }
+  } catch (err) { console.error(err); notify('Errore salvataggio tipi menu', 'error'); return false; }
 }
-
-// ===== UTILS =====
-function clearFilter() {
-  filterType = '';
-  document.getElementById('menu-type-filter').value = '';
-  render();
-}
-
-let notifyTimeout;
-function notify(msg, type = 'success') {
-  const el = document.getElementById('save-notification');
-  clearTimeout(notifyTimeout);
-  el.className = `notification ${type}`;
-  el.textContent = msg;
-  void el.offsetWidth;
-  el.classList.add('show');
-  notifyTimeout = setTimeout(() => el.classList.remove('show'), 3000);
-}
-
-function closeEditCategoryPopup() {
-  document.getElementById('edit-category-popup').classList.add('hidden');
-}
-
-function saveCategoryChanges() {
-  const newName = document.getElementById('category-name-input').value.trim();
-  if (!newName) return notify('Nome obbligatorio', 'error');
-  
-  if (newName !== editingCategoryName) {
-    if (categories.includes(newName)) return notify('Nome esistente', 'error');
-    menuData[newName] = menuData[editingCategoryName];
-    delete menuData[editingCategoryName];
-    categories[categories.indexOf(editingCategoryName)] = newName;
-  }
-  
-  menuData[newName] = editingCategoryItems;
-  hasChanges = true;
-  closeEditCategoryPopup();
-  render();
-  notify('Categoria aggiornata!');
-}
-
-function toggleCategoryVisibility(cat) {
-  const items = menuData[cat] || [];
-  const shouldHide = items.some(item => item.visible !== false);
-
-  items.forEach(item => {
-    item.visible = !shouldHide;
-  });
-
-  hasChanges = true;
-  notify(shouldHide ? `Categoria "${cat}" nascosta per TUTTI i menu` : `Categoria "${cat}" mostrata per TUTTI i menu`);
-  render();
-}
-
-function openEditCategoryPopup(cat) {
-  editingCategoryName = cat;
-  editingCategoryItems = [...menuData[cat]];
-  document.getElementById('category-name-input').value = cat;
-  renderCategoryMenuTypes(); 
-  renderDraggableItems();
-  document.getElementById('edit-category-popup').classList.remove('hidden');
-}
-
-function renderCategoryMenuTypes() {
-  const container = document.getElementById('category-menu-types');
-  const visibleMenuTypes = menuTypes.filter(t => t.visible !== false);
-
-  if (!container.children.length) {
-    container.innerHTML = visibleMenuTypes.map(t => `
-      <label class="checkbox-label ${t.id === "default" ? "disabled" : ""}">
-        <input type="checkbox" value="${t.id}" ${t.id === "default" ? "disabled" : ""}>
-        <span class="checkmark"></span>
-        <span class="checkbox-text">${t.name}</span>
-      </label>
-    `).join('');
-  }
-
-  visibleMenuTypes.forEach(t => {
-    const label = container.querySelector(`input[value="${t.id}"]`)?.closest(".checkbox-label");
-    if (!label) return;
-
-    const items = editingCategoryItems;
-    const itemsWithType = items.filter(item => item.menuType?.includes(t.id)).length;
-    const allHaveType = itemsWithType === items.length;
-    const noneHaveType = itemsWithType === 0;
-    const isChecked = !noneHaveType;
-    const isIncomplete = t.id !== "default" && isChecked && !allHaveType;
-
-    const checkbox = label.querySelector("input");
-    const mark = label.querySelector(".checkmark");
-
-    checkbox.checked = isChecked;
-    mark.classList.toggle("incomplete", isIncomplete);
-
-    if (t.id !== "default") {
-      checkbox.disabled = false;
-      checkbox.onchange = e => toggleCategoryMenuType(t.id, e.target.checked);
-    } else {
-      checkbox.disabled = true;
-    }
-  });
-}
-
-function toggleCategoryMenuType(typeId, isChecked) {
-  editingCategoryItems = editingCategoryItems.map(item => {
-    if (!item.menuType) item.menuType = [];
-
-    if (isChecked) {
-      if (!item.menuType.includes(typeId)) {
-        item.menuType.push(typeId);
-      }
-    } else {
-      item.menuType = item.menuType.filter(t => t !== typeId);
-    }
-
-    return item;
-  });
-
-  renderCategoryMenuTypes();
-  renderDraggableItems();
-}
-
-function renderDraggableItems() {
-  const container = document.getElementById('draggable-items-list');
-  container.innerHTML = editingCategoryItems.map((item, i) => `
-    <div class="draggable-item" data-index="${i}">
-      <div class="reorder-buttons">
-        <button class="reorder-btn" onclick="moveItemUp(${i})" ${i === 0 ? 'disabled' : ''}>
-          <img src="img/arrow-up.png">
-        </button>
-        <button class="reorder-btn" onclick="moveItemDown(${i})" ${i === editingCategoryItems.length - 1 ? 'disabled' : ''}>
-          <img src="img/arrow-down.png">
-        </button>
-      </div>
-      <img src="${item.image || 'img/placeholder.png'}" class="draggable-item-image">
-      <div class="draggable-item-info">
-        <p class="draggable-item-name">${item.name}</p>
-        <p class="draggable-item-price">€${item.price.toFixed(2)}</p>
-      </div>
-    </div>
-  `).join('');
-}
-
-function moveItemUp(i) {
-  if (i === 0) return;
-  [editingCategoryItems[i], editingCategoryItems[i-1]] = [editingCategoryItems[i-1], editingCategoryItems[i]];
-  renderDraggableItems();
-}
-
-function moveItemDown(i) {
-  if (i === editingCategoryItems.length - 1) return;
-  [editingCategoryItems[i], editingCategoryItems[i+1]] = [editingCategoryItems[i+1], editingCategoryItems[i]];
-  renderDraggableItems();
-}
-
-// Expose for HTML
-window.addCategory = addCategory;
-window.renameCategory = renameCategory;
-window.deleteCategory = deleteCategory;
-window.openPopup = openPopup;
-window.deleteMenuType = deleteMenuType;
-window.openAddMenuTypePopup = openAddMenuTypePopup;
-window.closeAddMenuTypePopup = closeAddMenuTypePopup;
-window.createNewMenuType = createNewMenuType;
-window.clearFilter = clearFilter;
-window.openEditCategoryPopup = openEditCategoryPopup;
-window.moveItemUp = moveItemUp;
-window.moveItemDown = moveItemDown;
-window.saveCategoryChanges = saveCategoryChanges;
-window.openEditMenuTypePopup = openEditMenuTypePopup;
-window.closeEditMenuTypePopup = closeEditMenuTypePopup;
-window.saveMenuTypeChanges = saveMenuTypeChanges;
-window.deleteMenuTypeFromPopup = deleteMenuTypeFromPopup;
-window.deleteMenuTypeFromCard = deleteMenuTypeFromCard;
-window.autoGenerateId = autoGenerateId;
-window.toggleCategoryVisibility = toggleCategoryVisibility;
-window.changeMenuIcon = changeMenuIcon;
-window.updateMenuIconDisplay = updateMenuIconDisplay;
-window.changeNewMenuIcon = changeNewMenuIcon;
-window.updateNewMenuIconDisplay = updateNewMenuIconDisplay;
