@@ -116,7 +116,6 @@
 
         <div class="checkbox-section">
           <label class="checkbox-label"><input type="checkbox" id="item-new"><span class="checkmark"></span><span class="checkbox-text">Segna come "Novità"</span></label>
-          <label class="checkbox-label"><input type="checkbox" id="hide-item"><span class="checkmark"></span><span class="checkbox-text">Nascondi elemento</span></label>
         </div>
 
         <div class="customization-field">
@@ -129,8 +128,8 @@
           <div class="customization-controls" id="customization-controls" style="display:none;">
             <input type="hidden" id="customization-group-id" />
             <button type="button" class="btn-group-id-display" id="btn-group-id-display" onclick="openCurrentGroupOrSelection()">-</button>
-            <button type="button" class="btn-choose-group" onclick="openGroupSelectionPopup()">Scegli Gruppo</button>
-            <button type="button" class="btn-add-group" onclick="createNewGroup()">+ Aggiungi Gruppo</button>
+            <button type="button" class="btn-secondary btn-sm btn-choose-group" onclick="openGroupSelectionPopup()">Scegli Gruppo</button>
+            <button type="button" class="btn-primary btn-sm btn-add-group" onclick="createNewGroup()">+ Aggiungi Gruppo</button>
           </div>
         </div>
 
@@ -165,15 +164,6 @@
             <div class="form-field"><label for="type-name">Nome visualizzato</label><input type="text" id="type-name" placeholder="Es. Menu Bar"></div>
             <div class="form-field" id="type-coperto-form"><label for="type-coperto">Prezzo coperto (€)</label><input type="number" id="type-coperto" step="0.01" min="0" value="0.00"></div>
           </div>
-        </div>
-
-        <p class="lbl">Metodi di checkout disponibili</p>
-        <p class="hint">Deseleziona tutti per usare il menu in sola visualizzazione.</p>
-        <div class="chk-grid">
-          <label class="checkbox-label need-premium"><input type="checkbox" id="m-table"><span class="checkmark"></span><span class="checkbox-text">Servizio al tavolo</span></label>
-          <label class="checkbox-label need-pro"><input type="checkbox" id="m-delivery"><span class="checkmark"></span><span class="checkbox-text">Consegna a domicilio</span></label>
-          <label class="checkbox-label need-premium"><input type="checkbox" id="m-takeaway"><span class="checkmark"></span><span class="checkbox-text">Take away</span></label>
-          <label class="checkbox-label need-hobby"><input type="checkbox" id="m-show"><span class="checkmark"></span><span class="checkbox-text">Mostra ordine</span></label>
         </div>
 
         <label class="checkbox-label" style="margin-top:14px">
@@ -218,28 +208,28 @@
 
   <!-- POPUP SELEZIONE GRUPPO -->
   <div class="popup hidden" id="group-selection-popup">
-    <div class="group-selection-content">
-      <div class="group-selection-header">
-        <h2>Seleziona Gruppo Customizzazione</h2>
-        <button class="close-popup" onclick="closeGroupSelectionPopup()"><img src="img/x.png" alt="Chiudi"></button>
-      </div>
-      <div id="groups-list"></div>
-      <div class="create-new-group-section">
-        <button class="btn-create-new-group" onclick="createNewGroup()">+ Crea Nuovo Gruppo</button>
+    <div class="popup-content management-popup narrow">
+      <button class="close-popup" onclick="closeGroupSelectionPopup()"><img src="img/x.png" alt="Chiudi"></button>
+      <h2 class="popup-title">Seleziona gruppo</h2>
+      <div class="pop-body"><div id="groups-list"></div></div>
+      <div class="popup-actions">
+        <button class="btn-save btn-create-new-group" onclick="createNewGroup()">+ Crea nuovo gruppo</button>
       </div>
     </div>
   </div>
 
   <!-- POPUP GESTIONE CUSTOMIZZAZIONE -->
   <div class="popup hidden" id="customization-popup">
-    <div class="customization-popup-content">
+    <div class="popup-content management-popup">
       <button class="close-popup" onclick="closeCustomizationGroupPopup()"><img src="img/x.png" alt="Chiudi"></button>
-      <h2 id="customization-popup-title">Crea Nuovo Gruppo Customizzazione</h2>
-      <div id="customization-sections-container"></div>
-      <button class="add-section-btn" onclick="addCustomizationSection()">+ Aggiungi Nuova Sezione</button>
-      <div class="customization-popup-actions">
+      <h2 class="popup-title" id="customization-popup-title">Crea nuovo gruppo</h2>
+      <div class="pop-body">
+        <div id="customization-sections-container"></div>
+        <button class="btn-primary add-section-btn" onclick="addCustomizationSection()">+ Aggiungi nuova sezione</button>
+      </div>
+      <div class="popup-actions">
         <button class="btn-secondary" onclick="closeCustomizationGroupPopup()">Annulla</button>
-        <button class="btn-save-customization" onclick="saveCustomizationGroup()">Salva Gruppo</button>
+        <button class="btn-save" onclick="saveCustomizationGroup()">Salva gruppo</button>
       </div>
     </div>
   </div>

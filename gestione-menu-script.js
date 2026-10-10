@@ -11,7 +11,7 @@ let currentEdit = { category: null, index: null }, uploadedImage = null, hasChan
 let filterType = '', query = '', view = 'grid', collapsed = new Set();
 let editingCat = null, editingItems = [], editingTypeIdx = null, iconIdx = 1, dragFrom = null;
 
-const METHODS = ['table', 'delivery', 'takeaway', 'show'];
+const VIEW_ONLY = { table: false, delivery: false, takeaway: false, show: false };
 const allergens = {
   "1": "No Glutine", "2": "No Lattosio", "3": "Soia", "4": "Latte", "5": "Uova", "6": "Pesce", "7": "Glutine", "8": "Arachidi",
   "9": "Frutta a guscio", "10": "Semi di sesamo", "11": "Sedano", "12": "Senape", "13": "Anidride solforosa", "14": "Crostacei", "15": "Lupino", "16": "Molluschi"
@@ -41,7 +41,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   $('search').oninput = e => { query = e.target.value.trim().toLowerCase(); render(); };
   $('menu-type-filter').onchange = e => { filterType = e.target.value === 'default' ? '' : e.target.value; render(); };
-  $('m-table').onchange = syncCoperto;
   $('category-menu-types').onchange = e => toggleCatType(e.target.value, e.target.checked);
   $('allergens-grid').onclick = e => e.target.closest('.allergen-item')?.classList.toggle('selected');
 
@@ -80,15 +79,6 @@ function onClick(e) {
   if (t) { const a = t.dataset.act; if (a !== 'ctx' && a !== 'cat-menu') hideCtx(); return actions[a]?.(t, e); }
   hideCtx();
 
-  const locked = e.target.closest('.checkbox-label.locked');
-  if (locked) {
-    e.preventDefault();
-    return ask('Consegna non configurata', 'Le impostazioni di consegna non sono complete. Vuoi configurarle ora?', 'Configura').then(ok => {
-      if (!ok) return;
-      window.open(`info.html?id=${restaurantId}`, '_blank');
-      addEventListener('focus', async () => lockDelivery(await checkDeliverySettings()), { once: true });
-    });
-  }
   const item = e.target.closest('.item');
   if (item) return openPopup(+item.dataset.i, item.closest('.cat').dataset.cat);
   const head = e.target.closest('.cat-head');
@@ -202,10 +192,10 @@ async function loadMenu() {
 
     menuTypes = (settings.menuTypes || []).map(t => ({
       id: t.id, name: t.name, coperto: t.copertoPrice || 0, visible: t.visibility !== false, icon: t.icon || 1,
-      methods: t.checkoutMethods || { table: true, delivery: true, takeaway: true, show: true }
+      methods: t.checkoutMethods || VIEW_ONLY
     }));
     if (!menuTypes.some(t => t.id === 'default'))
-      menuTypes.unshift({ id: 'default', name: 'Menu Intero', coperto: 0, visible: true, icon: 1, methods: { table: true, delivery: true, takeaway: true, show: true } });
+      menuTypes.unshift({ id: 'default', name: 'Menu Intero', coperto: 0, visible: true, icon: 1, methods: VIEW_ONLY });
   } catch (err) { console.error('Load error:', err); }
   render();
 }
@@ -223,7 +213,7 @@ function renderTypes() {
   $('types-count').textContent = menuTypes.length;
   $('menu-types-cards').innerHTML = menuTypes.map((t, i) => {
     const n = Object.values(menuData).flat().filter(it => it.menuType?.includes(t.id)).length;
-    return `<button class="chip ${t.id === 'default' ? 'main' : ''} ${t.visible ? '' : 'off'}" data-act="type-edit" data-i="${i}" title="ID: ${esc(t.id)}${t.visible ? '' : ' · non visibile'}">
+    return `<button class="chip ${t.visible ? '' : 'off'}" data-act="type-edit" data-i="${i}" title="ID: ${esc(t.id)}${t.visible ? '' : ' · non visibile'}">
       <img src="img/menu_icons/${t.icon || 1}.png" alt=""><span>${esc(t.name)}</span><small>${n}</small></button>`;
   }).join('') + `<button class="chip add" data-act="type-new">${I.plus}Nuovo</button>`;
 }
@@ -314,7 +304,6 @@ function openPopup(idx, cat) {
   $('item-price').value = it?.price ?? '';
   $('item-description').value = it?.description || '';
   $('item-new').checked = !!it?.isNew;
-  $('hide-item').checked = it?.visible === false;
   $('item-customizable').checked = !!it?.customizable;
   $('customization-group-id').value = it?.customizationGroup || '';
   updateCustomizationVisibility(); updateGroupIdButton();
@@ -322,7 +311,7 @@ function openPopup(idx, cat) {
 
   $('allergens-grid').innerHTML = Object.entries(allergens).map(([id, name]) => `
     <div class="allergen-item ${it?.allergens?.includes(id) ? 'selected' : ''}" data-allergen-id="${id}" title="${name}">
-      <img src="img/allergeni/${id}.png" alt="${name}"></div>`).join('');
+      <img src="img/allergeni/${id}.png" alt=""><span>${name}</span></div>`).join('');
 
   $('edit-popup').querySelector('.management-popup').scrollTop = 0;
   show('edit-popup');
@@ -346,7 +335,7 @@ function saveItem() {
     image: $('product-preview').classList.contains('hidden') ? '' : uploadedImage || old?.image || '',
     description: $('item-description').value.trim(),
     allergens: [...document.querySelectorAll('.allergen-item.selected')].map(e => e.dataset.allergenId),
-    isNew: $('item-new').checked, visible: !$('hide-item').checked,
+    isNew: $('item-new').checked, visible: old ? old.visible : true,
     menuType: [...new Set([...(old ? old.menuType || [] : menuTypes.map(t => t.id)), 'default'])], customizable: custom,
     customizationGroup: custom ? $('customization-group-id').value || null : null
   };
@@ -491,42 +480,18 @@ function toggleCategoryVisibility(cat) {
 }
 
 // ===== TIPI DI MENU =====
-async function checkDeliverySettings() {
-  try {
-    const r = await fetch(`IDs/${restaurantId}/settings.json`);
-    if (!r.ok) return false;
-    const { restaurant: a = {}, delivery: d = {} } = await r.json();
-    return [a.name, a.street, a.number, a.cap, a.phone, a.email, d.radius, d.costType, d.prepTime].every(v => v != null && v !== '');
-  } catch { return false; }
-}
-
-function lockDelivery(canEnable) {
-  const cb = $('m-delivery');
-  cb.disabled = !canEnable; if (!canEnable) cb.checked = false;
-  cb.closest('.checkbox-label').classList.toggle('locked', !canEnable);
-  cb.closest('.checkbox-label').title = canEnable ? '' : 'Configura le impostazioni di consegna per abilitare';
-}
-
-function syncCoperto() {
-  const on = $('m-table').checked;
-  $('type-coperto-form').style.display = on ? '' : 'none';
-  if (!on) $('type-coperto').value = '0.00';
-}
-
 function setIcon(n) { iconIdx = n; $('type-icon').src = `img/menu_icons/${n}.png`; }
 
 async function openTypePopup(idx) {
   editingTypeIdx = idx;
-  const t = idx === null ? { name: '', coperto: 0, visible: true, icon: 1, methods: {} } : menuTypes[idx];
+  const t = idx === null ? { name: '', coperto: 0, visible: true, icon: 1 } : menuTypes[idx];
   $('type-title').textContent = idx === null ? 'Nuovo tipo menu' : 'Modifica tipo menu';
   setIcon(t.icon || 1);
   $('type-name').value = t.name;
   $('type-coperto').value = (t.coperto || 0).toFixed(2);
-  METHODS.forEach(m => $('m-' + m).checked = idx !== null && t.methods?.[m] !== false);
   $('type-visible').checked = t.visible !== false;
   $('type-delete').classList.toggle('hidden', idx === null || t.id === 'default');
-  syncCoperto(); show('type-popup');
-  lockDelivery(await checkDeliverySettings());
+  show('type-popup');
 }
 
 async function saveType() {
@@ -540,7 +505,7 @@ async function saveType() {
   const type = {
     id, name, icon: iconIdx, visible: $('type-visible').checked,
     coperto: parseFloat((parseFloat($('type-coperto').value) || 0).toFixed(2)),
-    methods: Object.fromEntries(METHODS.map(m => [m, $('m-' + m).checked]))
+    methods: isNew ? { ...VIEW_ONLY } : menuTypes[editingTypeIdx].methods
   };
   if (isNew) {
     menuTypes.push(type);
@@ -594,7 +559,7 @@ async function saveSettings() {
     await post(`/save-menu-types/${restaurantId}`, {
       menuTypes: menuTypes.map(t => ({
         id: t.id, name: t.name, copertoPrice: t.coperto || 0, visibility: t.visible !== false, icon: t.icon || 1,
-        checkoutMethods: t.methods || { table: true, delivery: true, takeaway: true, show: true }
+        checkoutMethods: t.methods || VIEW_ONLY
       }))
     });
     return true;
