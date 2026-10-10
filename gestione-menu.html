@@ -48,17 +48,21 @@
 
     <!-- TOOLBAR -->
     <div class="toolbar">
-      <label class="search">
-        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="search" type="search" placeholder="Cerca un elemento…" autocomplete="off">
-      </label>
-      <select id="menu-type-filter" class="dropdown" title="Filtra per tipo di menu"></select>
-      <div class="seg">
-        <button class="icon-btn" id="view-grid" data-act="view" data-v="grid" title="Griglia"></button>
-        <button class="icon-btn" id="view-list" data-act="view" data-v="list" title="Lista compatta"></button>
+      <div class="tb-row">
+        <label class="search">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="search" type="search" placeholder="Cerca un elemento…" autocomplete="off">
+        </label>
+        <select id="menu-type-filter" class="dropdown" title="Filtra per tipo di menu"></select>
       </div>
-      <button class="btn-secondary btn-sm" id="toggle-all" data-act="toggle-all"></button>
-      <button class="btn-primary btn-sm" data-act="add-cat">+ Categoria</button>
+      <div class="tb-row">
+        <div class="seg">
+          <button class="icon-btn" id="view-grid" data-act="view" data-v="grid" title="Griglia"></button>
+          <button class="icon-btn" id="view-list" data-act="view" data-v="list" title="Lista compatta"></button>
+        </div>
+        <button class="btn-secondary btn-sm" id="toggle-all" data-act="toggle-all"></button>
+        <button class="btn-primary btn-sm" data-act="add-cat">+ Categoria</button>
+      </div>
     </div>
     <p class="stats" id="stats"></p>
 
@@ -81,60 +85,58 @@
       <button class="close-popup" data-act="close" data-p="edit-popup"><img src="img/x.png" alt="Chiudi"></button>
       <h2 class="popup-title" id="popup-title"></h2>
 
-      <div class="main-form-section">
-        <div class="image-section">
-          <p class="lbl">Immagine</p>
-          <div class="image-upload-area" id="product-image-area">
-            <img id="product-preview" class="image-preview hidden" alt="Anteprima">
-            <div class="upload-placeholder" id="product-placeholder">
-              <img src="img/upload.png" alt=""><span>Trascina o clicca</span>
+      <div class="pop-body">
+        <div class="main-form-section">
+          <div class="image-section">
+            <div class="image-upload-area" id="product-image-area">
+              <img id="product-preview" class="image-preview hidden" alt="Anteprima">
+              <div class="upload-placeholder" id="product-placeholder">
+                <img src="img/upload.png" alt=""><span>Immagine</span>
+              </div>
+              <input type="file" id="product-image" accept="image/*" class="hidden">
             </div>
-            <input type="file" id="product-image" accept="image/*" class="hidden">
+            <button type="button" class="link-btn hidden" id="remove-image" data-act="remove-image">Rimuovi</button>
           </div>
-          <button type="button" class="link-btn hidden" id="remove-image" data-act="remove-image">Rimuovi immagine</button>
-        </div>
-        <div class="text-inputs">
-          <div class="form-field">
-            <label for="item-name">Nome prodotto</label>
-            <input type="text" id="item-name" placeholder="Es. Pizza Margherita">
+          <div class="text-inputs">
+            <div class="form-field">
+              <label for="item-name">Nome prodotto</label>
+              <input type="text" id="item-name" placeholder="Es. Pizza Margherita">
+            </div>
+            <div class="form-field">
+              <label for="item-price">Prezzo (€)</label>
+              <input type="number" id="item-price" step="0.10" inputmode="decimal" placeholder="Es. 6.90">
+            </div>
           </div>
-          <div class="form-field">
-            <label for="item-price">Prezzo (€)</label>
-            <input type="number" id="item-price" step="0.10" inputmode="decimal" placeholder="Es. 6.90">
+        </div>
+
+        <div class="form-field">
+          <label for="item-description">Descrizione (opzionale)</label>
+          <textarea id="item-description" placeholder="Ingredienti separati da virgola (Es. Pomodoro, mozzarella, basilico)"></textarea>
+        </div>
+
+        <div class="checkbox-section">
+          <label class="checkbox-label"><input type="checkbox" id="item-new"><span class="checkmark"></span><span class="checkbox-text">Segna come "Novità"</span></label>
+          <label class="checkbox-label"><input type="checkbox" id="hide-item"><span class="checkmark"></span><span class="checkbox-text">Nascondi elemento</span></label>
+        </div>
+
+        <div class="customization-field">
+          <div class="customization-header">
+            <label class="checkbox-label">
+              <input type="checkbox" id="item-customizable" onchange="updateCustomizationVisibility()">
+              <span class="checkmark"></span><span class="checkbox-text">Prodotto Modificabile</span>
+            </label>
+          </div>
+          <div class="customization-controls" id="customization-controls" style="display:none;">
+            <input type="hidden" id="customization-group-id" />
+            <button type="button" class="btn-group-id-display" id="btn-group-id-display" onclick="openCurrentGroupOrSelection()">-</button>
+            <button type="button" class="btn-choose-group" onclick="openGroupSelectionPopup()">Scegli Gruppo</button>
+            <button type="button" class="btn-add-group" onclick="createNewGroup()">+ Aggiungi Gruppo</button>
           </div>
         </div>
+
+        <p class="lbl">Allergeni</p>
+        <div class="allergens-grid" id="allergens-grid"></div>
       </div>
-
-      <div class="form-field">
-        <label for="item-description">Descrizione (opzionale)</label>
-        <textarea id="item-description" placeholder="Ingredienti separati da virgola (Es. Pomodoro, mozzarella, basilico)"></textarea>
-      </div>
-
-      <div class="checkbox-section">
-        <label class="checkbox-label"><input type="checkbox" id="item-new"><span class="checkmark"></span><span class="checkbox-text">Segna come "Novità"</span></label>
-        <label class="checkbox-label"><input type="checkbox" id="hide-item"><span class="checkmark"></span><span class="checkbox-text">Nascondi elemento</span></label>
-      </div>
-
-      <div class="customization-field">
-        <div class="customization-header">
-          <label class="checkbox-label">
-            <input type="checkbox" id="item-customizable" onchange="updateCustomizationVisibility()">
-            <span class="checkmark"></span><span class="checkbox-text">Prodotto Modificabile</span>
-          </label>
-        </div>
-        <div class="customization-controls" id="customization-controls" style="display:none;">
-          <input type="hidden" id="customization-group-id" />
-          <button type="button" class="btn-group-id-display" id="btn-group-id-display" onclick="openCurrentGroupOrSelection()">-</button>
-          <button type="button" class="btn-choose-group" onclick="openGroupSelectionPopup()">Scegli Gruppo</button>
-          <button type="button" class="btn-add-group" onclick="createNewGroup()">+ Aggiungi Gruppo</button>
-        </div>
-      </div>
-
-      <p class="lbl">Visibile nei menu</p>
-      <div class="checkbox-section" id="menu-types-checkboxes"></div>
-
-      <p class="lbl">Allergeni</p>
-      <div class="allergens-grid" id="allergens-grid"></div>
 
       <div class="popup-actions">
         <button class="btn-danger hidden" id="delete-item" data-act="item-delete">Elimina</button>
@@ -146,36 +148,38 @@
 
   <!-- POPUP TIPO MENU (nuovo / modifica) -->
   <div class="popup hidden" id="type-popup">
-    <div class="customization-popup-content management-popup narrow">
+    <div class="popup-content management-popup narrow">
       <button class="close-popup" data-act="close" data-p="type-popup"><img src="img/x.png" alt="Chiudi"></button>
       <h2 class="popup-title" id="type-title"></h2>
 
-      <div class="icon-row">
-        <div class="icon-pick">
-          <div class="icon-box"><img id="type-icon" src="img/menu_icons/1.png" alt="Icona"></div>
-          <div class="icon-arrows">
-            <button class="reorder-btn" type="button" data-act="type-icon" data-d="prev" title="Precedente"><img src="img/arrow-up.png" alt="Su"></button>
-            <button class="reorder-btn" type="button" data-act="type-icon" data-d="next" title="Successiva"><img src="img/arrow-down.png" alt="Giù"></button>
+      <div class="pop-body">
+        <div class="icon-row">
+          <div class="icon-pick">
+            <div class="icon-box"><img id="type-icon" src="img/menu_icons/1.png" alt="Icona"></div>
+            <div class="icon-arrows">
+              <button class="reorder-btn" type="button" data-act="type-icon" data-d="prev" title="Precedente"><img src="img/arrow-up.png" alt="Su"></button>
+              <button class="reorder-btn" type="button" data-act="type-icon" data-d="next" title="Successiva"><img src="img/arrow-down.png" alt="Giù"></button>
+            </div>
+          </div>
+          <div class="icon-fields">
+            <div class="form-field"><label for="type-name">Nome visualizzato</label><input type="text" id="type-name" placeholder="Es. Menu Bar"></div>
+            <div class="form-field" id="type-coperto-form"><label for="type-coperto">Prezzo coperto (€)</label><input type="number" id="type-coperto" step="0.01" min="0" value="0.00"></div>
           </div>
         </div>
-        <div class="icon-fields">
-          <div class="form-field"><label for="type-name">Nome visualizzato</label><input type="text" id="type-name" placeholder="Es. Menu Bar"></div>
-          <div class="form-field" id="type-coperto-form"><label for="type-coperto">Prezzo coperto (€)</label><input type="number" id="type-coperto" step="0.01" min="0" value="0.00"></div>
+
+        <p class="lbl">Metodi di checkout disponibili</p>
+        <p class="hint">Deseleziona tutti per usare il menu in sola visualizzazione.</p>
+        <div class="chk-grid">
+          <label class="checkbox-label need-premium"><input type="checkbox" id="m-table"><span class="checkmark"></span><span class="checkbox-text">Servizio al tavolo</span></label>
+          <label class="checkbox-label need-pro"><input type="checkbox" id="m-delivery"><span class="checkmark"></span><span class="checkbox-text">Consegna a domicilio</span></label>
+          <label class="checkbox-label need-premium"><input type="checkbox" id="m-takeaway"><span class="checkmark"></span><span class="checkbox-text">Take away</span></label>
+          <label class="checkbox-label need-hobby"><input type="checkbox" id="m-show"><span class="checkmark"></span><span class="checkbox-text">Mostra ordine</span></label>
         </div>
-      </div>
 
-      <p class="lbl">Metodi di checkout disponibili</p>
-      <p class="hint">Deseleziona tutti per usare il menu in sola visualizzazione.</p>
-      <div class="chk-grid">
-        <label class="checkbox-label need-premium"><input type="checkbox" id="m-table"><span class="checkmark"></span><span class="checkbox-text">Servizio al tavolo</span></label>
-        <label class="checkbox-label need-pro"><input type="checkbox" id="m-delivery"><span class="checkmark"></span><span class="checkbox-text">Consegna a domicilio</span></label>
-        <label class="checkbox-label need-premium"><input type="checkbox" id="m-takeaway"><span class="checkmark"></span><span class="checkbox-text">Take away</span></label>
-        <label class="checkbox-label need-hobby"><input type="checkbox" id="m-show"><span class="checkmark"></span><span class="checkbox-text">Mostra ordine</span></label>
+        <label class="checkbox-label" style="margin-top:14px">
+          <input type="checkbox" id="type-visible"><span class="checkmark"></span><span class="checkbox-text">Menu visibile pubblicamente</span>
+        </label>
       </div>
-
-      <label class="checkbox-label" style="margin-top:14px">
-        <input type="checkbox" id="type-visible"><span class="checkmark"></span><span class="checkbox-text">Menu visibile pubblicamente</span>
-      </label>
 
       <div class="popup-actions">
         <button class="btn-danger" id="type-delete" data-act="type-delete">Elimina</button>
@@ -187,20 +191,22 @@
 
   <!-- POPUP CATEGORIA (nuova / modifica) -->
   <div class="popup hidden" id="edit-category-popup">
-    <div class="customization-popup-content management-popup narrow">
+    <div class="popup-content management-popup narrow">
       <button class="close-popup" data-act="close" data-p="edit-category-popup"><img src="img/x.png" alt="Chiudi"></button>
       <h2 class="popup-title" id="cat-title"></h2>
 
-      <div class="form-field">
-        <label for="cat-name">Nome categoria</label>
-        <input type="text" id="cat-name" placeholder="Nome della categoria">
-      </div>
+      <div class="pop-body">
+        <div class="form-field">
+          <label for="cat-name">Nome categoria</label>
+          <input type="text" id="cat-name" placeholder="Nome della categoria">
+        </div>
 
-      <div id="cat-extra">
-        <p class="lbl">Questa categoria appare in</p>
-        <div id="category-menu-types" class="chk-grid"></div>
-        <p class="lbl" style="margin-top:16px">Riordina elementi <span class="hint">(trascina o usa le frecce)</span></p>
-        <div id="draggable-items-list"></div>
+        <div id="cat-extra">
+          <p class="lbl">Questa categoria appare in</p>
+          <div id="category-menu-types" class="chk-grid"></div>
+          <p class="lbl" style="margin-top:16px">Riordina elementi <span class="hint">(trascina o usa le frecce)</span></p>
+          <div id="draggable-items-list"></div>
+        </div>
       </div>
 
       <div class="popup-actions">
@@ -238,7 +244,7 @@
     </div>
   </div>
 
-  <!-- CONFERMA (sostituisce confirm/prompt nativi) -->
+  <!-- CONFERMA -->
   <div class="popup hidden" id="confirm-popup">
     <div class="confirm-box">
       <h3 id="confirm-title"></h3>

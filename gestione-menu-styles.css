@@ -42,7 +42,8 @@ svg.ic { width: 16px; height: 16px; flex-shrink: 0; }
 .search input:focus, .dropdown:focus, .form-field input:focus, .form-field textarea:focus {
   border-color: var(--accent-gold); box-shadow: 0 0 0 3px var(--selected-glow); outline: 0;
 }
-.dropdown { width: auto; cursor: pointer; }
+
+.dropdown { cursor: pointer; }
 .form-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
 .form-field label { font-size: 12px; font-weight: 600; color: var(--text-primary); }
 .form-field textarea { min-height: 64px; max-height: 160px; resize: vertical; line-height: 1.4; }
@@ -67,11 +68,15 @@ svg.ic { width: 16px; height: 16px; flex-shrink: 0; }
 
 /* ===== TOOLBAR ===== */
 .toolbar {
-  position: sticky; top: 0; z-index: 30; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px;
+  position: sticky; top: 0; z-index: 30; display: flex; flex-direction: column; gap: 8px; padding: 8px;
   background: color-mix(in srgb, var(--bg-primary) 86%, transparent); backdrop-filter: blur(10px);
   border: 1px solid var(--card-border); border-radius: var(--r);
 }
-.search { flex: 1 1 220px; position: relative; display: flex; align-items: center; }
+.tb-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.tb-row .search { flex: 4 1 0; min-width: 0; }
+.tb-row .dropdown { flex: 1 1 0; min-width: 0; width: auto; text-overflow: ellipsis; }
+.tb-row .btn-primary { margin-left: auto; }
+.search { position: relative; display: flex; align-items: center; }
 .search .ic { position: absolute; left: 10px; opacity: .55; pointer-events: none; }
 .search input { padding-left: 32px; }
 .seg { display: flex; border: 1px solid var(--btn-secondary); border-radius: 9px; overflow: hidden; }
@@ -150,25 +155,35 @@ svg.ic { width: 16px; height: 16px; flex-shrink: 0; }
 .notification.error { background: #e53e3e; color: #fff; }
 
 /* ===== POPUP ===== */
-.management-popup, .customization-popup-content, .confirm-box { font-size: 14px; }
-.management-popup { width: min(94vw, 720px); max-height: 90vh; overflow-y: auto; text-align: left; position: relative; }
-.management-popup.narrow { width: min(94vw, 520px); }
-.popup-title { font-family: 'Klein-Bold'; font-size: 22px; font-weight: 400; margin: 0 36px 14px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.confirm-box, .customization-popup-content { font-size: 14px; }
+.popup .management-popup {
+  display: flex; flex-direction: column; width: min(94vw, 640px); max-width: none; max-height: 88vh; min-height: 0;
+  padding: 0; overflow: hidden; position: relative; text-align: left; font-size: 14px; line-height: 1.4;
+}
+.popup .management-popup.narrow { width: min(94vw, 480px); }
+.management-popup .close-popup { z-index: 2; }
+.management-popup .popup-title { margin: 0; padding: 18px 52px 10px 20px; flex-shrink: 0; font-family: 'Klein-Bold'; font-size: 20px; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pop-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 4px 20px 14px; }
 .popup-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
 .popup-actions .btn-danger { margin-right: auto; }
+.management-popup > .popup-actions { flex-shrink: 0; margin: 0; padding: 12px 20px; border-top: 1px solid var(--btn-secondary); }
+.management-popup .form-field input, .management-popup .form-field textarea { width: 100%; height: auto; margin: 0; font-size: 13.5px; padding: 8px 10px; }
+.management-popup .form-field input { height: 34px; }
+.management-popup .lbl:first-child { margin-top: 0; }
 
-.main-form-section { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 4px; }
-.image-section { flex: 0 0 112px; }
-.image-section .lbl { margin-top: 0; }
-.image-upload-area { width: 112px; height: 112px; display: flex; align-items: center; justify-content: center; border: 2px dashed var(--btn-secondary); border-radius: 12px; cursor: pointer; overflow: hidden; transition: all .15s; }
+.main-form-section { display: grid; grid-template-columns: 96px 1fr; gap: 14px; align-items: start; margin-bottom: 4px; }
+.image-section { width: 96px; text-align: center; }
+.image-upload-area { width: 96px; height: 96px; display: flex; align-items: center; justify-content: center; border: 2px dashed var(--btn-secondary); border-radius: 12px; cursor: pointer; overflow: hidden; transition: all .15s; }
 .image-upload-area:hover, .image-upload-area.dragover { border-color: var(--accent-gold); background: #91919125; }
 .image-upload-area.busy { opacity: .5; pointer-events: none; }
 .image-preview { max-width: 100%; max-height: 100%; object-fit: contain; }
 .upload-placeholder { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11.5px; text-align: center; opacity: .7; }
 .upload-placeholder img { width: 26px; height: 26px; }
-.text-inputs { flex: 1; min-width: 0; }
 
-.checkbox-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px 16px; margin: 8px 0; }
+.text-inputs { min-width: 0; }
+
+
+.checkbox-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px 16px; margin: 8px 0; }
 .checkbox-label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 .checkbox-label input[type="checkbox"] { display: none; }
 .checkbox-label.locked { opacity: .5; cursor: not-allowed; }
@@ -183,12 +198,11 @@ svg.ic { width: 16px; height: 16px; flex-shrink: 0; }
 .chk-grid .checkbox-label { padding: 8px 10px; border: 1px solid var(--btn-secondary); border-radius: 10px; background: var(--card-bg); }
 .chk-grid .checkbox-label:hover { border-color: var(--accent-gold); }
 
-.allergens-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 6px; }
-.allergen-item { display: flex; align-items: center; gap: 6px; padding: 5px 8px; border: 1px solid var(--btn-secondary); border-radius: 8px; background: var(--pill-bg); cursor: pointer; transition: all .15s; }
+.allergens-grid { display: grid; grid-template-columns: repeat(auto-fill, 44px); gap: 6px; }
+.allergen-item { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; padding: 0; border: 1px solid var(--btn-secondary); border-radius: 10px; background: var(--pill-bg); cursor: pointer; transition: all .15s; }
 .allergen-item:hover { border-color: var(--accent-gold); }
 .allergen-item.selected { background: var(--accent-gold); border-color: var(--accent-gold); box-shadow: 0 0 8px var(--selected-glow); }
-.allergen-item img { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; }
-.allergen-item span { font-size: 11.5px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.allergen-item img { width: 28px; height: 28px; border-radius: 50%; }
 
 .btn-group-id-display { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 0; border-radius: 50%; background: var(--accent-pink); color: #fff; font-weight: 700; cursor: pointer; }
 
@@ -201,7 +215,7 @@ svg.ic { width: 16px; height: 16px; flex-shrink: 0; }
 .icon-fields { flex: 1; min-width: 0; }
 
 /* righe riordino */
-#draggable-items-list { display: flex; flex-direction: column; gap: 6px; max-height: 340px; overflow-y: auto; }
+#draggable-items-list { display: flex; flex-direction: column; gap: 6px; }
 .row { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border: 1px solid var(--btn-secondary); border-radius: 10px; background: var(--card-bg); cursor: grab; }
 .row:hover { border-color: var(--accent-gold); }
 .row img { width: 36px; height: 36px; object-fit: contain; flex-shrink: 0; }
@@ -226,12 +240,13 @@ svg.ic { width: 16px; height: 16px; flex-shrink: 0; }
   .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
   .thumb { height: 72px; }
   .list-view .grid { grid-template-columns: 1fr; }
-  .toolbar .dropdown { flex: 1; min-width: 0; }
   .cat-head { padding: 9px 10px; }
   .cat-body { padding: 2px 10px 10px; }
   .cat-actions .btn-primary span { display: none; }
-  .main-form-section, .icon-row { flex-direction: column; }
-  .image-section { flex-basis: auto; }
+  .icon-row { flex-direction: column; }
+  .pop-body { padding: 4px 14px 12px; }
+  .management-popup .popup-title { padding: 16px 48px 8px 14px; }
+  .management-popup > .popup-actions { padding: 10px 14px; }
   .notification { left: 12px; right: 12px; max-width: none; }
   .savebar { max-width: calc(100vw - 20px); }
 }

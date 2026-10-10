@@ -112,7 +112,6 @@ const actions = {
   discard: async () => { if (await ask('Scartare le modifiche?', 'Le modifiche non salvate andranno perse.', 'Scarta')) { hasChanges = false; setDirty(false); await loadMenu(); } },
 
   'cat-add': t => openPopup(null, catOf(t)),
-  'cat-vis': t => toggleCategoryVisibility(catOf(t)),
   'cat-menu': t => {
     const c = catOf(t), i = categories.indexOf(c), hidden = allHidden(c);
     openCtx(t, [
@@ -257,7 +256,6 @@ function renderCats() {
         <span class="count">${filtering ? vis.length + '/' : ''}${total}</span>${hid ? '<span class="tag t-hid">Nascosta</span>' : ''}
         <div class="cat-actions">
           <button class="btn-primary btn-sm" data-act="cat-add" title="Aggiungi elemento">${I.plus}<span>Elemento</span></button>
-          <button class="icon-btn" data-act="cat-vis" title="${hid ? 'Mostra' : 'Nascondi'} categoria">${hid ? I.eyeOff : I.eye}</button>
           <button class="icon-btn" data-act="cat-menu" title="Altre azioni">${I.more}</button>
         </div>
       </header>
@@ -323,14 +321,8 @@ function openPopup(idx, cat) {
   setPreview(it?.image || '');
 
   $('allergens-grid').innerHTML = Object.entries(allergens).map(([id, name]) => `
-    <div class="allergen-item ${it?.allergens?.includes(id) ? 'selected' : ''}" data-allergen-id="${id}">
-      <img src="img/allergeni/${id}.png" alt=""><span title="${name}">${name}</span></div>`).join('');
-
-  $('menu-types-checkboxes').innerHTML = menuTypes.map(t => {
-    const isDef = t.id === 'default', on = isDef || it?.menuType?.includes(t.id) || (!it && filterType === t.id);
-    return `<label class="checkbox-label"><input type="checkbox" value="${esc(t.id)}" ${on ? 'checked' : ''} ${isDef ? 'disabled' : ''}>
-      <span class="checkmark"></span><span class="checkbox-text">${esc(t.name)}</span></label>`;
-  }).join('');
+    <div class="allergen-item ${it?.allergens?.includes(id) ? 'selected' : ''}" data-allergen-id="${id}" title="${name}">
+      <img src="img/allergeni/${id}.png" alt="${name}"></div>`).join('');
 
   $('edit-popup').querySelector('.management-popup').scrollTop = 0;
   show('edit-popup');
@@ -348,7 +340,6 @@ function saveItem() {
   if (dupe) return notify(`"${name}" già esistente`, 'error');
 
   const old = currentEdit.index === null ? null : menuData[currentEdit.category][currentEdit.index];
-  const types = [...document.querySelectorAll('#menu-types-checkboxes input:checked:not(:disabled)')].map(c => c.value);
   const custom = $('item-customizable').checked;
   const data = {
     name, price,
@@ -356,7 +347,7 @@ function saveItem() {
     description: $('item-description').value.trim(),
     allergens: [...document.querySelectorAll('.allergen-item.selected')].map(e => e.dataset.allergenId),
     isNew: $('item-new').checked, visible: !$('hide-item').checked,
-    menuType: ['default', ...types], customizable: custom,
+    menuType: [...new Set([...(old ? old.menuType || [] : menuTypes.map(t => t.id)), 'default'])], customizable: custom,
     customizationGroup: custom ? $('customization-group-id').value || null : null
   };
   old ? menuData[currentEdit.category][currentEdit.index] = data : menuData[currentEdit.category].push(data);
