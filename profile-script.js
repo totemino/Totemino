@@ -80,14 +80,40 @@ function updatePlanDisplay(plan, userData) {
 }
 
 // Set menu links
+
 function setMenuLinks() {
     document.getElementById('menuCard').href = `gestione-menu.html?id=${restaurantId}`;
-
     document.getElementById('informazioniCard').href = `info.html?id=${restaurantId}`;
     document.getElementById('bannersCard').href = `create-banners.html?id=${restaurantId}`;
     document.getElementById('themeCard').href = `custom-theme.html?id=${restaurantId}`;
 
-    document.getElementById('previewCard').href = `menu-select.html?id=${restaurantId}`;
+    const previewCard = document.getElementById('previewCard');
+    previewCard.href = `menu.html?id=${restaurantId}`;
+
+    previewCard.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        try {
+            const response = await fetch(`IDs/${restaurantId}/menuTypes.json`);
+            if (!response.ok) throw new Error('Errore caricamento menu');
+
+            const data = await response.json();
+            const menus = data.menuTypes || [];
+
+            if (menus.length > 1) {
+                window.location.href = `menu-select.html?id=${restaurantId}`;
+            } else {
+                const type = menus.length === 1
+                    ? `&type=${encodeURIComponent(menus[0].id)}`
+                    : '';
+
+                window.location.href = `menu.html?id=${restaurantId}${type}`;
+            }
+        } catch (error) {
+            console.error('Errore durante il controllo dei menu:', error);
+            alert('Impossibile verificare i menu. Riprova.');
+        }
+    });
 }
 
 // QR Code functionality
