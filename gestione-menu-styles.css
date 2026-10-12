@@ -49,7 +49,7 @@ svg.ic { width: 16px; height: 16px; flex-shrink: 0; }
 .form-field textarea { min-height: 64px; max-height: 160px; resize: vertical; line-height: 1.4; }
 
 /* ===== TIPI MENU ===== */
-.types, .cat { background: var(--bg-primary); border: 1px solid var(--card-border); border-radius: var(--r); }
+.types, .cat { background: var(--bg-primary); border: 1px solid var(--card-border); border-radius: var(--r); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
 .types { padding: 10px 12px; margin-bottom: 10px; }
 .types summary { cursor: pointer; font-weight: 700; font-size: 13px; color: var(--text-accent); list-style: none; display: flex; align-items: center; gap: 8px; }
 .types summary::-webkit-details-marker { display: none; }
@@ -69,6 +69,7 @@ svg.ic { width: 16px; height: 16px; flex-shrink: 0; }
 .toolbar {
   position: sticky; top: 0; z-index: 30; display: flex; flex-direction: column; gap: 8px; padding: 8px;
   background: color-mix(in srgb, var(--bg-primary) 86%, transparent); backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
   border: 1px solid var(--card-border); border-radius: var(--r);
 }
 .tb-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
