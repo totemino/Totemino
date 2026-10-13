@@ -119,7 +119,7 @@ svg.ic { width: 16px; height: 16px; flex-shrink: 0; }
 .item.hid { opacity: .55; }
 .item.hid .thumb { filter: grayscale(1); }
 /* drag & drop (solo mouse) */
-.item[draggable="true"] { cursor: grab; }
+.item[draggable="true"] { cursor: grab; -webkit-user-drag: element !important; user-drag: element !important; }
 .item[draggable="true"] .thumb { -webkit-user-drag: none; user-drag: none; }
 .item.dragging { opacity: .35; }
 .item.drop-before { box-shadow: -4px 0 0 var(--accent-pink); }
@@ -226,7 +226,7 @@ svg.ic { width: 16px; height: 16px; flex-shrink: 0; }
 
 /* righe riordino */
 #draggable-items-list { display: flex; flex-direction: column; gap: 6px; }
-.row { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border: 1px solid var(--btn-secondary); border-radius: 10px; background: var(--card-bg); cursor: grab; }
+.row { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border: 1px solid var(--btn-secondary); border-radius: 10px; background: var(--card-bg); cursor: grab; -webkit-user-drag: element !important; user-drag: element !important; }
 .row:hover { border-color: var(--accent-gold); }
 .row img { width: 36px; height: 36px; object-fit: contain; flex-shrink: 0; }
 .row .info { flex: 1; min-width: 0; font-size: 13px; }
