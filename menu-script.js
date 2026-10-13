@@ -43,6 +43,39 @@ function prependToMap(map, key, value) {
   return newMap;
 }
 
+// ===== DESCRIZIONE → TAG (non interagibili) =====
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// Se la descrizione contiene almeno un ";" ogni ingrediente diventa un tag,
+// altrimenti resta testo normale. Restituisce HTML già "escapato".
+function renderDescription(text) {
+  if (!text) return "";
+
+  const raw = String(text).trim();
+
+  if (!raw.includes(";")) {
+    return escapeHtml(raw.replace(/\\n/g, "\n"));
+  }
+
+  const tags = raw
+    .replace(/^\s*ingredienti\s*:\s*/i, "")   // toglie l'etichetta iniziale "ingredienti:"
+    .replace(/\\n/g, " ")
+    .split(";")
+    .map(t => t.trim())
+    .filter(Boolean);
+
+  return `<span class="desc-tags">${
+    tags.map(t => `<span class="desc-tag">${escapeHtml(t)}</span>`).join("")
+  }</span>`;
+}
+
 // Carica customizations.json
 async function loadCustomizations() {
   try {
@@ -391,15 +424,15 @@ function openCustomizationScreen(item) {
       </div>
       <div class="customization-content">
         ${item.img ? `<img src="${item.img}" alt="${item.displayName}" onerror="this.src='img/placeholder.png'">` : ""}
-        ${item.ingredients && item.ingredients.length > 0 ? 
+        ${item.description && item.description.trim() ?
           `<div style="background: var(--btn-secondary); color: var(--text-primary); padding: 1rem; border-radius: 1rem; margin-bottom: 1rem;">
-            <div style="font-size: 0.9rem; line-height: 1.5; white-space: pre-line; opacity: 0.9;">${item.ingredients.join(", ").replace(/\\n/g, "\n").trim()}</div>
-          </div>` 
+            <div style="font-size: 0.9rem; line-height: 1.5; white-space: pre-line; opacity: 0.9;">${renderDescription(item.description)}</div>
+          </div>`
         : ""}
         <div class="customization-sections"></div>
       </div>
     `;
-    
+
     const scrollY = window.scrollY;
     document.body.style.position = 'fixed';
     document.body.style.top = `-${scrollY}px`;
@@ -432,10 +465,10 @@ function openCustomizationScreen(item) {
     </div>
     <div class="customization-content">
       ${item.img ? `<img src="${item.img}" alt="${item.displayName}" onerror="this.src='img/placeholder.png'">` : ""}
-      ${item.ingredients && item.ingredients.length > 0 ? 
+      ${item.description && item.description.trim() ?
         `<div style="background: var(--btn-secondary); color: var(--text-primary); padding: 1rem; border-radius: 1rem; margin-bottom: 1rem;">
-          <div style="font-size: 0.9rem; line-height: 1.5; white-space: pre-line; opacity: 0.9;">${item.ingredients.join(", ").replace(/\\n/g, "\n").trim()}</div>
-        </div>` 
+          <div style="font-size: 0.9rem; line-height: 1.5; white-space: pre-line; opacity: 0.9;">${renderDescription(item.description)}</div>
+        </div>`
       : ""}
       <div class="customization-sections"></div>
     </div>
@@ -766,7 +799,8 @@ async function loadMenu() {
         displayName: item.name,
         price: item.price,
         img: item.imagePath,
-        ingredients: item.description.split(",").map(i => i.trim()).filter(Boolean),
+        description: item.description || "",
+        ingredients: (item.description || "").split(",").map(i => i.trim()).filter(Boolean),
         allergens: item.allergens.map(a => a.toString()),
         isNew: item.featured,
         customizable: item.customizable || false,
@@ -1059,7 +1093,7 @@ function openPopup(item) {
   popupImg.src = item.img;
   popupImg.onerror = () => { popupImg.src = 'img/placeholder.png'; };
   popupTitle.textContent = item.displayName;
-  popupIngredients.textContent = item.ingredients.join(", ").replace(/\\n/g, '\n');
+  popupIngredients.innerHTML = renderDescription(item.description);
   popupAllergens.innerHTML = "";
   popupControls.innerHTML = "";
   
