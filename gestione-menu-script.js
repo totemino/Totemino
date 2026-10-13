@@ -10,6 +10,9 @@ let menuData = {}, categories = [], menuTypes = [], restaurantId = null;
 let currentEdit = { category: null, index: null }, uploadedImage = null, hasChanges = false;
 let filterType = '', query = '', view = 'grid', collapsed = new Set();
 let editingCat = null, editingItems = [], editingTypeIdx = null, iconIdx = 1, dragFrom = null;
+// Trascinamento card: solo dispositivi con puntatore preciso e hover (mouse), mai su touch/cellulari
+const canDrag = () => matchMedia('(hover: hover) and (pointer: fine)').matches;
+let dragItem = null;
 
 const VIEW_ONLY = { table: false, delivery: false, takeaway: false, show: false };
 const allergens = {
@@ -60,6 +63,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     editingItems.splice(to, 0, editingItems.splice(dragFrom, 1)[0]); dragFrom = null; renderRows();
   };
 
+  initItemDrag();
   document.addEventListener('click', onClick);
   document.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); if (hasChanges) saveMenu(); }
@@ -72,6 +76,67 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadMenu();
   await loadCustomizations();
 });
+
+// ===== DRAG & DROP ELEMENTI (solo mouse) =====
+function initItemDrag() {
+  const box = $('menu-sections');
+  const clearMarks = () => box.querySelectorAll('.drop-before, .drop-after, .drop-target, .dragging')
+    .forEach(el => el.classList.remove('drop-before', 'drop-after', 'drop-target', 'dragging'));
+
+  // Calcola la destinazione sotto il cursore: { cat, index (null = in fondo), after }
+  const target = e => {
+    const sec = e.target.closest?.('.cat');
+    if (!sec) return null;
+    const cat = sec.dataset.cat, el = e.target.closest('.item');
+    if (!el) return { sec, cat, index: null, after: false };
+    const r = el.getBoundingClientRect();
+    const after = view === 'list' ? e.clientY > r.top + r.height / 2 : e.clientX > r.left + r.width / 2;
+    return { sec, el, cat, index: +el.dataset.i, after };
+  };
+
+  box.addEventListener('dragstart', e => {
+    const el = e.target.closest?.('.item');
+    if (!el || !canDrag()) return e.preventDefault();
+    dragItem = { cat: el.closest('.cat').dataset.cat, i: +el.dataset.i };
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', 'menu-item');
+    hideCtx();
+    setTimeout(() => el.classList.add('dragging'));
+  });
+
+  box.addEventListener('dragover', e => {
+    if (!dragItem || !canDrag()) return;
+    const t = target(e);
+    if (!t) return;
+    e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+    box.querySelectorAll('.drop-before, .drop-after, .drop-target').forEach(el => el.classList.remove('drop-before', 'drop-after', 'drop-target'));
+    if (t.el) { if (!(t.cat === dragItem.cat && t.index === dragItem.i)) t.el.classList.add(t.after ? 'drop-after' : 'drop-before'); }
+    else t.sec.classList.add('drop-target');
+  });
+
+  box.addEventListener('drop', e => {
+    if (!dragItem || !canDrag()) return;
+    const t = target(e), from = dragItem;
+    dragItem = null; clearMarks();
+    if (!t) return;
+    e.preventDefault();
+    if (t.el && t.cat === from.cat && t.index === from.i) return;
+
+    const [moved] = menuData[from.cat].splice(from.i, 1);
+    const dest = menuData[t.cat];
+    let pos = dest.length;
+    if (t.index !== null) {
+      pos = t.index;
+      if (t.cat === from.cat && from.i < t.index) pos--;
+      if (t.after) pos++;
+    }
+    dest.splice(pos, 0, moved);
+    setDirty(true); render();
+    notify(t.cat === from.cat ? 'Elemento spostato' : `Elemento spostato in “${t.cat}”`);
+  });
+
+  box.addEventListener('dragend', () => { dragItem = null; clearMarks(); });
+}
 
 // ===== EVENTI (delegati) =====
 function onClick(e) {
@@ -257,7 +322,7 @@ function renderCats() {
 
 function card(it, i) {
   const price = it.price > 0 ? `€${it.price.toFixed(2)}` : it.customizable ? 'Su scelta' : '€0.00';
-  return `<article class="item ${it.visible === false ? 'hid' : ''}" data-i="${i}">
+  return `<article class="item ${it.visible === false ? 'hid' : ''}" data-i="${i}" ${canDrag() ? 'draggable="true"' : ''}>
     <img class="thumb" src="${esc(it.image || 'img/placeholder.png')}" alt="" loading="lazy">
     <div class="meta">
       <div class="name" title="${esc(it.name)}">${esc(it.name)}</div>

@@ -118,6 +118,15 @@ svg.ic { width: 16px; height: 16px; flex-shrink: 0; }
 .al { width: 16px; height: 16px; border-radius: 50%; }
 .item.hid { opacity: .55; }
 .item.hid .thumb { filter: grayscale(1); }
+/* drag & drop (solo mouse) */
+.item[draggable="true"] { cursor: grab; }
+.item[draggable="true"] .thumb { -webkit-user-drag: none; user-drag: none; }
+.item.dragging { opacity: .35; }
+.item.drop-before { box-shadow: -4px 0 0 var(--accent-pink); }
+.item.drop-after { box-shadow: 4px 0 0 var(--accent-pink); }
+.list-view .item.drop-before { box-shadow: 0 -4px 0 var(--accent-pink); }
+.list-view .item.drop-after { box-shadow: 0 4px 0 var(--accent-pink); }
+.cat.drop-target { border-color: var(--accent-pink); box-shadow: 0 0 0 2px var(--accent-pink); }
 .quick { position: absolute; top: 6px; right: 6px; display: flex; gap: 4px; opacity: 0; transition: opacity .15s; }
 .item:hover .quick, .item:focus-within .quick { opacity: 1; }
 @media (hover: none) { .quick { opacity: .95; } }
