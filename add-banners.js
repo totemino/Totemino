@@ -160,31 +160,45 @@
 		closeBanner();
 	  });
 	  
-	  // Verifica se il banner deve essere cliccabile
-	  if (phoneNumber) {
-		banner.addEventListener('click', openLink);
-	  } else {
-		// Banner non cliccabile
-		banner.classList.add('non-clickable');
-	  }
+	  // La cliccabilità dipende dal singolo banner (vedi showBanner)
+	  banner.addEventListener('click', openLink);
 	  
 	  return banner;
 	}
   
-	// Open appropriate link based on conditions
+	const DEFAULT_WA_MESSAGE = "Ciao, voglio prenotare un tavolo per l'evento [evento]";
+
+	// Calcola il link di un banner: stringa vuota = non cliccabile
+	function resolveUrl(banner) {
+	  // Banner vecchi senza "link": comportamento storico (WhatsApp)
+	  const link = banner.link || { type: 'whatsapp' };
+
+	  if (link.type === 'website') {
+		try {
+		  const u = new URL(link.url);
+		  return (u.protocol === 'http:' || u.protocol === 'https:') ? u.href : '';
+		} catch (e) {
+		  return '';
+		}
+	  }
+
+	  if (link.type === 'whatsapp') {
+		if (!phoneNumber) return '';
+		const message = (link.message || DEFAULT_WA_MESSAGE).replaceAll('[evento]', banner.title);
+		return `https://wa.me/+39${phoneNumber}?text=${encodeURIComponent(message)}`;
+	  }
+
+	  return ''; // type "none"
+	}
+
+	// Open appropriate link for the current banner
 	function openLink() {
-	  const currentBanner = banners[currentIndex];
-	  
-	  // Se c'è numero di telefono → WhatsApp
-	  if (phoneNumber) {
-		const message = `Salve, volevo prenotare per la serata di ${currentBanner.title}`;
-		const whatsappUrl = `https://wa.me/+39${phoneNumber}?text=${encodeURIComponent(message)}`;
-		window.open(whatsappUrl, '_blank');
+	  const url = resolveUrl(banners[currentIndex]);
+	  if (!url) {
+		console.log('Banner non cliccabile');
 		return;
 	  }
-	  
-	  // Nessun numero → non fare nulla
-	  console.log('Banner non cliccabile');
+	  window.open(url, '_blank', 'noopener');
 	}
   
 	// Show banner
@@ -199,6 +213,7 @@
 	  bannerElement.querySelector('.totemino-banner-title').style.color = color;
 	  bannerElement.style.setProperty('--pill-color', color);
 	  bannerElement.querySelector('.totemino-banner-subtitle').textContent = banner.subtitle;
+	  bannerElement.classList.toggle('non-clickable', !resolveUrl(banner));
   
 	  bannerElement.classList.remove('hide');
 	  bannerElement.classList.add('show');
