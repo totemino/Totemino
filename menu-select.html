@@ -17,7 +17,7 @@
             const id = urlParams.get('id');
             
             if (!id) {
-                window.location.href = 'index-user.html';
+                window.location.href = 'index.html';
                 return;
             }
             
@@ -40,7 +40,7 @@
                 
                 // Se non ci sono menu alternativi, redirect IMMEDIATO
                 if (availableMenus === 0) {
-                    window.location.href = `index-user.html`;
+                    window.location.href = `index.html`;
                     return;
                 }
                 
@@ -49,7 +49,7 @@
                 
             } catch (error) {
                 console.error('Errore nel caricamento:', error);
-                window.location.href = 'index-user.html';
+                window.location.href = 'index.html';
             }
             
             function checkMenuTypeHasItems(menuData, menuTypeId) {
@@ -145,7 +145,7 @@
     <div class="title">
         <div class="logo_space">
             <img class="theme-img" data-light="img/logo/1_light.png" data-dark="img/logo/1_dark.png" alt="Logo" id="logoSwap">
-            <a href="index-user.html"><h1>Totemino</h1></a>
+            <a href="index.html"><h1>Totemino</h1></a>
         </div>
         <div>
             <button id="theme" class="header-btn" type="button">
