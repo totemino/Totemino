@@ -296,8 +296,20 @@ async function putJSON(env, key, data) {
   });
 }
 
-// Cancella da R2 le immagini che nessun file dati referenzia più
-async function cleanupImages(env, restaurantId) {
+// Nomi dei file immagine citati in un testo JSON ("/IDs/x/img/nome.webp", "img/nome.webp")
+function imageNames(text) {
+  const names = new Set();
+  for (const m of String(text || '').matchAll(/(?:^|["\/])img\/([^"\\/?#]+)"/g)) {
+    try { names.add(decodeURIComponent(m[1])); } catch { names.add(m[1]); }
+  }
+  return names;
+}
+
+// Cancella da R2 le immagini non più referenziate:
+//  - subito: quelle che stavano nel file appena sostituito (previousText) e ora non ci sono più
+//    (foto sostituita, rimossa, elemento o categoria eliminati)
+//  - con margine (IMG_GRACE_MS): quelle orfane mai referenziate (upload abbandonati)
+async function cleanupImages(env, restaurantId, previousText = '') {
   try {
     const prefix = `IDs/${restaurantId}/img/`;
     let haystack = '';
@@ -305,21 +317,28 @@ async function cleanupImages(env, restaurantId) {
       const o = await env.BUCKET.get(`IDs/${restaurantId}/${f}`);
       if (o) haystack += await o.text();
     }
+    const isUsed = (name) => haystack.includes(`/${name}"`) || haystack.includes(`"${name}"`);
 
-    const toDelete = [];
+    const toDelete = new Set();
+
+    for (const name of imageNames(previousText)) {
+      if (!isUsed(name)) toDelete.add(prefix + name);
+    }
+
     let cursor;
     do {
       const page = await env.BUCKET.list({ prefix, cursor });
       for (const o of page.objects) {
         const name = o.key.slice(prefix.length);
         const oldEnough = Date.now() - o.uploaded.getTime() > IMG_GRACE_MS;
-        if (oldEnough && !haystack.includes(name)) toDelete.push(o.key);
+        if (oldEnough && !isUsed(name)) toDelete.add(o.key);
       }
       cursor = page.truncated ? page.cursor : undefined;
     } while (cursor);
 
-    for (let i = 0; i < toDelete.length; i += 1000) {
-      await env.BUCKET.delete(toDelete.slice(i, i + 1000));
+    const keys = [...toDelete];
+    for (let i = 0; i < keys.length; i += 1000) {
+      await env.BUCKET.delete(keys.slice(i, i + 1000));
     }
   } catch (e) {
     console.error('cleanupImages:', e); // la pulizia non deve mai far fallire il salvataggio
@@ -329,6 +348,7 @@ async function cleanupImages(env, restaurantId) {
 async function saveMenu(env, restaurantId, menuContent) {
   const key = `IDs/${restaurantId}/menu.json`;
   const current = await env.BUCKET.get(key);
+  const previousText = current ? await current.text() : '';
 
   if (current) {
     const prefix = `IDs/${restaurantId}/menu-backups/`;
@@ -342,13 +362,13 @@ async function saveMenu(env, restaurantId, menuContent) {
     }
 
     const timestamp = new Date().toISOString().replace(/T/, '_').replace(/\..+/, '').replace(/:/g, '-');
-    await env.BUCKET.put(`${prefix}menu_${timestamp}.json`, await current.text(), {
+    await env.BUCKET.put(`${prefix}menu_${timestamp}.json`, previousText, {
       httpMetadata: { contentType: 'application/json' }
     });
   }
 
   await putJSON(env, key, menuContent);
-  await cleanupImages(env, restaurantId);
+  await cleanupImages(env, restaurantId, previousText);
   return { success: true, backupCreated: !!current };
 }
 
@@ -467,8 +487,11 @@ export default {
           if (cfg) {
             const value = body[cfg.field];
             if (cfg.array ? !Array.isArray(value) : !value) return fail(400, cfg.missing);
-            await putJSON(env, `IDs/${restaurantId}/${cfg.file}`, cfg.wrap(value));
-            await cleanupImages(env, restaurantId);
+            const fileKey = `IDs/${restaurantId}/${cfg.file}`;
+            const prev = await env.BUCKET.get(fileKey);
+            const previousText = prev ? await prev.text() : '';
+            await putJSON(env, fileKey, cfg.wrap(value));
+            await cleanupImages(env, restaurantId, previousText);
             return json({ success: true });
           }
         }
