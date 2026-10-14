@@ -420,10 +420,15 @@ async function deleteItem() {
 }
 
 // ===== IMMAGINE =====
-const IMG_SIZE = 256;
-const WORK_SIZE = 768;   // dimensione di lavoro per fill e trim (veloce e poca RAM)
-const BG_TOL = 14;       // tolleranza "quasi bianco" (0-255), ~ fuzz di magick ma più larga per i JPEG
-const BORDER_MIN = 0.98; // quota minima di bordo bianco/trasparente per attivare la rimozione
+// Pipeline (come lo script magick):
+//   1) controllo bordi bianchi (tolleranza larga) -> se non sono bianchi, si salta tutto il punto 2
+//   2) floodfill trasparente dal bordo (fuzz 5%) + trim dei bordi trasparenti
+//   3) quadrato trasparente centrato (padding) -> 4) ridimensionamento a max 256x256 (mai ingrandita)
+const IMG_SIZE = 256;     // lato massimo finale
+const WORK_SIZE = 1024;   // dimensione di lavoro per fill e trim (veloce e poca RAM)
+const CHECK_TOL = 32;     // tolleranza del controllo bordi (0-255, ~12%): "bianco" anche se sporco/grigino
+const BORDER_MIN = 0.95;  // quota minima di bordo bianco/trasparente per attivare la rimozione
+const FILL_TOL = 13;      // fuzz del floodfill (0-255, ~5% come -fuzz 5%)
 
 // Ridimensiona a gradini (qualità alta, poca RAM). Non chiude mai `src`.
 function scaleTo(src, w, h) {
@@ -443,32 +448,35 @@ function scaleTo(src, w, h) {
   return out;
 }
 
-const isBg = (d, p) => d[p + 3] < 16 ||
-  (d[p] >= 255 - BG_TOL && d[p + 1] >= 255 - BG_TOL && d[p + 2] >= 255 - BG_TOL);
+// pixel "sfondo": trasparente oppure quasi bianco (entro `tol` per canale)
+const isBg = (d, p, tol) => d[p + 3] < 16 ||
+  (d[p] >= 255 - tol && d[p + 1] >= 255 - tol && d[p + 2] >= 255 - tol);
 
-// Se il bordo è (quasi) tutto bianco: floodfill trasparente dal bordo + trim. Altrimenti restituisce il canvas com'è.
+// Se il bordo è bianco: floodfill trasparente dal bordo + trim. Altrimenti restituisce il canvas com'è.
 function removeWhiteBg(canvas) {
   const w = canvas.width, h = canvas.height;
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
   const img = ctx.getImageData(0, 0, w, h), d = img.data;
 
-  // 1) controllo del perimetro
+  // 1) controllo del perimetro (tolleranza larga)
   let bg = 0, total = 0;
-  const check = (x, y) => { total++; if (isBg(d, (y * w + x) * 4)) bg++; };
+  const check = (x, y) => { total++; if (isBg(d, (y * w + x) * 4, CHECK_TOL)) bg++; };
   for (let x = 0; x < w; x++) { check(x, 0); check(x, h - 1); }
   for (let y = 1; y < h - 1; y++) { check(0, y); check(w - 1, y); }
   if (bg / total < BORDER_MIN) return canvas;
 
-  // 2) floodfill dai pixel di bordo (solo lo sfondo collegato al bordo diventa trasparente)
+  // 2) floodfill: parte dai pixel di bordo "bianchi" e si espande con fuzz stretto
+  //    (solo lo sfondo collegato al bordo diventa trasparente)
   const seen = new Uint8Array(w * h), stack = [];
-  const push = (x, y) => { const i = y * w + x; if (!seen[i] && isBg(d, i * 4)) { seen[i] = 1; stack.push(i); } };
-  for (let x = 0; x < w; x++) { push(x, 0); push(x, h - 1); }
-  for (let y = 0; y < h; y++) { push(0, y); push(w - 1, y); }
+  const seed = (x, y) => { const i = y * w + x; if (!seen[i] && isBg(d, i * 4, CHECK_TOL)) { seen[i] = 1; stack.push(i); } };
+  const grow = (x, y) => { const i = y * w + x; if (!seen[i] && isBg(d, i * 4, FILL_TOL)) { seen[i] = 1; stack.push(i); } };
+  for (let x = 0; x < w; x++) { seed(x, 0); seed(x, h - 1); }
+  for (let y = 0; y < h; y++) { seed(0, y); seed(w - 1, y); }
   while (stack.length) {
     const i = stack.pop(), x = i % w, y = (i / w) | 0;
     d[i * 4 + 3] = 0;
-    if (x > 0) push(x - 1, y); if (x < w - 1) push(x + 1, y);
-    if (y > 0) push(x, y - 1); if (y < h - 1) push(x, y + 1);
+    if (x > 0) grow(x - 1, y); if (x < w - 1) grow(x + 1, y);
+    if (y > 0) grow(x, y - 1); if (y < h - 1) grow(x, y + 1);
   }
 
   // 3) trim: bounding box dei pixel visibili
@@ -489,23 +497,25 @@ function removeWhiteBg(canvas) {
   return out;
 }
 
-// Quadrato trasparente 256x256, immagine centrata e mai tagliata (sfondo bianco rimosso se i bordi sono bianchi).
+// Quadrato trasparente con immagine centrata, mai tagliata, lato max 256 (le piccole non vengono ingrandite).
 async function toSquareBlob(file) {
   const src = await createImageBitmap(file);
   const k = Math.min(1, WORK_SIZE / Math.max(src.width, src.height));
   let work = scaleTo(src, Math.max(1, Math.round(src.width * k)), Math.max(1, Math.round(src.height * k)));
   src.close?.();
 
-  work = removeWhiteBg(work);
+  work = removeWhiteBg(work);                       // 1-2) controllo bordi, floodfill, trim
 
-  const s = Math.min(IMG_SIZE / work.width, IMG_SIZE / work.height);
+  const side = Math.max(work.width, work.height);   // 3) lato del quadrato con padding
+  const finalSide = Math.min(IMG_SIZE, side);       // 4) mai oltre 256, mai ingrandita
+  const s = finalSide / side;
   const w = Math.max(1, Math.round(work.width * s)), h = Math.max(1, Math.round(work.height * s));
   const fitted = scaleTo(work, w, h);
   work.width = work.height = 0;
 
-  const out = document.createElement('canvas'); out.width = out.height = IMG_SIZE;
+  const out = document.createElement('canvas'); out.width = out.height = finalSide;
   const ctx = out.getContext('2d'); ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(fitted, Math.round((IMG_SIZE - w) / 2), Math.round((IMG_SIZE - h) / 2), w, h);
+  ctx.drawImage(fitted, Math.round((finalSide - w) / 2), Math.round((finalSide - h) / 2), w, h);
   fitted.width = fitted.height = 0;
 
   const blob = await new Promise(r => out.toBlob(r, 'image/webp', 0.92));
