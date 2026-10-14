@@ -17,7 +17,7 @@ const CONFIG = {
     PROTECTED_PAGES: {
         hobby: ['gestione-menu.html'],
         premium: ['gestione.html','create-banners.html'],
-        pro: ['statistics.html','create-promo.html','custom-theme.html']
+        pro: ['custom-theme.html']
     }
 };
 
