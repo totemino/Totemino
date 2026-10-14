@@ -267,6 +267,12 @@ function setMenuLinks() {
     });
 }
 
+// ===== QR CODE: configurazione =====
+// Link fisso (reindirizza al dominio attuale tramite _redirects): i QR stampati non si rompono se cambi dominio
+const QR_BASE = 'https://totemino.pages.dev';
+// Logo al centro del QR: link fisso su GitHub (il repo deve essere pubblico)
+const QR_LOGO = 'https://raw.githubusercontent.com/totemino/Totemino/refs/heads/main/img/faviconQR.png';
+
 // QR Code functionality
 function initQRCode() {
     const qrCard = document.getElementById('qrCard');
@@ -338,59 +344,45 @@ function initQRCode() {
         }
     }
 
-    // Generate QR code using API with short URL and logo
+    // Genera il QR Code tramite QuickChart (link fisso + logo da GitHub)
     async function generateQRCode(menuType) {
         const canvas = document.getElementById('qrCanvas');
         const qrMenuName = document.getElementById('qrMenuName');
-        
-        const menuUrl = menuType === 'menu-select' 
-            ? `https://totemino.it/menu-select.html?id=${restaurantId}`
-            : `https://totemino.it/menu.html?id=${restaurantId}&type=${menuType}`;
-        
+
+        const menuUrl = menuType === 'menu-select'
+            ? `${QR_BASE}/menu-select.html?id=${encodeURIComponent(restaurantId)}`
+            : `${QR_BASE}/menu.html?id=${encodeURIComponent(restaurantId)}&type=${encodeURIComponent(menuType)}`;
+
         qrMenuName.textContent = currentMenuName;
-        canvas.innerHTML = 'Generazione QR Code...';
-        
-        try {
-            // Prova a creare short URL (opzionale, se fallisce usa l'originale)
-            let finalUrl = menuUrl;
-            
-            try {
-                const shortUrlResponse = await fetch(`https://is.gd/create.php?format=json&url=${encodeURIComponent(menuUrl)}`);
-                const shortData = await shortUrlResponse.json();
-                if (shortData.shorturl) {
-                    finalUrl = shortData.shorturl;
-                }
-            } catch (err) {
-                
-            }
-            
-            // Genera QR Code con logo più grande (0.3 = 30%)
-            // NON codificare due volte - QuickChart si aspetta parametri normali
-            const qrImageUrl = `https://quickchart.io/qr?text=${encodeURIComponent(finalUrl)}&size=400&format=png&margin=1&ecLevel=H&centerImageUrl=https://totemino.it/img/faviconQR.png&centerImageSizeRatio=0.293`;
-            
-            // Crea immagine QR
-            const img = document.createElement('img');
-            img.src = qrImageUrl;
-            img.alt = 'QR Code';
-            img.style.width = '100%';
-            img.style.height = 'auto';
-            
-            // Gestisci errore di caricamento immagine
-            img.onerror = () => {
-                canvas.innerHTML = 'Errore: impossibile generare il QR Code. Verifica che il logo sia accessibile.';
-            };
-            
-            canvas.innerHTML = '';
+        canvas.textContent = 'Generazione QR Code...';
+        delete canvas.dataset.qrImageUrl;
+
+        const params = new URLSearchParams({
+            text: menuUrl,
+            size: '400',
+            format: 'png',
+            margin: '4',            // quiet zone standard: con 1 molti lettori non scansionano
+            ecLevel: 'H',
+            centerImageUrl: QR_LOGO,
+            centerImageSizeRatio: '0.22'
+        });
+        const qrImageUrl = `https://quickchart.io/qr?${params}`;
+
+        const img = new Image();
+        img.alt = 'QR Code';
+        img.style.cssText = 'width:100%;height:auto';
+        img.onload = () => {
+            canvas.textContent = '';
             canvas.appendChild(img);
-            
-            // Salva l'URL dell'immagine per il download
-            canvas.dataset.qrImageUrl = qrImageUrl;
-            
-        } catch (error) {
-            console.error('Errore generazione QR:', error);
-            canvas.innerHTML = 'Errore nella generazione del QR Code';
-        }
+            canvas.dataset.qrImageUrl = qrImageUrl; // impostato solo se l'immagine si carica davvero
+        };
+        img.onerror = () => {
+            canvas.textContent = 'Errore: impossibile generare il QR Code.';
+            delete canvas.dataset.qrImageUrl;
+        };
+        img.src = qrImageUrl;
     }
+
 
     // Download QR code
     downloadQR.addEventListener('click', async () => {
