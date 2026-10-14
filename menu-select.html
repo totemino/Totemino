@@ -186,20 +186,10 @@
                 }
             }
             
-            // Controlla se le prenotazioni sono abilitate
-            let hasReservations = false;
-            try {
-                const settingsResponse = await fetch(`IDs/${id}/settings.json`);
-                const allSettings = await settingsResponse.json();
-                hasReservations = allSettings.reservations && allSettings.reservations.enabled === true;
-            } catch (error) {
-                console.log('Prenotazioni non abilitate o errore nel caricamento settings.json');
-            }
-            
             // Logica di redirect:
             // Se c'è SOLO 1 menu E NON ci sono prenotazioni -> redirect automatico
             // Altrimenti mostra la pagina di selezione
-            if (availableMenus.length === 1 && !hasReservations) {
+            if (availableMenus.length === 1) {
                 window.location.href = `menu.html?id=${id}&type=${availableMenus[0].id}`;
                 return;
             }
@@ -223,21 +213,6 @@
                 `;
                 
                 menuGrid.appendChild(menuCard);
-            }
-            
-            // Aggiungi la card per le prenotazioni se abilitate
-            if (hasReservations) {
-                const reservationCard = document.createElement('a');
-                reservationCard.className = 'menu-card';
-                reservationCard.href = `prenota.html?id=${id}`;
-                
-                reservationCard.innerHTML = `
-                    <img class="menu-icon" src="img/prenota.png" alt="Prenota un tavolo">
-                    <h3>Prenota un tavolo</h3>
-                    <img class="arrow" src="img/arrow_select.png" alt="Vai">
-                `;
-                
-                menuGrid.appendChild(reservationCard);
             }
         }
         

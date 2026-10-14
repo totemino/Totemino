@@ -43,28 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
     observer.observe(step);
   });
 
-  // Observe pricing cards
- const pricingCards = document.querySelectorAll('.pricing-card');
-
-  pricingCards.forEach((card, index) => {
-    let delay;
-
-    const isFeatured = card.classList.contains('featured');
-
-    // Ordine: prima (0s), terza (0.25s), centrale/featured (0.4s)
-    if (!isFeatured && index === 0) {
-      delay = 0;
-    } else if (!isFeatured && index !== 0) {
-      delay = 0.25;
-    } else if (isFeatured) {
-      delay = 0.5;
-    }
-
-    card.style.animationDelay = `${delay}s`;
-    observer.observe(card);
-  });
-
-
   // Observe testimonials
   const testimonials = document.querySelectorAll('.testimonial-card');
   testimonials.forEach((testimonial, index) => {
@@ -270,7 +248,7 @@ function createRipple(event) {
 }
 
 // Apply ripple to buttons
-document.querySelectorAll('.btn-hero, .btn-pricing, .btn-cta-large').forEach(button => {
+document.querySelectorAll('.btn-hero, .btn-cta-large').forEach(button => {
   button.addEventListener('click', createRipple);
 });
 

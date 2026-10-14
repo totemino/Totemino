@@ -11,7 +11,12 @@
  *   R2  IDs/<id>/menu.json, settings.json, menuTypes.json, customizations.json,
  *       banners.json, promo.json, img/<file>, menu-backups/menu_<data>.json
  *   R2  userdata/users.json
- * Se un file non è ancora in R2, viene servito quello presente nel sito (seed).
+ * Se un file dati non è ancora in R2 viene restituito il valore di default;
+ * solo l'elenco utenti ha un seed opzionale nel sito (userdata/users.json).
+ *
+ * Non esistono piani/abbonamenti: ogni utente registrato ha le stesse funzioni.
+ * Unica eccezione, solo lato backend: il flag opzionale "pro": true in users.json
+ * (vedi isPro), mai esposto al client.
  */
 
 const SESSION_COOKIE = 'tm_session';
@@ -177,19 +182,9 @@ async function mutateUsers(env, request, fn) {
   throw new Error('Conflitto di scrittura utenti');
 }
 
-function trialInfo(user) {
-  let isTrialActive = false;
-  let trialDaysLeft = 0;
-  if (user.planType === 'free' && user.trialEndsAt) {
-    const now = new Date();
-    const end = new Date(user.trialEndsAt);
-    if (now < end) {
-      isTrialActive = true;
-      trialDaysLeft = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
-    }
-  }
-  return { isTrialActive, trialDaysLeft };
-}
+// Flag personale/interno: si imposta a mano su R2 (userdata/users.json -> "pro": true).
+// Non è un piano e non viene mai inviato al client.
+const isPro = (user) => user?.pro === true;
 
 // ==================== ROTTE AUTH ====================
 async function handleLogin(request, env) {
@@ -207,7 +202,7 @@ async function handleLogin(request, env) {
     {
       success: true,
       message: 'Login effettuato con successo',
-      user: { userCode, restaurantId: userCode, planType: user.planType || 'free' }
+      user: { userCode, restaurantId: userCode }
     },
     200,
     { 'Set-Cookie': sessionCookie(await signSession(env, userCode)) }
@@ -219,22 +214,17 @@ async function handleRegister(request, env) {
   const { userCode, password } = body || {};
   if (!userCode || !password) return fail(400, 'ID utente e password richiesti');
   if (!/^\d{4}$/.test(userCode)) return fail(400, 'ID deve essere di 4 cifre numeriche');
-  if (password.length < 8 || !/[a-z]/.test(password) || !/\d/.test(password)) {
+  if (password.length < 8 || !/\d/.test(password)) {
     return fail(400, 'Password deve avere almeno 8 caratteri e almeno un numero');
   }
 
-  const now = new Date();
-  const trialEnd = new Date(now);
-  trialEnd.setDate(trialEnd.getDate() + 14);
   const hashed = await hashPassword(password);
 
   const exists = await mutateUsers(env, request, async (users) => {
     if (users[userCode]) return { changed: false, result: true };
     users[userCode] = {
       password: hashed,
-      planType: 'free',
-      createdAt: now.toISOString(),
-      trialEndsAt: trialEnd.toISOString()
+      createdAt: new Date().toISOString()
     };
     return { changed: true, result: false };
   });
@@ -244,7 +234,7 @@ async function handleRegister(request, env) {
   return json({
     success: true,
     message: 'Registrazione completata con successo',
-    user: { userCode, restaurantId: userCode, planType: 'free', trialEndsAt: trialEnd.toISOString() }
+    user: { userCode, restaurantId: userCode }
   });
 }
 
@@ -256,19 +246,10 @@ async function handleMe(request, env) {
   const fresh = users[session.userCode];
   if (!fresh) return json({ success: false, requireLogin: true });
 
-  const { isTrialActive, trialDaysLeft } = trialInfo(fresh);
-
   return json(
     {
       success: true,
-      user: {
-        userCode: session.userCode,
-        restaurantId: session.restaurantId,
-        planType: fresh.planType || 'free',
-        isTrialActive,
-        trialDaysLeft,
-        subscriptionEndsAt: fresh.subscriptionEndsAt
-      }
+      user: { userCode: session.userCode, restaurantId: session.restaurantId }
     },
     200,
     { 'Set-Cookie': sessionCookie(await signSession(env, session.userCode)) } // sessione "rolling"
@@ -413,11 +394,6 @@ export default {
       if (path === '/api/auth/register' && method === 'POST') return await handleRegister(request, env);
       if (path === '/api/auth/me' && method === 'GET') return await handleMe(request, env);
       if (path === '/api/auth/logout' && method === 'POST') return handleLogout();
-
-      // Il checkout (Stripe) non esiste più: risposta compatibile con i bottoni "Passa a..." di index.html
-      if (path === '/api/create-checkout') {
-        return json({ success: false, error: 'Pagamenti non disponibili in questa versione' }, 501);
-      }
 
       // ---------- Elenco utenti per index-user.html (solo gli ID, mai le password) ----------
       if (path === '/userdata/users.json' && method === 'GET') {

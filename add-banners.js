@@ -161,10 +161,7 @@
 	  });
 	  
 	  // Verifica se il banner deve essere cliccabile
-	  const canReserve = checkReservationAvailable();
-	  const hasPhone = !!phoneNumber;
-	  
-	  if (canReserve || hasPhone) {
+	  if (phoneNumber) {
 		banner.addEventListener('click', openLink);
 	  } else {
 		// Banner non cliccabile
@@ -178,14 +175,7 @@
 	function openLink() {
 	  const currentBanner = banners[currentIndex];
 	  
-	  // Logica 1: Se può prenotare → vai a prenota.html
-	  if (checkReservationAvailable()) {
-		const prenotaUrl = `prenota.html?id=${restaurantId}`;
-		window.open(prenotaUrl, '_blank');
-		return;
-	  }
-	  
-	  // Logica 2: Se c'è numero di telefono → WhatsApp
+	  // Se c'è numero di telefono → WhatsApp
 	  if (phoneNumber) {
 		const message = `Salve, volevo prenotare per la serata di ${currentBanner.title}`;
 		const whatsappUrl = `https://wa.me/+39${phoneNumber}?text=${encodeURIComponent(message)}`;
@@ -193,25 +183,8 @@
 		return;
 	  }
 	  
-	  // Logica 3: Se nessuna delle due → non fare nulla
+	  // Nessun numero → non fare nulla
 	  console.log('Banner non cliccabile');
-	}
-
-	// Check if reservation is available
-	function checkReservationAvailable() {
-	  if (!restaurantSettings?.reservations?.enabled) {
-		return false;
-	  }
-	  
-	  const reservations = restaurantSettings.reservations;
-	  
-	  // Se tablesEnabled è true, controlla che ci siano tavoli
-	  if (reservations.tablesEnabled) {
-		return reservations.tables && reservations.tables.length > 0;
-	  }
-	  
-	  // Se tablesEnabled è false, controlla maxPeoplePerSlot
-	  return reservations.maxPeoplePerSlot > 0;
 	}
   
 	// Show banner

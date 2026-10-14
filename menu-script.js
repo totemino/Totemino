@@ -1264,20 +1264,6 @@ if (nextBtn) {
     if (currentCategoryIndex < categories.length - 1) {
       lastSwipeDirection = "left";
       setActiveCategory(currentCategoryIndex + 1);
-    } else {
-      // ✅ Costruisci URL con tutti i parametri
-      const params = new URLSearchParams(window.location.search);
-      const checkoutUrl = new URL('checkout.html', window.location.origin);
-      
-      checkoutUrl.searchParams.set('id', restaurantId);
-      
-      // ✅ Passa il type se presente
-      const menuType = params.get('type');
-      if (menuType) {
-        checkoutUrl.searchParams.set('type', menuType);
-      }
-      
-      window.location.href = checkoutUrl.toString();
     }
   });
 }
