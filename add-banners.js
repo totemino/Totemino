@@ -113,13 +113,6 @@
 		filter: invert(1);
  		opacity: 0.8;
 	  }
-
-	  /* Stile per banner non cliccabile */
-	  .totemino-banner.non-clickable {
-		cursor: default;
-		pointer-events: none;
-		opacity: 0.9;
-	  }
 	`;
 	document.head.appendChild(style);
   
@@ -160,7 +153,7 @@
 		closeBanner();
 	  });
 	  
-	  // La cliccabilità dipende dal singolo banner (vedi showBanner)
+	  // Il click apre il link del banner corrente; se non c'è link non succede nulla (nessuno stile diverso)
 	  banner.addEventListener('click', openLink);
 	  
 	  return banner;
@@ -213,7 +206,6 @@
 	  bannerElement.querySelector('.totemino-banner-title').style.color = color;
 	  bannerElement.style.setProperty('--pill-color', color);
 	  bannerElement.querySelector('.totemino-banner-subtitle').textContent = banner.subtitle;
-	  bannerElement.classList.toggle('non-clickable', !resolveUrl(banner));
   
 	  bannerElement.classList.remove('hide');
 	  bannerElement.classList.add('show');
