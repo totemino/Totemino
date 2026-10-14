@@ -421,13 +421,13 @@ async function deleteItem() {
 
 // ===== IMMAGINE =====
 // Pipeline (come lo script magick):
-//   1) controllo bordi bianchi (tolleranza larga) -> se non sono bianchi, si salta tutto il punto 2
+//   1) controllo bordi bianchi (tolleranza larga): basta anche 1 solo lato bianco, altrimenti si salta il punto 2
 //   2) floodfill trasparente dal bordo (fuzz 5%) + trim dei bordi trasparenti
 //   3) quadrato trasparente centrato (padding) -> 4) ridimensionamento a max 256x256 (mai ingrandita)
 const IMG_SIZE = 256;     // lato massimo finale
 const WORK_SIZE = 1024;   // dimensione di lavoro per fill e trim (veloce e poca RAM)
 const CHECK_TOL = 32;     // tolleranza del controllo bordi (0-255, ~12%): "bianco" anche se sporco/grigino
-const BORDER_MIN = 0.95;  // quota minima di bordo bianco/trasparente per attivare la rimozione
+const BORDER_MIN = 0.95;  // quota minima di un lato bianco/trasparente per considerarlo "bianco"
 const FILL_TOL = 13;      // fuzz del floodfill (0-255, ~5% come -fuzz 5%)
 
 // Ridimensiona a gradini (qualità alta, poca RAM). Non chiude mai `src`.
@@ -452,26 +452,35 @@ function scaleTo(src, w, h) {
 const isBg = (d, p, tol) => d[p + 3] < 16 ||
   (d[p] >= 255 - tol && d[p + 1] >= 255 - tol && d[p + 2] >= 255 - tol);
 
-// Se il bordo è bianco: floodfill trasparente dal bordo + trim. Altrimenti restituisce il canvas com'è.
+// Se almeno un lato è bianco: floodfill trasparente da quel/i lato/i + trim. Altrimenti restituisce il canvas com'è.
 function removeWhiteBg(canvas) {
   const w = canvas.width, h = canvas.height;
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
   const img = ctx.getImageData(0, 0, w, h), d = img.data;
 
-  // 1) controllo del perimetro (tolleranza larga)
-  let bg = 0, total = 0;
-  const check = (x, y) => { total++; if (isBg(d, (y * w + x) * 4, CHECK_TOL)) bg++; };
-  for (let x = 0; x < w; x++) { check(x, 0); check(x, h - 1); }
-  for (let y = 1; y < h - 1; y++) { check(0, y); check(w - 1, y); }
-  if (bg / total < BORDER_MIN) return canvas;
+  // 1) controllo dei 4 lati (tolleranza larga): basta che ne passi anche uno solo
+  const sideWhite = (n, at) => {
+    let bg = 0;
+    for (let i = 0; i < n; i++) if (isBg(d, at(i) * 4, CHECK_TOL)) bg++;
+    return bg / n >= BORDER_MIN;
+  };
+  const sides = {
+    top:    sideWhite(w, i => i),
+    bottom: sideWhite(w, i => (h - 1) * w + i),
+    left:   sideWhite(h, i => i * w),
+    right:  sideWhite(h, i => i * w + (w - 1))
+  };
+  if (!sides.top && !sides.bottom && !sides.left && !sides.right) return canvas;
 
-  // 2) floodfill: parte dai pixel di bordo "bianchi" e si espande con fuzz stretto
-  //    (solo lo sfondo collegato al bordo diventa trasparente)
+  // 2) floodfill: parte dai pixel "bianchi" dei soli lati bianchi e si espande con fuzz stretto
+  //    (solo lo sfondo collegato a quei lati diventa trasparente)
   const seen = new Uint8Array(w * h), stack = [];
   const seed = (x, y) => { const i = y * w + x; if (!seen[i] && isBg(d, i * 4, CHECK_TOL)) { seen[i] = 1; stack.push(i); } };
   const grow = (x, y) => { const i = y * w + x; if (!seen[i] && isBg(d, i * 4, FILL_TOL)) { seen[i] = 1; stack.push(i); } };
-  for (let x = 0; x < w; x++) { seed(x, 0); seed(x, h - 1); }
-  for (let y = 0; y < h; y++) { seed(0, y); seed(w - 1, y); }
+  if (sides.top)    for (let x = 0; x < w; x++) seed(x, 0);
+  if (sides.bottom) for (let x = 0; x < w; x++) seed(x, h - 1);
+  if (sides.left)   for (let y = 0; y < h; y++) seed(0, y);
+  if (sides.right)  for (let y = 0; y < h; y++) seed(w - 1, y);
   while (stack.length) {
     const i = stack.pop(), x = i % w, y = (i / w) | 0;
     d[i * 4 + 3] = 0;
