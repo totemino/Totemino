@@ -24,6 +24,8 @@ const SESSION_MAX_AGE = 14 * 24 * 60 * 60; // 14 giorni
 const USERS_KEY = 'userdata/users.json';
 const MAX_BACKUPS = 3;
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+const IMG_GRACE_MS = 2 * 60 * 60 * 1000; // foto appena caricate non vengono toccate per 2 ore
+const REF_FILES = ['menu.json', 'banners.json', 'promo.json', 'customizations.json', 'settings.json', 'menuTypes.json'];
 const PBKDF2_ITERATIONS = 100000; // massimo consentito da Workers
 
 const ID_RE = /^[\w-]{1,20}$/;
@@ -294,6 +296,36 @@ async function putJSON(env, key, data) {
   });
 }
 
+// Cancella da R2 le immagini che nessun file dati referenzia più
+async function cleanupImages(env, restaurantId) {
+  try {
+    const prefix = `IDs/${restaurantId}/img/`;
+    let haystack = '';
+    for (const f of REF_FILES) {
+      const o = await env.BUCKET.get(`IDs/${restaurantId}/${f}`);
+      if (o) haystack += await o.text();
+    }
+
+    const toDelete = [];
+    let cursor;
+    do {
+      const page = await env.BUCKET.list({ prefix, cursor });
+      for (const o of page.objects) {
+        const name = o.key.slice(prefix.length);
+        const oldEnough = Date.now() - o.uploaded.getTime() > IMG_GRACE_MS;
+        if (oldEnough && !haystack.includes(name)) toDelete.push(o.key);
+      }
+      cursor = page.truncated ? page.cursor : undefined;
+    } while (cursor);
+
+    for (let i = 0; i < toDelete.length; i += 1000) {
+      await env.BUCKET.delete(toDelete.slice(i, i + 1000));
+    }
+  } catch (e) {
+    console.error('cleanupImages:', e); // la pulizia non deve mai far fallire il salvataggio
+  }
+}
+
 async function saveMenu(env, restaurantId, menuContent) {
   const key = `IDs/${restaurantId}/menu.json`;
   const current = await env.BUCKET.get(key);
@@ -316,11 +348,12 @@ async function saveMenu(env, restaurantId, menuContent) {
   }
 
   await putJSON(env, key, menuContent);
+  await cleanupImages(env, restaurantId);
   return { success: true, backupCreated: !!current };
 }
 
 async function uploadImage(env, session, body) {
-  const { fileName, fileData, restaurantId, oldImageUrl } = body || {};
+  const { fileName, fileData, restaurantId } = body || {};
 
   if (!fileName || !fileData || !restaurantId) return fail(400, 'Dati mancanti');
   if (session.restaurantId !== restaurantId || !ID_RE.test(restaurantId)) {
@@ -344,12 +377,9 @@ async function uploadImage(env, session, body) {
     return fail(400, 'Immagine non valida');
   }
 
-  // nome file della vecchia immagine (se era già su questo sito)
-  const oldMatch = oldImageUrl ? String(oldImageUrl).match(/\/?IDs\/([\w-]+)\/img\/([^/?#]+)$/) : null;
-  const oldFileName = oldMatch && oldMatch[1] === restaurantId ? decodeURIComponent(oldMatch[2]) : null;
-
+  // La vecchia immagine non si cancella qui: lo fa cleanupImages dopo il salvataggio,
+  // quando nessun file dati la referenzia più.
   let finalName = `${baseName}.${extension}`;
-  if (oldFileName && finalName === oldFileName) finalName = `${baseName}_1.${extension}`;
 
   let key = `IDs/${restaurantId}/img/${finalName}`;
   let counter = 2;
@@ -360,10 +390,6 @@ async function uploadImage(env, session, body) {
   }
 
   await env.BUCKET.put(key, bytes, { httpMetadata: { contentType: IMAGE_TYPES[extension] } });
-
-  if (oldFileName) {
-    try { await env.BUCKET.delete(`IDs/${restaurantId}/img/${oldFileName}`); } catch { /* ignora */ }
-  }
 
   return json({ success: true, fileName: finalName, imageUrl: `/IDs/${restaurantId}/img/${finalName}` });
 }
@@ -442,6 +468,7 @@ export default {
             const value = body[cfg.field];
             if (cfg.array ? !Array.isArray(value) : !value) return fail(400, cfg.missing);
             await putJSON(env, `IDs/${restaurantId}/${cfg.file}`, cfg.wrap(value));
+            await cleanupImages(env, restaurantId);
             return json({ success: true });
           }
         }

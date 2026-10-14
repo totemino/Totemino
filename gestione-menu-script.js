@@ -421,22 +421,93 @@ async function deleteItem() {
 
 // ===== IMMAGINE =====
 const IMG_SIZE = 256;
-// Quadrato trasparente 256x256, immagine centrata e mai tagliata; riduzione a gradini per qualità e poca RAM.
-async function toSquareBlob(file) {
-  const src = await createImageBitmap(file);
-  const s = Math.min(IMG_SIZE / src.width, IMG_SIZE / src.height);
-  const w = Math.max(1, Math.round(src.width * s)), h = Math.max(1, Math.round(src.height * s));
+const WORK_SIZE = 768;   // dimensione di lavoro per fill e trim (veloce e poca RAM)
+const BG_TOL = 14;       // tolleranza "quasi bianco" (0-255), ~ fuzz di magick ma più larga per i JPEG
+const BORDER_MIN = 0.98; // quota minima di bordo bianco/trasparente per attivare la rimozione
+
+// Ridimensiona a gradini (qualità alta, poca RAM). Non chiude mai `src`.
+function scaleTo(src, w, h) {
   let cur = src, cw = src.width, ch = src.height;
   while (cw / 2 > w && ch / 2 > h) {
     const tmp = document.createElement('canvas');
     tmp.width = Math.ceil(cw / 2); tmp.height = Math.ceil(ch / 2);
-    const t = tmp.getContext('2d'); t.imageSmoothingQuality = 'high'; t.drawImage(cur, 0, 0, tmp.width, tmp.height);
-    cur.close?.(); cur = tmp; cw = tmp.width; ch = tmp.height;
+    const t = tmp.getContext('2d'); t.imageSmoothingQuality = 'high';
+    t.drawImage(cur, 0, 0, tmp.width, tmp.height);
+    if (cur !== src) cur.width = cur.height = 0;
+    cur = tmp; cw = tmp.width; ch = tmp.height;
   }
+  const out = document.createElement('canvas'); out.width = w; out.height = h;
+  const o = out.getContext('2d'); o.imageSmoothingQuality = 'high';
+  o.drawImage(cur, 0, 0, w, h);
+  if (cur !== src) cur.width = cur.height = 0;
+  return out;
+}
+
+const isBg = (d, p) => d[p + 3] < 16 ||
+  (d[p] >= 255 - BG_TOL && d[p + 1] >= 255 - BG_TOL && d[p + 2] >= 255 - BG_TOL);
+
+// Se il bordo è (quasi) tutto bianco: floodfill trasparente dal bordo + trim. Altrimenti restituisce il canvas com'è.
+function removeWhiteBg(canvas) {
+  const w = canvas.width, h = canvas.height;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const img = ctx.getImageData(0, 0, w, h), d = img.data;
+
+  // 1) controllo del perimetro
+  let bg = 0, total = 0;
+  const check = (x, y) => { total++; if (isBg(d, (y * w + x) * 4)) bg++; };
+  for (let x = 0; x < w; x++) { check(x, 0); check(x, h - 1); }
+  for (let y = 1; y < h - 1; y++) { check(0, y); check(w - 1, y); }
+  if (bg / total < BORDER_MIN) return canvas;
+
+  // 2) floodfill dai pixel di bordo (solo lo sfondo collegato al bordo diventa trasparente)
+  const seen = new Uint8Array(w * h), stack = [];
+  const push = (x, y) => { const i = y * w + x; if (!seen[i] && isBg(d, i * 4)) { seen[i] = 1; stack.push(i); } };
+  for (let x = 0; x < w; x++) { push(x, 0); push(x, h - 1); }
+  for (let y = 0; y < h; y++) { push(0, y); push(w - 1, y); }
+  while (stack.length) {
+    const i = stack.pop(), x = i % w, y = (i / w) | 0;
+    d[i * 4 + 3] = 0;
+    if (x > 0) push(x - 1, y); if (x < w - 1) push(x + 1, y);
+    if (y > 0) push(x, y - 1); if (y < h - 1) push(x, y + 1);
+  }
+
+  // 3) trim: bounding box dei pixel visibili
+  let x0 = w, y0 = h, x1 = -1, y1 = -1, visible = 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    if (d[(y * w + x) * 4 + 3] > 8) {
+      visible++;
+      if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+    }
+  }
+  if (visible < w * h * 0.01) return canvas; // immagine praticamente tutta bianca: lascio l'originale
+
+  ctx.putImageData(img, 0, 0);
+  const out = document.createElement('canvas');
+  out.width = x1 - x0 + 1; out.height = y1 - y0 + 1;
+  out.getContext('2d').drawImage(canvas, x0, y0, out.width, out.height, 0, 0, out.width, out.height);
+  canvas.width = canvas.height = 0;
+  return out;
+}
+
+// Quadrato trasparente 256x256, immagine centrata e mai tagliata (sfondo bianco rimosso se i bordi sono bianchi).
+async function toSquareBlob(file) {
+  const src = await createImageBitmap(file);
+  const k = Math.min(1, WORK_SIZE / Math.max(src.width, src.height));
+  let work = scaleTo(src, Math.max(1, Math.round(src.width * k)), Math.max(1, Math.round(src.height * k)));
+  src.close?.();
+
+  work = removeWhiteBg(work);
+
+  const s = Math.min(IMG_SIZE / work.width, IMG_SIZE / work.height);
+  const w = Math.max(1, Math.round(work.width * s)), h = Math.max(1, Math.round(work.height * s));
+  const fitted = scaleTo(work, w, h);
+  work.width = work.height = 0;
+
   const out = document.createElement('canvas'); out.width = out.height = IMG_SIZE;
   const ctx = out.getContext('2d'); ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(cur, Math.round((IMG_SIZE - w) / 2), Math.round((IMG_SIZE - h) / 2), w, h);
-  cur.close?.();
+  ctx.drawImage(fitted, Math.round((IMG_SIZE - w) / 2), Math.round((IMG_SIZE - h) / 2), w, h);
+  fitted.width = fitted.height = 0;
+
   const blob = await new Promise(r => out.toBlob(r, 'image/webp', 0.92));
   out.width = out.height = 0;
   return blob;
@@ -449,10 +520,9 @@ async function processImage(file) {
     const blob = await toSquareBlob(file);
     const ext = blob.type === 'image/webp' ? 'webp' : 'png';
     const base64 = await new Promise((ok, ko) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = ko; r.readAsDataURL(blob); });
-    const old = currentEdit.index === null ? null : menuData[currentEdit.category][currentEdit.index];
     const res = await fetch('/upload-image', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fileName: `${file.name.replace(/\.[^.]+$/, '')}.${ext}`, fileData: base64, restaurantId, oldImageUrl: old?.image })
+      body: JSON.stringify({ fileName: `${file.name.replace(/\.[^.]+$/, '')}.${ext}`, fileData: base64, restaurantId })
     });
     const r = await res.json();
     if (!r.success) throw new Error(r.message);
