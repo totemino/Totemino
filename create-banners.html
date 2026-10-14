@@ -167,7 +167,7 @@
                 <div class="link-box hidden" id="box-whatsapp">
                     <div class="form-field">
                         <label for="wa-phone">Numero WhatsApp del locale</label>
-                        <input type="tel" id="wa-phone" inputmode="tel" placeholder="Es. 333 1234567">
+                        <input type="tel" id="wa-phone" inputmode="tel" maxlength="18" autocomplete="tel" placeholder="Es. 3214567890">
                         <span class="hint">Il +39 viene aggiunto in automatico. Il numero viene salvato nelle impostazioni del locale.</span>
                     </div>
                     <div class="form-field">
@@ -315,6 +315,12 @@
                 t.focus(); t.setSelectionRange(s + 8, s + 8); updatePreview();
             });
             $('reset-msg').addEventListener('click', () => { $('wa-message').value = DEFAULT_MSG; updatePreview(); });
+
+            // numero: accetta solo cifre, spazi, + e - (anche incollando)
+            $('wa-phone').addEventListener('input', e => {
+                const clean = e.target.value.replace(/[^\d\s+\-]/g, '');
+                if (clean !== e.target.value) e.target.value = clean;
+            });
 
             document.addEventListener('keydown', e => {
                 if (e.key === 'Escape') { closePopup(); $('confirm-popup').classList.add('hidden'); }
