@@ -458,7 +458,7 @@ function openCustomizationScreen(item) {
   // Vista normale/customizzabile
   screen.innerHTML = `
     <div class="customization-header">
-      <h2>Modifica ${item.displayName}</h2>
+      <h2>${item.displayName}</h2>
       <button class="back-btn">
         <img src="img/x.png" alt="Chiudi">
       </button>
