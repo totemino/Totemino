@@ -11,6 +11,7 @@
  *   R2  IDs/<id>/menu.json, settings.json, menuTypes.json, customizations.json,
  *       banners.json, promo.json, img/<file>, menu-backups/menu_<data>.json
  *   R2  userdata/users.json
+ *   R2  Richieste/<data>_<id>.json  (richieste di informazioni dal modulo in login.html)
  * Se un file dati non è ancora in R2 viene restituito il valore di default;
  * solo l'elenco utenti ha un seed opzionale nel sito (userdata/users.json).
  *
@@ -23,6 +24,13 @@ const SESSION_COOKIE = 'tm_session';
 const SESSION_MAX_AGE = 14 * 24 * 60 * 60; // 14 giorni
 const USERS_KEY = 'userdata/users.json';
 const MAX_BACKUPS = 3;
+const REQUESTS_PREFIX = 'Richieste/';
+const REQUEST_COOLDOWN_MS = 60 * 1000; // una richiesta al minuto per IP
+const MAX_REQUEST_BYTES = 10 * 1024;
+const VENUE_TYPES = ['ristorante', 'pizzeria', 'bar', 'pub', 'lido', 'altro'];
+const TABLE_RANGES = ['1-10', '11-25', '26-50', '50+'];
+const INTERESTS = ['menu-digitale', 'ordini-tavolo', 'statistiche', 'multilingua'];
+const CURRENT_SYSTEMS = ['carta', 'qr', 'gestionale', 'altro'];
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 const IMG_GRACE_MS = 2 * 60 * 60 * 1000; // foto appena caricate non vengono toccate per 2 ore
 const REF_FILES = ['menu.json', 'banners.json', 'promo.json', 'customizations.json', 'settings.json', 'menuTypes.json'];
@@ -240,6 +248,100 @@ async function handleRegister(request, env) {
   });
 }
 
+// ==================== RICHIESTE DI INFORMAZIONI ====================
+const clean = (v, max) => String(v ?? '').replace(/[\u0000-\u001f\u007f]+/g, ' ').trim().slice(0, max);
+
+async function sha256Hex(text) {
+  const buf = await crypto.subtle.digest('SHA-256', enc.encode(text));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function handleInfoRequest(request, env) {
+  const raw = await request.text();
+  if (raw.length > MAX_REQUEST_BYTES) return fail(413, 'Richiesta troppo grande');
+
+  let body;
+  try { body = JSON.parse(raw); } catch { body = null; }
+  if (!body || typeof body !== 'object') return fail(400, 'Richiesta non valida');
+
+  const data = {
+    restaurantName: clean(body.restaurantName, 80),
+    contactName: clean(body.contactName, 80),
+    contactEmail: clean(body.contactEmail, 120),
+    contactPhone: clean(body.contactPhone, 20),
+    city: clean(body.city, 60),
+    venueType: clean(body.venueType, 20),
+    tables: clean(body.tables, 10),
+    interests: (Array.isArray(body.interests) ? body.interests : [])
+      .map((i) => clean(i, 30)).filter((i) => INTERESTS.includes(i)),
+    currentSystem: clean(body.currentSystem, 20),
+    notes: clean(body.notes, 500)
+  };
+
+  if (!data.restaurantName) return fail(400, 'Inserisci il nome del locale');
+  if (!data.contactName) return fail(400, 'Inserisci il tuo nome');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(data.contactEmail)) return fail(400, 'Inserisci un indirizzo email valido');
+  if (!VENUE_TYPES.includes(data.venueType)) return fail(400, 'Seleziona il tipo di locale');
+  if (!TABLE_RANGES.includes(data.tables)) return fail(400, 'Indica quanti tavoli ha il tuo locale');
+  if (data.currentSystem && !CURRENT_SYSTEMS.includes(data.currentSystem)) data.currentSystem = '';
+  if (body.privacyConsent !== true) return fail(400, 'Devi acconsentire al trattamento dei dati');
+
+  // Limite per IP: un marcatore in R2 (hash dell'IP, nessun IP in chiaro)
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const rateKey = `${REQUESTS_PREFIX}_rate/${(await sha256Hex(ip)).slice(0, 32)}`;
+  const last = await env.BUCKET.head(rateKey);
+  if (last && Date.now() - last.uploaded.getTime() < REQUEST_COOLDOWN_MS) {
+    return fail(429, 'Hai già inviato una richiesta da poco. Riprova tra un minuto.');
+  }
+
+  const now = new Date();
+  const stamp = now.toISOString().replace(/T/, '_').replace(/\..+/, '').replace(/:/g, '-');
+  const id = b64urlEncode(crypto.getRandomValues(new Uint8Array(6)));
+
+  await putJSON(env, `${REQUESTS_PREFIX}${stamp}_${id}.json`, {
+    ...data,
+    privacyConsent: true,
+    receivedAt: now.toISOString()
+  });
+  await env.BUCKET.put(rateKey, '1');
+
+  return json({ success: true, message: 'Richiesta inviata' });
+}
+
+async function handleChangePassword(request, env) {
+  const session = await readSession(request, env);
+  if (!session) return json({ success: false, requireLogin: true, message: 'Autenticazione richiesta' }, 401);
+
+  const body = await readBody(request);
+  const { currentPassword, newPassword } = body || {};
+  if (typeof currentPassword !== 'string' || typeof newPassword !== 'string' || !currentPassword || !newPassword) {
+    return fail(400, 'Password attuale e nuova password richieste');
+  }
+  if (newPassword.length < 8 || !/\d/.test(newPassword)) {
+    return fail(400, 'La nuova password deve avere almeno 8 caratteri e un numero');
+  }
+  if (newPassword.length > 200) return fail(400, 'Password troppo lunga');
+
+  const users = await loadUsers(env, request);
+  const user = users[session.userCode];
+  if (!user) return json({ success: false, requireLogin: true, message: 'Utente non trovato' }, 401);
+
+  if (!(await verifyPassword(currentPassword, user.password))) {
+    return fail(403, 'La password attuale non è corretta');
+  }
+
+  const hashed = await hashPassword(newPassword);
+  const updated = await mutateUsers(env, request, async (all) => {
+    if (!all[session.userCode]) return { changed: false, result: false };
+    all[session.userCode].password = hashed;
+    all[session.userCode].passwordChangedAt = new Date().toISOString();
+    return { changed: true, result: true };
+  });
+  if (!updated) return fail(404, 'Utente non trovato');
+
+  return json({ success: true, message: 'Password cambiata con successo' });
+}
+
 async function handleMe(request, env) {
   const session = await readSession(request, env);
   if (!session) return json({ success: false, requireLogin: true });
@@ -439,7 +541,11 @@ export default {
       if (path === '/api/auth/login' && method === 'POST') return await handleLogin(request, env);
       if (path === '/api/auth/register' && method === 'POST') return await handleRegister(request, env);
       if (path === '/api/auth/me' && method === 'GET') return await handleMe(request, env);
+      if (path === '/api/auth/change-password' && method === 'POST') return await handleChangePassword(request, env);
       if (path === '/api/auth/logout' && method === 'POST') return handleLogout();
+
+      // ---------- Richieste di informazioni (pubblico, salva in R2 -> Richieste/) ----------
+      if (path === '/api/info-request' && method === 'POST') return await handleInfoRequest(request, env);
 
       // ---------- Elenco utenti per index-user.html (solo gli ID, mai le password) ----------
       if (path === '/userdata/users.json' && method === 'GET') {

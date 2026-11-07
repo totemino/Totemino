@@ -242,9 +242,126 @@
     box-shadow: 0 0 0 2px rgba(var(--text-accent-rgb, 180, 83, 134), 0.2);
 }
 
-.form-group input.error {
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--text-accent-gradient-low);
+    border-radius: 1rem;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-family: inherit;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--text-accent);
+    box-shadow: 0 0 0 2px rgba(var(--text-accent-rgb, 180, 83, 134), 0.2);
+}
+
+.form-group input.error,
+.form-group select.error,
+.form-group textarea.error {
     border-color: #ff4444;
     box-shadow: 0 0 0 2px rgba(255, 68, 68, 0.2);
+}
+
+/* Modulo richiesta informazioni */
+.form-intro {
+    margin: 0 0 1.5rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--text-sec);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.choice-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.form-group .choice,
+.choice {
+    display: inline-block;
+    margin: 0;
+    cursor: pointer;
+    position: relative;
+}
+
+.choice input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    padding: 0;
+    border: none;
+}
+
+.form-group .choice span {
+    display: inline-block;
+    padding: 8px 14px;
+    border: 1px solid var(--text-accent-gradient-low);
+    border-radius: 2rem;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.15s ease;
+}
+
+.form-group .choice:hover span {
+    border-color: var(--text-accent);
+}
+
+.form-group .choice input:checked + span {
+    background: var(--text-accent);
+    border-color: var(--text-accent);
+    color: var(--card-bg);
+}
+
+.form-group .choice input:focus-visible + span {
+    box-shadow: 0 0 0 2px rgba(var(--text-accent-rgb, 180, 83, 134), 0.35);
+}
+
+.form-group.error .choice span {
+    border-color: #ff4444;
+}
+
+.choice.consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    font-size: 0.85rem;
+    color: var(--text-sec);
+}
+
+.choice.consent input {
+    position: static;
+    opacity: 1;
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    flex-shrink: 0;
+    accent-color: var(--text-accent);
+}
+
+.choice.consent.error span {
+    color: #ef4444;
 }
 
 /* Password input con icona */
@@ -413,6 +530,11 @@
 }
 
 @media (max-width: 600px) {
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
     .login-container {
         width: 95%;
     }

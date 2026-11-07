@@ -53,7 +53,7 @@
             <div class="login-toggle-container">
                 <div class="login-toggle" id="loginTabs">
                     <button class="login-toggle-btn active" data-tab="login">Accedi</button>
-                    <button class="login-toggle-btn" data-tab="register">Registrati</button>
+                    <button class="login-toggle-btn" data-tab="register">Richiedi info</button>
                 </div>
             </div>
 
@@ -103,69 +103,93 @@
                     </form>
                 </div>
 
-                <!-- SEZIONE REGISTRAZIONE -->
+                <!-- SEZIONE RICHIESTA INFORMAZIONI -->
                 <div id="register-section" class="form-section">
-                    <form id="registerForm" autocomplete="off">
+                    <form id="infoForm" autocomplete="off" novalidate>
+                        <p class="form-intro">Raccontaci qualcosa del tuo locale: ti ricontatteremo con tutte le informazioni su Totemino.</p>
+
                         <div class="form-group">
-                            <label for="newUserCode">ID Utente (4 cifre)</label>
-                            <input 
-                                type="text" 
-                                id="newUserCode" 
-                                placeholder="0000" 
-                                maxlength="4" 
-                                pattern="[0-9]{4}" 
-                                autocomplete="username"
-                                required>
+                            <label for="restaurantName">Nome del locale *</label>
+                            <input type="text" id="restaurantName" name="restaurantName" placeholder="Es. Trattoria da Mario" maxlength="80" required>
                         </div>
-                        
+
                         <div class="form-group">
-                            <label for="newUserPassword">Password</label>
-                            <div class="password-input">
-                                <input 
-                                    type="password" 
-                                    id="newUserPassword" 
-                                    placeholder="Inserisci password" 
-                                    autocomplete="new-password"
-                                    required>
-                                <button type="button" class="password-toggle" data-target="newUserPassword">
-                                    <div class="eye-icon">
-                                        <svg viewBox="0 0 24 24">
-                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                            <circle cx="12" cy="12" r="3"/>
-                                            <line class="eye-slash" x1="1" y1="1" x2="23" y2="23"/>
-                                        </svg>
-                                    </div>
-                                </button>
+                            <label for="contactName">Il tuo nome *</label>
+                            <input type="text" id="contactName" name="contactName" placeholder="Nome e cognome" maxlength="80" required>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="contactEmail">Email *</label>
+                                <input type="email" id="contactEmail" name="contactEmail" placeholder="nome@email.it" maxlength="120" required>
                             </div>
-                            <div id="passwordRequirements" class="password-requirements">
-                                <div class="requirement" data-req="length">• Almeno 8 caratteri</div>
-                                <div class="requirement" data-req="number">• Almeno un numero</div>
+                            <div class="form-group">
+                                <label for="contactPhone">Telefono</label>
+                                <input type="tel" id="contactPhone" name="contactPhone" placeholder="Opzionale" maxlength="20">
                             </div>
                         </div>
-                        
+
                         <div class="form-group">
-                            <label for="confirmPassword">Conferma Password</label>
-                            <div class="password-input">
-                                <input 
-                                    type="password" 
-                                    id="confirmPassword" 
-                                    placeholder="Ripeti password" 
-                                    autocomplete="new-password"
-                                    required>
-                                <button type="button" class="password-toggle" data-target="confirmPassword">
-                                    <div class="eye-icon">
-                                        <svg viewBox="0 0 24 24">
-                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                            <circle cx="12" cy="12" r="3"/>
-                                            <line class="eye-slash" x1="1" y1="1" x2="23" y2="23"/>
-                                        </svg>
-                                    </div>
-                                </button>
+                            <label for="city">Città</label>
+                            <input type="text" id="city" name="city" placeholder="Dove si trova il locale?" maxlength="60">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="venueType">Tipo di locale *</label>
+                            <select id="venueType" name="venueType" required>
+                                <option value="" selected disabled>Seleziona</option>
+                                <option value="ristorante">Ristorante</option>
+                                <option value="pizzeria">Pizzeria</option>
+                                <option value="bar">Bar / Caffetteria</option>
+                                <option value="pub">Pub / Birreria</option>
+                                <option value="lido">Lido / Stabilimento</option>
+                                <option value="altro">Altro</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Quanti tavoli ha il tuo locale? *</label>
+                            <div class="choice-group">
+                                <label class="choice"><input type="radio" name="tables" value="1-10"><span>1-10</span></label>
+                                <label class="choice"><input type="radio" name="tables" value="11-25"><span>11-25</span></label>
+                                <label class="choice"><input type="radio" name="tables" value="26-50"><span>26-50</span></label>
+                                <label class="choice"><input type="radio" name="tables" value="50+"><span>Più di 50</span></label>
                             </div>
                         </div>
-                        
-                        <button type="submit" class="btn btn-solid" id="registerBtn">
-                            Registrati
+
+                        <div class="form-group">
+                            <label>Cosa ti interessa di più?</label>
+                            <div class="choice-group">
+                                <label class="choice"><input type="checkbox" name="interests" value="menu-digitale"><span>Menu digitale</span></label>
+                                <label class="choice"><input type="checkbox" name="interests" value="ordini-tavolo"><span>Ordini dal tavolo</span></label>
+                                <label class="choice"><input type="checkbox" name="interests" value="statistiche"><span>Statistiche</span></label>
+                                <label class="choice"><input type="checkbox" name="interests" value="multilingua"><span>Menu multilingua</span></label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="currentSystem">Come gestisci oggi gli ordini?</label>
+                            <select id="currentSystem" name="currentSystem">
+                                <option value="" selected disabled>Seleziona</option>
+                                <option value="carta">Menu cartaceo e comande a voce</option>
+                                <option value="qr">Menu QR / digitale</option>
+                                <option value="gestionale">Gestionale / cassa con comande</option>
+                                <option value="altro">Altro</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="notes">Vuoi aggiungere altro?</label>
+                            <textarea id="notes" name="notes" rows="3" maxlength="500" placeholder="Domande, esigenze particolari…"></textarea>
+                        </div>
+
+                        <label class="choice consent">
+                            <input type="checkbox" id="privacyConsent" name="privacyConsent" required>
+                            <span>Acconsento al trattamento dei dati per essere ricontattato. *</span>
+                        </label>
+
+                        <button type="submit" class="btn btn-solid" id="infoBtn">
+                            Invia richiesta
                         </button>
                     </form>
                 </div>

@@ -10,6 +10,15 @@
 			(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 			document.documentElement.setAttribute('data-theme', theme);
 
+			// Dispositivi poco potenti: niente animazioni di sfondo / blur
+			try {
+				const mem = navigator.deviceMemory, cores = navigator.hardwareConcurrency;
+				if ((mem && mem <= 2) || (cores && cores <= 4) ||
+					window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+					document.documentElement.classList.add('low-perf');
+				}
+			} catch (e) {}
+
 			try {
 				const urlParams = new URLSearchParams(window.location.search);
 				const restaurantId = urlParams.get('id');
@@ -66,12 +75,55 @@
 	<div class="bg-light light3"></div>
 	<div class="title">
 		<div>
-			<img id="logoSwap" class="theme-img" data-light="img/logo/1_light.png" data-dark="img/logo/1_dark.png" alt="Logo" id="logoSwap">
+			<img id="logoSwap" class="theme-img" data-light="img/logo/1_light.png" data-dark="img/logo/1_dark.png" alt="Logo">
 			<a href="index.html"><h1>Totemino</h1></a>
 		</div>
-		<button id="theme" class="header-btn" type="button"><img class="theme-img" data-light="img/theme_light.png" data-dark="img/theme_dark.png" alt="Cambia tema"></button>
+		<button id="menu-toggle" class="header-btn menu-toggle-btn" type="button" aria-label="Apri il menu" aria-expanded="false" aria-controls="side-menu">
+			<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+		</button>
 	</div>
-	<nav class="categories"></nav>
+	<div id="side-menu-overlay" class="side-menu-overlay"></div>
+	<aside id="side-menu" class="side-menu" aria-hidden="true" aria-label="Menu">
+		<div class="side-menu-head">
+			<h2>Menu</h2>
+			<button class="side-menu-close" type="button" aria-label="Chiudi il menu"><img src="img/x.png" alt=""></button>
+		</div>
+
+		<section class="side-group">
+			<h3>Visualizzazione</h3>
+			<div class="side-segmented" role="group" aria-label="Metodo di visualizzazione">
+				<button type="button" data-view="grid" aria-pressed="true"><i class="fa-solid fa-table-cells-large"></i><span>Griglia</span></button>
+				<button type="button" data-view="list" aria-pressed="false"><i class="fa-solid fa-list"></i><span>Dettagli</span></button>
+			</div>
+		</section>
+
+		<section class="side-group">
+			<button id="theme" class="side-item" type="button">
+				<img class="theme-img" data-light="img/theme_light.png" data-dark="img/theme_dark.png" alt="">
+				<span>Tema</span>
+				<span id="theme-value" class="side-item-value"></span>
+			</button>
+			<button id="language-btn" class="side-item" type="button">
+				<span class="side-icon"><i class="fa-solid fa-language"></i></span>
+				<span>Lingua</span>
+			</button>
+			<button id="scan-btn" class="side-item" type="button">
+				<span class="side-icon"><i class="fa-solid fa-camera"></i></span>
+				<span>Scannerizza un altro ristorante</span>
+			</button>
+		</section>
+	</aside>
+
+	<div class="categories-row">
+		<nav class="categories"></nav>
+		<div class="search-box">
+			<i class="fa-solid fa-magnifying-glass"></i>
+			<input id="search-input" type="search" placeholder="Cerca nel menu" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
+		</div>
+		<button id="search-btn" class="search-btn" type="button" aria-label="Cerca" aria-expanded="false">
+			<i class="fa-solid fa-magnifying-glass"></i>
+		</button>
+	</div>
 	<div class="items"></div>
 	<div class="order">	
 		<div>

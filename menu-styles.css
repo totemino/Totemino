@@ -230,24 +230,25 @@ input[type="number"]::-webkit-outer-spin-button {
   width: 90vw;
   height: 90vw;
   border-radius: 50%;
-  filter: blur(100px) hue-rotate(var(--bg-hue)) saturate(var(--bg-sat));;
+  filter: hue-rotate(var(--bg-hue)) saturate(var(--bg-sat)); /* niente blur(100px): troppo pesante per la GPU */
+  will-change: transform;
   opacity: 0.5;
   pointer-events: none;
   z-index: -1;
 }
 
 .light1 {
-  background: var(--light1);
+  background: radial-gradient(circle closest-side, var(--light1) 30%, transparent);
   animation: moveCircle1 20s infinite linear;
 }
 
 .light2 {
-  background: var(--light2);
+  background: radial-gradient(circle closest-side, var(--light2) 30%, transparent);
   animation: moveCircle2 25s infinite linear;
 }
 
 .light3 {
-  background: var(--light3);
+  background: radial-gradient(circle closest-side, var(--light3) 30%, transparent);
   animation: moveCircle3 30s infinite linear;
 }
 
@@ -382,7 +383,7 @@ input[type="number"]::-webkit-outer-spin-button {
   width: max-content;
   border-radius: 2rem;
   background: var(--pill-bg);
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, width 0.3s ease;
   pointer-events: none;
 }
 
@@ -391,8 +392,7 @@ input[type="number"]::-webkit-outer-spin-button {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 1rem;
-  padding: 0 1rem 5rem 1rem;
-  margin-bottom: 4rem;
+  padding: 0 1rem 15rem 1rem;
 }
 
 .items button {
@@ -404,7 +404,7 @@ input[type="number"]::-webkit-outer-spin-button {
   padding-top: 0.8rem;
   padding-bottom: 1.2rem;
   position: relative;
-  transition: all 0.2s;
+  transition: box-shadow 0.2s, border-color 0.2s, background-color 0.2s;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -1202,4 +1202,393 @@ input[type="number"]::-webkit-outer-spin-button {
   .footer-social {
     justify-content: center;
   }
+}
+
+
+/* ===== LOW PERFORMANCE ===== */
+.low-perf .bg-light { animation: none; }
+
+/* ===== VISUALIZZAZIONE DETTAGLIATA (1 elemento per riga) ===== */
+.items.list-view {
+  grid-template-columns: 1fr;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+  gap: 0.9rem;
+}
+
+.items.list-view button {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr;
+  grid-template-rows: auto 1fr auto;
+  column-gap: 0.9rem;
+  row-gap: 0.2rem;
+  justify-content: start;
+  align-items: start;
+  padding: 0.8rem;
+}
+
+.items.list-view button > img {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+  width: 6.5rem;
+  height: 6.5rem;
+  margin: 0;
+  align-self: center;
+}
+
+.items.list-view h3 {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0;
+  padding-right: 2rem; /* spazio per il bottone info */
+  min-height: 0;
+  max-height: none;
+  align-items: flex-start;
+  font-size: 1.05rem;
+}
+
+.items.list-view .item-desc {
+  grid-column: 2;
+  grid-row: 2;
+  font-size: 0.85rem;
+  line-height: 1.25rem;
+  color: var(--text-primary);
+  opacity: 0.75;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.items.list-view p {
+  grid-column: 2;
+  grid-row: 3;
+  margin: 0;
+  align-self: end;
+}
+
+.items.list-view .novita {
+  top: 0.4rem;
+  left: 0.4rem;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.7rem;
+}
+
+/* ===== MENU HAMBURGER ===== */
+.menu-toggle-btn {
+  color: var(--text-accent);
+  background: transparent;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-toggle-btn svg {
+  width: 1.9rem;
+  height: 1.9rem;
+  pointer-events: none;
+}
+
+.side-menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s, visibility 0s 0.25s;
+  z-index: 3000;
+}
+
+.side-menu-overlay.show {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.25s, visibility 0s;
+}
+
+.side-menu {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(340px, 85vw);
+  background: var(--bg-primary);
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.25);
+  padding: 1rem;
+  padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  overflow-y: auto;
+  transform: translateX(100%);
+  visibility: hidden;
+  touch-action: pan-y; /* lo swipe orizzontale lo gestisce il JS */
+  overscroll-behavior: contain;
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s 0.28s;
+  z-index: 3001;
+}
+
+.side-menu.open {
+  transform: translateX(0);
+  visibility: visible;
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s;
+}
+
+.side-menu-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.side-menu-head h2 {
+  font-family: 'Klein-Bold';
+  font-size: 1.5rem;
+  color: var(--text-accent);
+}
+
+.side-menu-close {
+  width: 2.2rem;
+  height: 2.2rem;
+  border: none;
+  border-radius: 50%;
+  background: var(--btn-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.side-menu-close img {
+  width: 1.3rem;
+  opacity: var(--icon-opacity);
+}
+
+[data-theme="dark"] .side-menu-close img { filter: invert(1); }
+
+.side-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.side-group h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-primary);
+  opacity: 0.6;
+}
+
+.side-segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  padding: 0.5rem;
+  background: var(--input-bg);
+  border-radius: 2rem;
+}
+
+.side-segmented button {
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  border-radius: 2rem;
+  padding: 0.7rem 0.4rem;
+  display: flex;
+  margin: 0 auto;
+  align-items: center;
+  width: 100%;
+  justify-content: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.side-segmented button i { font-size: 1.25rem; }
+
+.side-segmented button.active {
+  background: var(--pill-bg);
+}
+
+.side-item {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: 100%;
+  padding: 1rem;
+  border: none;
+  border-radius: 1.2rem;
+  background: var(--card-bg);
+  box-shadow: 0 2px 8px var(--shadow-sm);
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.side-item:active { transform: scale(0.98); }
+
+.side-item img,
+.side-item .side-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+}
+
+.side-item .side-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.side-item-value {
+  margin-left: auto;
+  font-size: 0.85rem;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+
+/* ===== TITOLI PRODOTTO ===== */
+.items h3 .title-text {
+  font-weight: inherit; /* il reset globale "* {font-weight:400}" lo azzerava */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;   /* mostra le PRIME parole, poi "…" */
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  text-align: left;
+  min-width: 0;
+}
+
+.items.list-view h3 .title-text {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* una riga sola, taglio anche a metà parola */
+}
+
+.items.list-view p { justify-self: end; } /* prezzo a destra */
+
+.no-results {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 2rem 1rem;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+/* ===== RIGA CATEGORIE + CERCA ===== */
+.categories-row {
+  display: flex;
+  align-items: stretch;
+  height: var(--cat-h, 3.5rem); /* altezza reale della barra categorie, misurata dal JS */
+  gap: 0.5rem;
+  width: calc(100% - 2rem);
+  margin: 0.5rem auto 1rem;
+}
+
+.categories-row .categories {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  max-width: none;
+  margin: 0;
+}
+
+.search-btn {
+  flex: 0 0 auto;
+  width: var(--cat-h, 3.5rem);
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 1.15rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.search-btn:active { transform: scale(0.92); }
+
+.search-box {
+  display: none;
+  height: 100%;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0 1.1rem;
+  background: var(--input-bg);
+  border-radius: 2rem;
+  color: var(--text-primary);
+}
+
+/* niente "X" nativa del campo di ricerca: si chiude solo dal bottone a destra */
+.search-box input::-webkit-search-cancel-button,
+.search-box input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+.search-box input {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 1rem; /* >=16px: iOS non zooma al focus */
+  padding: 0.8rem 0;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.categories-row.searching .categories { display: none; }
+.categories-row.searching .search-box { display: flex; }
+
+@media (min-width: 1200px) {
+  .categories-row {
+    width: calc(100% - 4rem);
+    max-width: 1337px;
+  }
+}
+
+
+/* ===== TOAST ===== */
+.totemino-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+  transform: translate(-50%, 20px);
+  width: min(90vw, 420px);
+  padding: 1rem 1.3rem;
+  border-radius: 1.2rem;
+  background: var(--tooltip-bg);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s, transform 0.25s;
+  z-index: 4000;
+}
+
+.totemino-toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }

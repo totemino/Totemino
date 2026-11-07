@@ -18,9 +18,9 @@
 		position: fixed;
 		bottom: 2rem; /* o 8rem quando esiste .order */
 		left: auto;
-		margin-left: 5vw;
-		right: 5vw;
-		width: 90vw;
+		margin-left: 16px;
+		right: 16px;
+		width: calc(100%-16px);
 		max-width: 500px;
 		background: var(--bg-secondary);
 		border-radius: 1.5rem;
@@ -34,7 +34,11 @@
   		-webkit-backdrop-filter: blur(7px);
 	  }
 		
-	  
+	  @media (min-width: 1200px) {
+	  	.totemino-banner {
+          right: 32px;
+		}	
+	  }
 
 	  @media (min-width: 1416px) {
 	  	.totemino-banner {
@@ -194,43 +198,88 @@
 	  window.open(url, '_blank', 'noopener');
 	}
   
+	// ===== ROTAZIONE AUTOMATICA =====
+	const DISPLAY_MS = 15000;   // quanto resta visibile ogni banner
+	const GAP_MS = 800;        // pausa tra un banner e il successivo
+	let rotateTimer = null;
+	let paused = false;
+
 	// Show banner
 	function showBanner() {
 	  if (banners.length === 0 || isVisible) return;
-  
+	  if (currentIndex >= banners.length) currentIndex = 0;
+
 	  const banner = banners[currentIndex];
-	  const color = colors[currentIndex % colors.length];
-  
+	  const color = banner._color;
+
 	  bannerElement.style.borderLeftColor = color;
 	  bannerElement.querySelector('.totemino-banner-title').textContent = banner.title;
 	  bannerElement.querySelector('.totemino-banner-title').style.color = color;
 	  bannerElement.style.setProperty('--pill-color', color);
 	  bannerElement.querySelector('.totemino-banner-subtitle').textContent = banner.subtitle;
-  
+
 	  bannerElement.classList.remove('hide');
 	  bannerElement.classList.add('show');
 	  isVisible = true;
+
+	  scheduleNext();
 	}
-  
-	// Close banner
-	function closeBanner() {
+
+	// Programma il passaggio al banner successivo (un solo banner: resta fermo)
+	function scheduleNext() {
+	  clearTimeout(rotateTimer);
+	  if (banners.length < 2 || paused || !isVisible) return;
+	  rotateTimer = setTimeout(advance, DISPLAY_MS);
+	}
+
+	// Nasconde il banner con animazione, poi esegue il callback
+	function hideBanner(done) {
 	  if (!isVisible) return;
-  
-	  bannerElement.classList.add('hide');
 	  isVisible = false;
-  
+	  bannerElement.classList.add('hide');
 	  setTimeout(() => {
 		bannerElement.classList.remove('show', 'hide');
-		
-		currentIndex++;
-		
-		// Show next banner after 5 seconds only if there are more banners
-		if (currentIndex < banners.length) {
-		  setTimeout(showBanner, 10000);
-		}
+		if (done) done();
 	  }, 300);
 	}
-  
+
+	function advance() {
+	  hideBanner(() => {
+		currentIndex = (currentIndex + 1) % banners.length;
+		rotateTimer = setTimeout(showBanner, GAP_MS);
+	  });
+	}
+
+	// La X chiude questo banner: non rientra più in rotazione, gli altri continuano
+	function closeBanner() {
+	  if (!isVisible) return;
+	  clearTimeout(rotateTimer);
+	  const closing = currentIndex;
+	  hideBanner(() => {
+		banners.splice(closing, 1); // currentIndex ora punta già al banner seguente
+		if (banners.length > 0) {
+		  if (currentIndex >= banners.length) currentIndex = 0;
+		  rotateTimer = setTimeout(showBanner, GAP_MS);
+		}
+	  });
+	}
+
+	// Pausa mentre l'utente tocca/passa sopra il banner, o quando la scheda è in background
+	function setupPause() {
+	  const pause = () => { paused = true; clearTimeout(rotateTimer); };
+	  const resume = () => { paused = false; scheduleNext(); };
+
+	  bannerElement.addEventListener('touchstart', pause, { passive: true });
+	  bannerElement.addEventListener('touchend', resume, { passive: true });
+	  bannerElement.addEventListener('touchcancel', resume, { passive: true });
+	  bannerElement.addEventListener('mouseenter', pause);
+	  bannerElement.addEventListener('mouseleave', resume);
+
+	  document.addEventListener('visibilitychange', () => {
+		if (document.hidden) pause(); else resume();
+	  });
+	}
+
 	// Load phone number from settings
 	async function loadPhoneNumber() {
 	  try {
@@ -269,9 +318,11 @@
 		  banners = await response.json();
 		  
 		  if (banners.length > 0) {
+			banners.forEach((b, i) => { b._color = colors[i % colors.length]; });
 			bannerElement = createBannerElement();
+			setupPause();
 			
-			// Show first banner after 5 seconds
+			// Il primo banner appare dopo 6.5 secondi, poi scorrono da soli
 			setTimeout(showBanner, 6500);
 		  }
 		}

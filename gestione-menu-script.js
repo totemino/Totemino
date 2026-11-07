@@ -13,6 +13,7 @@ let editingCat = null, editingItems = [], editingTypeIdx = null, iconIdx = 1, dr
 // Trascinamento card: solo dispositivi con puntatore preciso e hover (mouse), mai su touch/cellulari
 const canDrag = () => matchMedia('(hover: hover) and (pointer: fine)').matches;
 let dragItem = null;
+let suppressClickUntil = 0; // dopo un trascinamento col dito ignora il click che ne segue
 
 const VIEW_ONLY = { table: false, delivery: false, takeaway: false, show: false };
 const allergens = {
@@ -63,6 +64,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     editingItems.splice(to, 0, editingItems.splice(dragFrom, 1)[0]); dragFrom = null; renderRows();
   };
 
+  if (!canDrag()) attachTouchDrag({
+    root: list, itemSel: '.row',
+    scroller: () => document.querySelector('#edit-category-popup .pop-body'),
+    start: el => { el.classList.add('dragging'); return +el.dataset.i; },
+    move: (from, x, y, node) => {
+      list.querySelectorAll('.drop-before, .drop-after').forEach(r => r.classList.remove('drop-before', 'drop-after'));
+      const r = node?.closest?.('.row');
+      if (!r || !list.contains(r) || +r.dataset.i === from) return;
+      const b = r.getBoundingClientRect();
+      r.classList.add(y > b.top + b.height / 2 ? 'drop-after' : 'drop-before');
+    },
+    drop: (from, x, y, node) => {
+      const r = node?.closest?.('.row');
+      if (r && list.contains(r) && +r.dataset.i !== from) {
+        const b = r.getBoundingClientRect();
+        let to = +r.dataset.i + (y > b.top + b.height / 2 ? 1 : 0);
+        if (from < to) to--;
+        editingItems.splice(to, 0, editingItems.splice(from, 1)[0]);
+      }
+      renderRows();
+    },
+    cancel: () => renderRows()
+  });
+
   initItemDrag();
   document.addEventListener('click', onClick);
   document.addEventListener('keydown', e => {
@@ -77,23 +102,129 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadCustomizations();
 });
 
-// ===== DRAG & DROP ELEMENTI (solo mouse) =====
+// ===== TRASCINAMENTO COL DITO (pressione prolungata) =====
+// Il drag HTML5 non funziona in modo affidabile su touch: qui si usano i touch event.
+// Tieni premuto ~0,4 s su un elemento, poi trascina; scorre da solo vicino ai bordi.
+function attachTouchDrag({ root, itemSel, scroller, start, move, drop, cancel }) {
+  let timer = null, el = null, state = null, ghost = null, active = false, raf = 0;
+  let sx = 0, sy = 0, lx = 0, ly = 0, offX = 0, offY = 0;
+
+  const nodeAt = (x, y) => document.elementFromPoint(x, y);
+  const place = (x, y) => { if (ghost) ghost.style.transform = `translate(${x - offX}px, ${y - offY}px) scale(1.03)`; };
+
+  const loop = () => {
+    if (!active) return;
+    const sc = scroller && scroller();
+    const rect = sc ? sc.getBoundingClientRect() : { top: 0, bottom: innerHeight };
+    const edge = sc ? 56 : 100, speed = 14;   // 100px in alto: c'è la toolbar sticky
+    const dy = ly < rect.top + edge ? -speed : ly > rect.bottom - edge ? speed : 0;
+    if (dy) {
+      if (sc) sc.scrollTop += dy; else window.scrollBy(0, dy);
+      move(state, lx, ly, nodeAt(lx, ly));
+    }
+    raf = requestAnimationFrame(loop);
+  };
+
+  const begin = () => {
+    timer = null;
+    if (!el) return;
+    state = start(el);
+    if (state == null || state === false) { el = null; return; }
+    active = true;
+    const r = el.getBoundingClientRect();
+    offX = sx - r.left; offY = sy - r.top;
+    ghost = el.cloneNode(true);
+    ghost.classList.remove('dragging');
+    ghost.classList.add('touch-ghost');
+    ghost.style.width = r.width + 'px';
+    ghost.style.height = r.height + 'px';
+    root.appendChild(ghost);                  // dentro root: mantiene gli stili di vista lista/griglia
+    place(sx, sy);
+    if (navigator.vibrate) navigator.vibrate(12);
+    raf = requestAnimationFrame(loop);
+  };
+
+  root.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1 || active) return;
+    const it = e.target.closest(itemSel);
+    if (!it || e.target.closest('button, a, input, textarea, select')) return;
+    el = it;
+    sx = lx = e.touches[0].clientX; sy = ly = e.touches[0].clientY;
+    clearTimeout(timer);
+    timer = setTimeout(begin, 380);
+  }, { passive: true });
+
+  root.addEventListener('touchmove', e => {
+    const t = e.touches[0];
+    if (!active) {
+      // il dito si muove prima del long-press: è uno scroll normale, annulla
+      if (timer && Math.hypot(t.clientX - sx, t.clientY - sy) > 10) { clearTimeout(timer); timer = null; el = null; }
+      return;
+    }
+    e.preventDefault();                       // blocca lo scroll mentre trascini
+    lx = t.clientX; ly = t.clientY;
+    place(lx, ly);
+    move(state, lx, ly, nodeAt(lx, ly));
+  }, { passive: false });
+
+  const finish = (e, canceled) => {
+    clearTimeout(timer); timer = null;
+    if (!active) { el = null; return; }
+    if (e.cancelable) e.preventDefault();
+    suppressClickUntil = Date.now() + 400;
+    active = false; cancelAnimationFrame(raf);
+    const x = lx, y = ly, node = nodeAt(x, y), st = state;
+    if (ghost) ghost.remove();
+    ghost = null; state = null; el = null;
+    canceled ? cancel(st) : drop(st, x, y, node);
+  };
+  root.addEventListener('touchend', e => finish(e, false), { passive: false });
+  root.addEventListener('touchcancel', e => finish(e, true), { passive: false });
+  root.addEventListener('contextmenu', e => { if (e.target.closest(itemSel)) e.preventDefault(); });
+}
+
+// ===== DRAG & DROP ELEMENTI (mouse: HTML5, touch: pressione prolungata) =====
 function initItemDrag() {
   const box = $('menu-sections');
-  const clearMarks = () => box.querySelectorAll('.drop-before, .drop-after, .drop-target, .dragging')
-    .forEach(el => el.classList.remove('drop-before', 'drop-after', 'drop-target', 'dragging'));
+  const clearHints = () => box.querySelectorAll('.drop-before, .drop-after, .drop-target')
+    .forEach(el => el.classList.remove('drop-before', 'drop-after', 'drop-target'));
+  const clearMarks = () => { clearHints(); box.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging')); };
 
-  // Calcola la destinazione sotto il cursore: { cat, index (null = in fondo), after }
-  const target = e => {
-    const sec = e.target.closest?.('.cat');
-    if (!sec) return null;
-    const cat = sec.dataset.cat, el = e.target.closest('.item');
+  // Destinazione sotto il punto (x, y): { cat, index (null = in fondo), after }
+  const targetAt = (node, x, y) => {
+    const sec = node?.closest?.('.cat');
+    if (!sec || !box.contains(sec)) return null;
+    const cat = sec.dataset.cat, el = node.closest('.item');
     if (!el) return { sec, cat, index: null, after: false };
     const r = el.getBoundingClientRect();
-    const after = view === 'list' ? e.clientY > r.top + r.height / 2 : e.clientX > r.left + r.width / 2;
+    const after = view === 'list' ? y > r.top + r.height / 2 : x > r.left + r.width / 2;
     return { sec, el, cat, index: +el.dataset.i, after };
   };
 
+  const hint = (t, from) => {
+    clearHints();
+    if (!t) return;
+    if (t.el) { if (!(t.cat === from.cat && t.index === from.i)) t.el.classList.add(t.after ? 'drop-after' : 'drop-before'); }
+    else t.sec.classList.add('drop-target');
+  };
+
+  const drop = (t, from) => {
+    if (!t) return;
+    if (t.el && t.cat === from.cat && t.index === from.i) return;
+    const [moved] = menuData[from.cat].splice(from.i, 1);
+    const dest = menuData[t.cat];
+    let pos = dest.length;
+    if (t.index !== null) {
+      pos = t.index;
+      if (t.cat === from.cat && from.i < t.index) pos--;
+      if (t.after) pos++;
+    }
+    dest.splice(pos, 0, moved);
+    setDirty(true); render();
+    notify(t.cat === from.cat ? 'Elemento spostato' : `Elemento spostato in “${t.cat}”`);
+  };
+
+  // --- mouse ---
   box.addEventListener('dragstart', e => {
     const el = e.target.closest?.('.item');
     if (!el || !canDrag()) return e.preventDefault();
@@ -106,40 +237,37 @@ function initItemDrag() {
 
   box.addEventListener('dragover', e => {
     if (!dragItem || !canDrag()) return;
-    const t = target(e);
+    const t = targetAt(e.target, e.clientX, e.clientY);
     if (!t) return;
     e.preventDefault(); e.dataTransfer.dropEffect = 'move';
-    box.querySelectorAll('.drop-before, .drop-after, .drop-target').forEach(el => el.classList.remove('drop-before', 'drop-after', 'drop-target'));
-    if (t.el) { if (!(t.cat === dragItem.cat && t.index === dragItem.i)) t.el.classList.add(t.after ? 'drop-after' : 'drop-before'); }
-    else t.sec.classList.add('drop-target');
+    hint(t, dragItem);
   });
 
   box.addEventListener('drop', e => {
     if (!dragItem || !canDrag()) return;
-    const t = target(e), from = dragItem;
+    const t = targetAt(e.target, e.clientX, e.clientY), from = dragItem;
     dragItem = null; clearMarks();
     if (!t) return;
     e.preventDefault();
-    if (t.el && t.cat === from.cat && t.index === from.i) return;
-
-    const [moved] = menuData[from.cat].splice(from.i, 1);
-    const dest = menuData[t.cat];
-    let pos = dest.length;
-    if (t.index !== null) {
-      pos = t.index;
-      if (t.cat === from.cat && from.i < t.index) pos--;
-      if (t.after) pos++;
-    }
-    dest.splice(pos, 0, moved);
-    setDirty(true); render();
-    notify(t.cat === from.cat ? 'Elemento spostato' : `Elemento spostato in “${t.cat}”`);
+    drop(t, from);
   });
 
   box.addEventListener('dragend', () => { dragItem = null; clearMarks(); });
+
+  // --- dito ---
+  if (!canDrag()) attachTouchDrag({
+    root: box, itemSel: '.item',
+    scroller: () => null,                                   // scorre la pagina
+    start: el => { hideCtx(); el.classList.add('dragging'); return { cat: el.closest('.cat').dataset.cat, i: +el.dataset.i }; },
+    move: (from, x, y, node) => hint(targetAt(node, x, y), from),
+    drop: (from, x, y, node) => { const t = targetAt(node, x, y); clearMarks(); drop(t, from); },
+    cancel: () => clearMarks()
+  });
 }
 
 // ===== EVENTI (delegati) =====
 function onClick(e) {
+  if (Date.now() < suppressClickUntil) return;
   const t = e.target.closest('[data-act]');
   if (t) { const a = t.dataset.act; if (a !== 'ctx' && a !== 'cat-menu') hideCtx(); return actions[a]?.(t, e); }
   hideCtx();
@@ -253,6 +381,8 @@ async function loadMenu() {
         isNew: i.featured || false, visible: i.visible !== false, menuType: i.menuType || [],
         customizable: i.customizable || false, customizationGroup: i.customizationGroup || null
       }));
+      // Dopo ogni caricamento gli elementi nascosti vanno in fondo alla categoria (ordine stabile per il resto)
+      menuData[cat.name].sort((a, b) => (a.visible === false) - (b.visible === false));
     });
 
     menuTypes = (settings.menuTypes || []).map(t => ({
@@ -310,11 +440,11 @@ function renderCats() {
         <span class="chev">${I.chev}</span><h2 class="cat-title">${esc(cat)}</h2>
         <span class="count">${filtering ? vis.length + '/' : ''}${total}</span>${hid ? '<span class="tag t-hid">Nascosta</span>' : ''}
         <div class="cat-actions">
-          <button class="btn-primary btn-sm" data-act="cat-add" title="Aggiungi elemento">${I.plus}<span>Elemento</span></button>
+          <button class="icon-btn add" data-act="cat-add" title="Aggiungi elemento" aria-label="Aggiungi elemento">${I.plus}</button>
           <button class="icon-btn" data-act="cat-menu" title="Altre azioni">${I.more}</button>
         </div>
       </header>
-      <div class="cat-body">${vis.length ? `<div class="grid">${vis.map(v => card(v.item, v.i)).join('')}</div>` : '<p class="muted">Nessun elemento: usa “Elemento” per aggiungerne uno.</p>'}</div>
+      <div class="cat-body">${vis.length ? `<div class="grid">${vis.map(v => card(v.item, v.i)).join('')}</div>` : '<p class="muted">Nessun elemento: usa il tasto + per aggiungerne uno.</p>'}</div>
     </section>`;
   }).join('');
   box.innerHTML = html || `<div class="empty"><h2>Nessun risultato</h2><button class="btn-secondary" data-act="clear-filter">Azzera filtri</button></div>`;
@@ -322,19 +452,20 @@ function renderCats() {
 
 function card(it, i) {
   const price = it.price > 0 ? `€${it.price.toFixed(2)}` : it.customizable ? 'Su scelta' : '€0.00';
+  const tags = [
+    it.isNew ? '<span class="tag t-new">Novità</span>' : '',
+    it.customizationGroup ? `<span class="tag t-grp" title="Gruppo ${esc(it.customizationGroup)}">Gr. ${esc(it.customizationGroup)}</span>` : '',
+    it.visible === false ? '<span class="tag t-hid">Nascosto</span>' : '',
+    ...(it.allergens || []).map(a => `<img class="al" src="img/allergeni/${esc(a)}.png" alt="" title="${esc(allergens[a] || '')}">`)
+  ].join('');
   return `<article class="item ${it.visible === false ? 'hid' : ''}" data-i="${i}" ${canDrag() ? 'draggable="true"' : ''}>
     <img class="thumb" src="${esc(it.image || 'img/placeholder.png')}" alt="" loading="lazy">
     <div class="meta">
       <div class="name" title="${esc(it.name)}">${esc(it.name)}</div>
       ${it.description ? `<div class="desc">${esc(it.description).replace(/\n+/g, ' · ')}</div>` : ''}
-      <div class="tags">
-        ${it.isNew ? '<span class="tag t-new">Novità</span>' : ''}
-        ${it.customizationGroup ? `<span class="tag t-grp" title="Gruppo ${esc(it.customizationGroup)}">Gr. ${esc(it.customizationGroup)}</span>` : ''}
-        ${it.visible === false ? '<span class="tag t-hid">Nascosto</span>' : ''}
-        ${(it.allergens || []).map(a => `<img class="al" src="img/allergeni/${esc(a)}.png" alt="" title="${esc(allergens[a] || '')}">`).join('')}
-      </div>
     </div>
     <div class="price">${price}</div>
+    ${tags ? `<div class="tags">${tags}</div>` : ''}
     <div class="quick">
       <button class="icon-btn sm" data-act="item-vis" title="${it.visible === false ? 'Mostra' : 'Nascondi'}">${it.visible === false ? I.eyeOff : I.eye}</button>
       <button class="icon-btn sm" data-act="item-dup" title="Duplica">${I.copy}</button>
@@ -577,7 +708,7 @@ function toggleCatType(id, on) {
 
 function renderRows() {
   $('draggable-items-list').innerHTML = editingItems.map((it, i) => `
-    <div class="row" draggable="true" data-i="${i}">
+    <div class="row" ${canDrag() ? 'draggable="true"' : ''} data-i="${i}">
       <div class="arrows">
         <button class="reorder-btn" data-act="row-up" ${i === 0 ? 'disabled' : ''}><img src="img/arrow-up.png" alt="Su"></button>
         <button class="reorder-btn" data-act="row-down" ${i === editingItems.length - 1 ? 'disabled' : ''}><img src="img/arrow-down.png" alt="Giù"></button>

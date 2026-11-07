@@ -33,6 +33,115 @@ let isAnimating = false;
 isViewOnlyMode = true;
 document.documentElement.classList.add('view-only');
 
+// ===== VISUALIZZAZIONE (griglia / dettagliata) =====
+const VIEW_MODE_KEY = 'totemino_view_mode';
+let viewMode = 'grid';
+try {
+  const v = localStorage.getItem(VIEW_MODE_KEY);
+  if (v === 'list' || v === 'grid') viewMode = v;
+} catch (e) {}
+
+// ===== CATEGORIA CORRENTE (ripristinata dopo il ricaricamento) =====
+let categoryStorageKey = null;
+let searchActive = false;
+
+function getInitialCategoryIndex() {
+  try {
+    const entry = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+    let type = entry ? entry.type : null;
+    if (!type && performance.navigation) {
+      type = performance.navigation.type === 1 ? 'reload' : performance.navigation.type === 2 ? 'back_forward' : 'navigate';
+    }
+    if (type !== 'reload' && type !== 'back_forward') return 0;
+    const idx = categories.indexOf(sessionStorage.getItem(categoryStorageKey));
+    return idx >= 0 ? idx : 0;
+  } catch (e) {
+    return 0;
+  }
+}
+
+function saveCurrentCategory(index) {
+  try {
+    if (categoryStorageKey && categories[index]) sessionStorage.setItem(categoryStorageKey, categories[index]);
+  } catch (e) {}
+}
+
+// ===== BLOCCO SCROLL (contatore: più livelli aperti non si pestano i piedi) =====
+let scrollLockCount = 0;
+let lockedScrollY = 0;
+
+function lockScroll() {
+  if (scrollLockCount++ > 0) return;
+  lockedScrollY = window.scrollY;
+  document.body.style.top = `-${lockedScrollY}px`;
+  document.body.classList.add("noscroll");
+}
+
+function unlockScroll() {
+  if (scrollLockCount === 0) return;
+  if (--scrollLockCount > 0) return;
+  document.body.classList.remove("noscroll");
+  document.body.style.top = '';
+  window.scrollTo(0, lockedScrollY);
+}
+
+// ===== LIVELLI SOVRAPPOSTI (scheda prodotto, menu laterale) =====
+// Ogni livello aperto aggiunge una voce alla history, così il tasto indietro
+// del telefono (o lo swipe indietro di iOS) chiude il livello invece di uscire dalla pagina.
+const layerStack = [];
+let pendingBack = false;
+let pendingBackTimer = null;
+
+function pushLayer(closeFn) {
+  layerStack.push(closeFn);
+  history.pushState({ toteminoLayer: layerStack.length }, '');
+}
+
+// Chiusura richiesta dall'utente (X, overlay, swipe): passa da history.back()
+function dismissTopLayer() {
+  if (!layerStack.length || pendingBack) return;
+  pendingBack = true;
+  history.back();
+  pendingBackTimer = setTimeout(() => {
+    if (!pendingBack) return;      // popstate non arrivato: chiudo comunque
+    pendingBack = false;
+    const fn = layerStack.pop();
+    if (fn) fn();
+  }, 400);
+}
+
+window.addEventListener('popstate', () => {
+  clearTimeout(pendingBackTimer);
+  pendingBack = false;
+  const depth = (history.state && history.state.toteminoLayer) || 0;
+  while (layerStack.length > depth) {
+    const fn = layerStack.pop();
+    try { fn(); } catch (e) { console.error(e); }
+  }
+});
+
+// Dopo un ricaricamento lo stato "livello aperto" non ha più senso
+if (history.state && history.state.toteminoLayer) history.replaceState(null, '');
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') dismissTopLayer();
+});
+
+// Descrizione in testo semplice (per la vista dettagliata)
+function plainDescription(text) {
+  if (!text) return "";
+  let raw = String(text).trim();
+  if (raw.includes(";")) {
+    raw = raw
+      .replace(/^\s*ingredienti\s*:\s*/i, "")
+      .split(";")
+      .map(t => t.trim())
+      .filter(Boolean)
+      .join(", ");
+  }
+  return raw.replace(/\\n/g, " ").replace(/\s+/g, " ");
+}
+
 //helper
 function prependToMap(map, key, value) {
   const newMap = new Map();
@@ -161,6 +270,7 @@ function updateItemButtonUI(itemName) {
   
   buttons.forEach(btn => {
     const titleEl = btn.querySelector("h3");
+    const titleTextEl = titleEl && (titleEl.querySelector(".title-text") || titleEl);
     if (!titleEl) return;
     
     const baseName = titleEl.getAttribute('data-item-name');
@@ -176,7 +286,7 @@ function updateItemButtonUI(itemName) {
     const totalQty = calculateTotalQuantityForItem(itemName);
     
     // Aggiorna titolo
-    titleEl.textContent = totalQty > 1 ? `${itemName} (x${totalQty})` : itemName;
+    titleTextEl.textContent = totalQty > 1 ? `${itemName} (x${totalQty})` : itemName;
     
     // Aggiorna classe selected
     btn.classList.toggle("selected", totalQty > 0);
@@ -409,7 +519,82 @@ document.addEventListener("click", (e) => {
 });
 
 // === SCHERMATA CUSTOMIZZAZIONE ===
+function mountScreen(screen) {
+  document.body.appendChild(screen);
+  lockScroll();
+
+  const backBtn = screen.querySelector(".back-btn");
+  if (backBtn) backBtn.addEventListener("click", dismissTopLayer);
+
+  attachSwipeToClose(screen);
+  pushLayer(() => unmountScreen(screen));
+}
+
+function unmountScreen(screen) {
+  if (!screen.parentNode || screen.classList.contains("closing")) return;
+  screen.classList.add("closing");
+
+  let done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    if (screen.parentNode) screen.parentNode.removeChild(screen);
+    unlockScroll();
+  };
+  screen.addEventListener("animationend", finish, { once: true });
+  setTimeout(finish, 320); // rete di sicurezza se animationend non scatta
+}
+
+// Trascina da sinistra verso destra per chiudere
+function attachSwipeToClose(screen) {
+  let sx = 0, sy = 0, st = 0, dx = 0, mode = null; // mode: null | 'h' | 'v' | 'ignore'
+
+  screen.addEventListener("touchstart", (e) => {
+    if (e.touches.length !== 1) { mode = "ignore"; return; }
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
+    st = Date.now();
+    dx = 0;
+    mode = null;
+    screen.style.transition = "none";
+  }, { passive: true });
+
+  screen.addEventListener("touchmove", (e) => {
+    if (mode === "ignore" || mode === "v") return;
+    const t = e.touches[0];
+    dx = t.clientX - sx;
+    const dy = t.clientY - sy;
+
+    if (mode === null) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      mode = (dx > 0 && Math.abs(dx) > Math.abs(dy) * 1.5) ? "h" : "v";
+      if (mode === "v") return;
+    }
+    screen.style.transform = `translate3d(${Math.max(0, dx)}px, 0, 0)`;
+  }, { passive: true });
+
+  const end = () => {
+    const wasHorizontal = mode === "h";
+    mode = null;
+    if (!wasHorizontal) return;
+
+    const fast = dx / Math.max(1, Date.now() - st) > 0.5;
+    if (dx > 80 || (dx > 40 && fast)) {
+      dismissTopLayer(); // l'animazione di uscita parte dalla posizione attuale
+    } else {
+      screen.style.transition = "transform 0.2s ease-out";
+      screen.style.transform = "";
+      setTimeout(() => { screen.style.transition = ""; }, 220);
+    }
+  };
+  screen.addEventListener("touchend", end, { passive: true });
+  screen.addEventListener("touchcancel", end, { passive: true });
+}
+
 function openCustomizationScreen(item) {
+  // Evita schermate sovrapposte (doppio tap): era la causa del "non si chiude"
+  if (document.querySelector(".customization-screen")) return;
+
   const screen = document.createElement("div");
   screen.className = "customization-screen";
   
@@ -433,25 +618,10 @@ function openCustomizationScreen(item) {
       </div>
     `;
 
-    const scrollY = window.scrollY;
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = '100%';
-    
-    document.body.appendChild(screen);
-    document.body.classList.add("noscroll");
+    mountScreen(screen);
     
     const backBtn = screen.querySelector(".back-btn");
-    backBtn.addEventListener("click", () => {
-      const scrollY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.removeChild(screen);
-      document.body.classList.remove("noscroll");
-      window.scrollTo(0, parseInt(scrollY || '0') * -1);
-    });
-    
+        
     return;
   }
   
@@ -481,13 +651,7 @@ function openCustomizationScreen(item) {
     </div>
   `;
   
-  const scrollY = window.scrollY;
-  document.body.style.position = 'fixed';
-  document.body.style.top = `-${scrollY}px`;
-  document.body.style.width = '100%';
-  
-  document.body.appendChild(screen);
-  document.body.classList.add("noscroll");
+  mountScreen(screen);
   
   const sectionsContainer = screen.querySelector(".customization-sections");
   const totalPriceEl = screen.querySelector(".total-price");
@@ -669,26 +833,11 @@ function openCustomizationScreen(item) {
       saveSelectionToStorage();
       updateItemButtonUI(item.name);
       
-      const scrollY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.removeChild(screen);
-      document.body.classList.remove("noscroll");
-      window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      dismissTopLayer();
     });
   }
   
-  backBtn.addEventListener("click", () => {
-    const scrollY = document.body.style.top;
-    document.body.style.position = '';
-    document.body.style.top = '';
-    document.body.style.width = '';
-    document.body.removeChild(screen);
-    document.body.classList.remove("noscroll");
-    window.scrollTo(0, parseInt(scrollY || '0') * -1);
-  });
-  
+    
   if (!isViewOnlyMode) {
     updateTotalPrice();
   }
@@ -762,6 +911,10 @@ async function loadMenu() {
 
   categories = menuJson.categories.map(cat => cat.name);
 
+  categoryStorageKey = `totemino_cat_${restaurantId}_${menuTypeFilter}`;
+  const startIndex = getInitialCategoryIndex();
+  currentCategoryIndex = startIndex; // niente animazione di slide al ripristino
+
   nav.innerHTML = "";
   const pill = document.createElement("div");
   pill.style.transform = "translateX(0.7rem)";
@@ -771,15 +924,12 @@ async function loadMenu() {
   categories.forEach((cat, index) => {
     const btn = document.createElement("button");
     btn.textContent = cat;
-    if (index === 0) btn.classList.add("active");  // ✅ AGGIUNGI QUESTA RIGA
+    if (index === startIndex) btn.classList.add("active");
     btn.addEventListener("click", () => setActiveCategory(index));
     nav.appendChild(btn);
   });
 
-  nav.addEventListener("scroll", () => {
-    const active = document.querySelector(".categories button.active");
-    if (active) movePillTo(active);
-  });
+  // (listener 'scroll' sulla nav rimosso: la pill e' dentro la nav e scorre con lei)
   window.addEventListener("resize", () => {
     const active = document.querySelector(".categories button.active");
     if (active) movePillTo(active);
@@ -820,7 +970,7 @@ async function loadMenu() {
   const checkAndActivate = () => {
     const firstButton = nav.querySelector("button");
     if (firstButton && firstButton.offsetWidth > 0) {
-      setActiveCategory(0, true);
+      setActiveCategory(startIndex, true);
     } else {
       setTimeout(checkAndActivate, 1000);
     }
@@ -850,6 +1000,7 @@ function setActiveCategory(index, skipAnimationBlock = false) {
   }
 
   currentCategoryIndex = index;
+  saveCurrentCategory(index);
   
   // ✅ Imposta animazione in corso
   if (!skipAnimationBlock) {
@@ -911,7 +1062,8 @@ function renderItems(category) {
 
   setTimeout(() => {
     itemsContainer.innerHTML = "";
-    const items = window.menuData[category] || [];
+    const items = Array.isArray(category) ? category : (window.menuData[category] || []);
+    const frag = document.createDocumentFragment();
 
     items.forEach(item => {
       const btn = document.createElement("button");
@@ -932,19 +1084,36 @@ function renderItems(category) {
       btn.appendChild(infoBtn);
 
       const img = document.createElement("img");
-      img.src = item.img;
+      img.loading = "lazy";
+      img.decoding = "async";
       img.alt = item.displayName;
+      img.src = item.img;
       img.onerror = () => { img.src = 'img/placeholder.png'; };
       
       const title = document.createElement("h3");
       title.setAttribute('data-item-name', item.name);
-      title.textContent = item.displayName;
+      const titleText = document.createElement("span");
+      titleText.className = "title-text";
+      titleText.textContent = item.displayName;
+      titleText.dataset.full = item.displayName;
+      title.appendChild(titleText);
 
       const price = document.createElement("p");
       price.textContent = `€${item.price.toFixed(2)}`;
 
       btn.appendChild(img);
       btn.appendChild(title);
+
+      if (viewMode === "list") {
+        const descText = plainDescription(item.description);
+        if (descText) {
+          const desc = document.createElement("div");
+          desc.className = "item-desc";
+          desc.textContent = descText;
+          btn.appendChild(desc);
+        }
+      }
+
       btn.appendChild(price);
 
       btn.addEventListener("click", (event) => {
@@ -1021,9 +1190,18 @@ function renderItems(category) {
         }
       });
 
-      itemsContainer.appendChild(btn);
-      updateItemButtonUI(item.name);
+      frag.appendChild(btn);
     });
+
+    if (items.length === 0 && searchActive) {
+      const empty = document.createElement("div");
+      empty.className = "no-results";
+      empty.textContent = "Nessun risultato";
+      frag.appendChild(empty);
+    }
+    itemsContainer.appendChild(frag);
+    fitGridTitles();
+    if (!isViewOnlyMode) items.forEach(i => updateItemButtonUI(i.name));
 
     itemsContainer.classList.remove("fade-out-left", "fade-out-right", "fade-out-simple");
     if (lastSwipeDirection === null) {
@@ -1271,25 +1449,22 @@ if (nextBtn) {
 let startX = 0, startY = 0, isSwipe = false;
 
 if (itemsContainer) {
+  // Listener passivi: il browser non deve aspettare il JS prima di scrollare (meno lag)
   itemsContainer.addEventListener("touchstart", (e) => {
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
-    isSwipe = true; // inizialmente assumiamo che sia uno swipe valido
-  });
+    isSwipe = true;
+  }, { passive: true });
 
   itemsContainer.addEventListener("touchmove", (e) => {
+    if (!isSwipe) return;
     const deltaX = Math.abs(e.touches[0].clientX - startX);
     const deltaY = Math.abs(e.touches[0].clientY - startY);
-    
-    if (deltaY > deltaX) {
-      // movimento verticale maggiore di quello orizzontale → blocca swipe
-      isSwipe = false;
-    }
-  });
+    if (deltaY > deltaX) isSwipe = false; // movimento verticale → non è uno swipe
+  }, { passive: true });
 
   itemsContainer.addEventListener("touchend", (e) => {
-    if (!isSwipe) return; // se è verticale, non fare swipe
-
+    if (!isSwipe || searchActive) return;
     const endX = e.changedTouches[0].clientX;
     const threshold = 50;
     if (endX - startX > threshold) {
@@ -1299,7 +1474,299 @@ if (itemsContainer) {
       lastSwipeDirection = "left";
       setActiveCategory(currentCategoryIndex + 1);
     }
+  }, { passive: true });
+}
+
+// ===== MENU LATERALE (hamburger) =====
+function setViewMode(mode, rerender = true) {
+  viewMode = mode;
+  try { localStorage.setItem(VIEW_MODE_KEY, mode); } catch (e) {}
+
+  itemsContainer.classList.toggle("list-view", mode === "list");
+  document.querySelectorAll(".side-segmented button").forEach(b => {
+    const on = b.dataset.view === mode;
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+
+  if (rerender && categories.length) {
+    lastSwipeDirection = null;
+    renderItems(categories[currentCategoryIndex]);
+  }
+}
+
+// Nessuna API web permette di aprire la UI di traduzione del browser (Chrome/Safari):
+// mostriamo un suggerimento breve su come aprirla.
+function showToast(message, ms = 5000) {
+  const old = document.querySelector(".totemino-toast");
+  if (old) old.remove();
+  const el = document.createElement("div");
+  el.className = "totemino-toast";
+  el.textContent = message;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add("show"));
+  setTimeout(() => {
+    el.classList.remove("show");
+    setTimeout(() => el.remove(), 300);
+  }, ms);
+}
+
+function openLanguageSelector() {
+  dismissTopLayer(); // chiude il menu laterale
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const isChrome = /Chrome|CriOS/.test(ua) && !/Edg|OPR/.test(ua);
+
+  let msg = "Apri il menu del browser e scegli “Traduci”.";
+  if (isChrome) msg = "Tocca ⋮ del browser e scegli “Traduci…” per tradurre il menu.";
+  else if (isIOS) msg = "Tocca “aA” nella barra degli indirizzi e scegli “Traduci in…”.";
+
+  setTimeout(() => showToast(msg), 300);
+}
+
+// TODO: da implementare (aprire la fotocamera e leggere il QR di un altro ristorante)
+function openRestaurantScanner() {
+  console.log("Scanner ristorante: non ancora implementato");
+}
+
+function initSideMenu() {
+  const toggle = document.getElementById("menu-toggle");
+  const panel = document.getElementById("side-menu");
+  const overlay = document.getElementById("side-menu-overlay");
+  if (!toggle || !panel || !overlay) return;
+
+  let isOpen = false;
+
+  function show() {
+    if (isOpen) return;
+    isOpen = true;
+    panel.classList.add("open");
+    overlay.classList.add("show");
+    panel.setAttribute("aria-hidden", "false");
+    toggle.setAttribute("aria-expanded", "true");
+    lockScroll();
+    pushLayer(hide);
+  }
+
+  function hide() {
+    if (!isOpen) return;
+    isOpen = false;
+    panel.classList.remove("open");
+    overlay.classList.remove("show");
+    panel.style.transform = "";
+    overlay.style.opacity = "";
+    panel.setAttribute("aria-hidden", "true");
+    toggle.setAttribute("aria-expanded", "false");
+    unlockScroll();
+  }
+
+  toggle.addEventListener("click", show);
+  overlay.addEventListener("click", dismissTopLayer);
+  panel.querySelector(".side-menu-close").addEventListener("click", dismissTopLayer);
+
+  // Trascina verso destra (sul pannello o sullo sfondo scuro) per chiuderlo: il pannello segue il dito
+  let sx = 0, sy = 0, st = 0, dx = 0, mode = null; // mode: null | 'h' | 'v' | 'ignore'
+
+  const onStart = (e) => {
+    if (!isOpen || e.touches.length !== 1) { mode = "ignore"; return; }
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
+    st = Date.now();
+    dx = 0;
+    mode = null;
+    panel.style.transition = "none";
+  };
+
+  const onMove = (e) => {
+    if (mode === "ignore" || mode === "v") return;
+    const t = e.touches[0];
+    dx = t.clientX - sx;
+    const dy = t.clientY - sy;
+    if (mode === null) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      mode = (dx > 0 && Math.abs(dx) > Math.abs(dy) * 1.5) ? "h" : "v";
+      if (mode === "v") return;
+    }
+    const x = Math.max(0, dx);
+    panel.style.transform = `translate3d(${x}px, 0, 0)`;
+    overlay.style.opacity = String(Math.max(0, 1 - x / panel.offsetWidth));
+  };
+
+  const onEnd = () => {
+    const wasHorizontal = mode === "h";
+    mode = null;
+    panel.style.transition = "";
+    if (!wasHorizontal) return;
+    overlay.style.opacity = "";
+    const fast = dx / Math.max(1, Date.now() - st) > 0.5;
+    if (dx > 80 || (dx > 40 && fast)) {
+      dismissTopLayer();            // hide() ripulisce lo stile inline e il pannello esce da dov'è
+    } else {
+      panel.style.transform = "";   // torna aperto con transizione
+    }
+  };
+
+  [panel, overlay].forEach(el => {
+    el.addEventListener("touchstart", onStart, { passive: true });
+    el.addEventListener("touchmove", onMove, { passive: true });
+    el.addEventListener("touchend", onEnd, { passive: true });
+    el.addEventListener("touchcancel", onEnd, { passive: true });
+  });
+
+  panel.querySelectorAll(".side-segmented button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (btn.dataset.view !== viewMode) setViewMode(btn.dataset.view);
+      setTimeout(dismissTopLayer, 180);
+    });
+  });
+
+  document.getElementById("language-btn").addEventListener("click", openLanguageSelector);
+  document.getElementById("scan-btn").addEventListener("click", openRestaurantScanner);
+
+  // Etichetta del tema (il toggle vero lo gestisce theme.js tramite #theme)
+  const updateThemeLabel = () => {
+    const el = document.getElementById("theme-value");
+    if (el) el.textContent = document.documentElement.getAttribute("data-theme") === "dark" ? "Scuro" : "Chiaro";
+  };
+  updateThemeLabel();
+  new MutationObserver(updateThemeLabel).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+}
+
+initSideMenu();
+
+
+// ===== TITOLI GRIGLIA: 2 righe, ultima parola tagliata a metà con "…" =====
+// Il browser con line-clamp manda a capo l'ultima parola e la nasconde intera:
+// qui calcoliamo noi il taglio (con canvas, senza forzare layout per ogni titolo).
+const titleMeasureCtx = document.createElement("canvas").getContext("2d");
+
+function fitTwoLines(text, maxW, measure) {
+  const words = text.split(/\s+/).filter(Boolean);
+  let line1 = "";
+  let i = 0;
+  while (i < words.length) {
+    const cand = line1 ? line1 + " " + words[i] : words[i];
+    if (measure(cand) <= maxW) { line1 = cand; i++; } else break;
+  }
+  if (i >= words.length) return text;       // sta in una riga
+  if (!line1) return text;                  // prima parola enorme: ci pensa il CSS
+  const rest = words.slice(i).join(" ");
+  if (measure(rest) <= maxW) return text;   // sta in due righe
+
+  let lo = 0, hi = rest.length;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (measure(rest.slice(0, mid).trimEnd() + "…") <= maxW) lo = mid; else hi = mid - 1;
+  }
+  return line1 + " " + rest.slice(0, lo).trimEnd() + "…";
+}
+
+function fitGridTitles() {
+  const spans = itemsContainer.querySelectorAll(".title-text");
+  if (!spans.length) return;
+
+  if (viewMode !== "grid") {                // vista dettagliata: ellipsis CSS su una riga
+    spans.forEach(sp => { if (sp.dataset.full) sp.textContent = sp.dataset.full; });
+    return;
+  }
+
+  const maxW = spans[0].clientWidth;        // tutte le card della griglia hanno la stessa larghezza
+  if (!maxW) return;
+  const cs = getComputedStyle(spans[0]);
+  titleMeasureCtx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  const measure = (t) => titleMeasureCtx.measureText(t).width;
+
+  spans.forEach(sp => {
+    const full = sp.dataset.full;
+    if (full) sp.textContent = fitTwoLines(full, maxW - 1, measure);
   });
 }
+
+let fitTitlesTimer = null;
+window.addEventListener("resize", () => {
+  clearTimeout(fitTitlesTimer);
+  fitTitlesTimer = setTimeout(fitGridTitles, 150);
+});
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitGridTitles); // font QS caricato → rimisura
+
+// ===== RICERCA =====
+function initSearch() {
+  const row = document.querySelector(".categories-row");
+  const btn = document.getElementById("search-btn");
+  const input = document.getElementById("search-input");
+  if (!row || !btn || !input) return;
+
+  // Misura la barra categorie e la usa come altezza della riga (bottone tondo, campo alto uguale)
+  const measure = () => {
+    const h = nav.offsetHeight;
+    if (h > 0) row.style.setProperty("--cat-h", h + "px"); // 0 = nav nascosta durante la ricerca
+  };
+  measure();
+  if (window.ResizeObserver) new ResizeObserver(measure).observe(nav);
+  window.addEventListener("resize", measure);
+  window.addEventListener("load", measure);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+
+  const norm = (t) => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  let timer = null;
+
+  function runSearch() {
+    const q = norm(input.value).trim();
+    lastSwipeDirection = null;
+    if (!q) {
+      renderItems(categories[currentCategoryIndex]);
+      return;
+    }
+    const results = [];
+    categories.forEach(cat => {
+      (window.menuData[cat] || []).forEach(item => {
+        if (norm(item.displayName).includes(q) || norm(plainDescription(item.description)).includes(q)) {
+          results.push(item);
+        }
+      });
+    });
+    renderItems(results);
+  }
+
+  function openSearch() {
+    if (searchActive) return;
+    searchActive = true;
+    row.classList.add("searching");
+    btn.setAttribute("aria-expanded", "true");
+    btn.setAttribute("aria-label", "Chiudi la ricerca");
+    btn.firstElementChild.className = "fa-solid fa-xmark";
+    input.value = "";
+    input.focus();
+    pushLayer(closeSearch);
+  }
+
+  function closeSearch() {
+    if (!searchActive) return;
+    searchActive = false;
+    clearTimeout(timer);
+    row.classList.remove("searching");
+    btn.setAttribute("aria-expanded", "false");
+    btn.setAttribute("aria-label", "Cerca");
+    btn.firstElementChild.className = "fa-solid fa-magnifying-glass";
+    input.blur();
+    input.value = "";
+    lastSwipeDirection = null;
+    renderItems(categories[currentCategoryIndex]);
+  }
+
+  btn.addEventListener("click", () => {
+    if (searchActive) dismissTopLayer(); else openSearch();
+  });
+  input.addEventListener("input", () => {
+    clearTimeout(timer);
+    timer = setTimeout(runSearch, 220);
+  });
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") input.blur(); // chiude la tastiera, i risultati restano
+  });
+}
+
+initSearch();
+setViewMode(viewMode, false); // applica la modalità salvata prima del primo render
 
 loadMenu();

@@ -1,6 +1,6 @@
 // ===== CONFIGURAZIONE =====
 const API_BASE = '/api/auth';
-const MIN_PASSWORD_LENGTH = 8;
+const INFO_ENDPOINT = '/api/info-request';
 
 // ===== GESTIONE UI =====
 class UIManager {
@@ -27,16 +27,6 @@ class UIManager {
         button.disabled = isLoading;
         button.textContent = isLoading ? 'Attendere...' : button.dataset.originalText;
     }
-
-    static resetPasswordRequirements() {
-        const container = document.getElementById('passwordRequirements');
-        if (container) {
-            container.classList.remove('success', 'error');
-            container.querySelectorAll('.requirement').forEach(req => {
-                req.classList.remove('valid', 'invalid');
-            });
-        }
-    }
 }
 
 // ===== VALIDAZIONE =====
@@ -47,59 +37,16 @@ class Validator {
         return { valid: true };
     }
 
-    static validatePassword(password, isRegistration = false) {
+    static validatePassword(password) {
         if (!password) return { valid: false, error: 'Password richiesta' };
-        
-        if (isRegistration) {
-            const requirements = {
-                length: password.length >= MIN_PASSWORD_LENGTH,
-                number: /\d/.test(password)
-            };
-
-            if (!requirements.length) {
-                return { valid: false, error: `Password deve essere di almeno ${MIN_PASSWORD_LENGTH} caratteri` };
-            }
-            if (!requirements.number) {
-                return { valid: false, error: 'Password deve contenere almeno un numero' };
-            }
-
-            return { valid: true, requirements };
-        }
-
         return { valid: true };
     }
 
-    static validatePasswordMatch(password, confirm) {
-        if (password !== confirm) {
-            return { valid: false, error: 'Le password non coincidono' };
-        }
+    static validateEmail(email) {
+        if (!email) return { valid: false, error: 'Email richiesta' };
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return { valid: false, error: 'Inserisci un indirizzo email valido' };
         return { valid: true };
     }
-}
-
-// ===== GESTIONE PASSWORD REQUIREMENTS =====
-function updatePasswordRequirements(password) {
-    const requirements = {
-        length: password.length >= MIN_PASSWORD_LENGTH,
-        number: /\d/.test(password)
-    };
-
-    Object.keys(requirements).forEach(req => {
-        const element = document.querySelector(`[data-req="${req}"]`);
-        if (element) {
-            element.classList.toggle('valid', requirements[req]);
-            element.classList.toggle('invalid', !requirements[req] && password.length > 0);
-        }
-    });
-
-    const allValid = Object.values(requirements).every(Boolean);
-    const container = document.getElementById('passwordRequirements');
-    if (container && password.length > 0) {
-        container.classList.toggle('success', allValid);
-        container.classList.toggle('error', !allValid);
-    }
-
-    return allValid;
 }
 
 // ===== API CALLS =====
@@ -120,22 +67,6 @@ class AuthAPI {
         return data;
     }
 
-    static async register(userCode, password) {
-        const response = await fetch(`${API_BASE}/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userCode, password })
-        });
-
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.message || 'Errore durante la registrazione');
-        }
-
-        return data;
-    }
-
     static async checkAuth() {
         try {
             const response = await fetch(`${API_BASE}/me`);
@@ -146,6 +77,25 @@ class AuthAPI {
             
         }
         return null;
+    }
+}
+
+class InfoAPI {
+    static async send(payload) {
+        const response = await fetch(INFO_ENDPOINT, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        let data = {};
+        try { data = await response.json(); } catch (e) {}
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Impossibile inviare la richiesta. Riprova tra poco.');
+        }
+
+        return data;
     }
 }
 
@@ -170,8 +120,8 @@ function initTabSwitching() {
             // Reset forms and UI
             UIManager.clearMessage();
             document.getElementById('loginForm').reset();
-            document.getElementById('registerForm').reset();
-            UIManager.resetPasswordRequirements();
+            document.getElementById('infoForm').reset();
+            document.querySelectorAll('#infoForm .error').forEach(el => el.classList.remove('error'));
         });
     });
 }
@@ -199,29 +149,6 @@ function initInputFormatting() {
             e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
         });
     });
-
-    // Password strength checker
-    const newPasswordInput = document.getElementById('newUserPassword');
-    if (newPasswordInput) {
-        newPasswordInput.addEventListener('input', (e) => {
-            updatePasswordRequirements(e.target.value);
-        });
-    }
-
-    // Confirm password checker
-    const confirmInput = document.getElementById('confirmPassword');
-    if (confirmInput) {
-        confirmInput.addEventListener('input', (e) => {
-            const password = document.getElementById('newUserPassword').value;
-            const confirm = e.target.value;
-            
-            if (confirm.length > 0) {
-                e.target.classList.toggle('error', password !== confirm);
-            } else {
-                e.target.classList.remove('error');
-            }
-        });
-    }
 }
 
 // ===== LOGIN FORM =====
@@ -265,60 +192,59 @@ async function handleLogin(e) {
     }
 }
 
-// ===== REGISTER FORM =====
-async function handleRegister(e) {
+// ===== INFO REQUEST FORM =====
+async function handleInfoRequest(e) {
     e.preventDefault();
-    
-    const userCode = document.getElementById('newUserCode').value.trim();
-    const password = document.getElementById('newUserPassword').value;
-    const confirm = document.getElementById('confirmPassword').value;
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    
+
+    const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const val = id => document.getElementById(id).value.trim();
+
     UIManager.clearMessage();
-    
-    // Validazione user code
-    const codeValidation = Validator.validateUserCode(userCode);
-    if (!codeValidation.valid) {
-        UIManager.showMessage(codeValidation.error, 'error');
-        return;
-    }
-    
-    // Validazione password
-    const passwordValidation = Validator.validatePassword(password, true);
-    if (!passwordValidation.valid) {
-        UIManager.showMessage(passwordValidation.error, 'error');
-        return;
-    }
-    
-    // Validazione password match
-    const matchValidation = Validator.validatePasswordMatch(password, confirm);
-    if (!matchValidation.valid) {
-        UIManager.showMessage(matchValidation.error, 'error');
-        return;
-    }
-    
-    // Submit
+    form.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+
+    const data = {
+        restaurantName: val('restaurantName'),
+        contactName: val('contactName'),
+        contactEmail: val('contactEmail'),
+        contactPhone: val('contactPhone'),
+        city: val('city'),
+        venueType: document.getElementById('venueType').value,
+        tables: (form.querySelector('input[name="tables"]:checked') || {}).value || '',
+        interests: Array.from(form.querySelectorAll('input[name="interests"]:checked'), i => i.value),
+        currentSystem: document.getElementById('currentSystem').value,
+        notes: val('notes'),
+        privacyConsent: document.getElementById('privacyConsent').checked
+    };
+
+    const fail = (message, el) => {
+        UIManager.showMessage(message, 'error');
+        if (el) {
+            el.classList.add('error');
+            if (el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    };
+
+    if (!data.restaurantName) return fail('Inserisci il nome del locale', document.getElementById('restaurantName'));
+    if (!data.contactName) return fail('Inserisci il tuo nome', document.getElementById('contactName'));
+
+    const emailValidation = Validator.validateEmail(data.contactEmail);
+    if (!emailValidation.valid) return fail(emailValidation.error, document.getElementById('contactEmail'));
+
+    if (!data.venueType) return fail('Seleziona il tipo di locale', document.getElementById('venueType'));
+    if (!data.tables) return fail('Indica quanti tavoli ha il tuo locale', form.querySelector('.choice-group').closest('.form-group'));
+    if (!data.privacyConsent) return fail('Devi acconsentire al trattamento dei dati per inviare la richiesta', document.querySelector('.choice.consent'));
+
     UIManager.setButtonLoading(submitBtn, true);
-    
+
     try {
-        const result = await AuthAPI.register(userCode, password);
-        UIManager.showMessage('Registrazione completata! Accesso in corso...', 'success');
-        
-        // Auto-login dopo registrazione
-        setTimeout(async () => {
-            try {
-                await AuthAPI.login(userCode, password);
-                window.location.href = `profile.html?id=${userCode}`;
-            } catch (error) {
-                UIManager.showMessage('Registrazione completata. Effettua il login.', 'success');
-                // Switch to login tab
-                document.querySelector('[data-tab="login"]').click();
-                UIManager.setButtonLoading(submitBtn, false);
-            }
-        }, 1000);
-        
+        await InfoAPI.send(data);
+        form.reset();
+        UIManager.showMessage('Richiesta inviata! Ti ricontatteremo al più presto.', 'success');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
         UIManager.showMessage(error.message, 'error');
+    } finally {
         UIManager.setButtonLoading(submitBtn, false);
     }
 }
@@ -337,7 +263,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Attach form handlers
     document.getElementById('loginForm').addEventListener('submit', handleLogin);
-    document.getElementById('registerForm').addEventListener('submit', handleRegister);
+    document.getElementById('infoForm').addEventListener('submit', handleInfoRequest);
     
     // Check if already authenticated
     const authData = await AuthAPI.checkAuth();
