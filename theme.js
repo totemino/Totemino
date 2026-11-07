@@ -172,8 +172,8 @@ class ThemeManager {
           opacity: 0; transition: opacity .2s;
       
           /* invisibile fino a 100px, poi sfuma fino a pieno a 200px */
-          -webkit-mask-image: linear-gradient(to bottom, transparent 100px, #000 200px);
-                  mask-image: linear-gradient(to bottom, transparent 100px, #000 200px);
+          -webkit-mask-image: linear-gradient(to bottom, transparent 72px, #000 384px);
+                  mask-image: linear-gradient(to bottom, transparent 72px, #000 384px);
         }
         .bg-pattern.show { opacity: .15; }
         [data-theme="dark"] .bg-pattern { filter: invert(1); }
