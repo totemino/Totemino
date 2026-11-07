@@ -169,13 +169,13 @@ class ThemeManager {
         .bg-pattern {
           position: fixed; inset: 0; z-index: -2; pointer-events: none;
           background-position: center; background-size: cover; background-repeat: no-repeat;
-          opacity: 0; transition: opacity .2s;
+          opacity: 0; transition: opacity .4s;
       
           /* invisibile fino a 100px, poi sfuma fino a pieno a 200px */
           -webkit-mask-image: linear-gradient(to bottom, transparent 72px, #000 384px);
                   mask-image: linear-gradient(to bottom, transparent 72px, #000 384px);
         }
-        .bg-pattern.show { opacity: .15; }
+        .bg-pattern.show { opacity: .08; }
         [data-theme="dark"] .bg-pattern { filter: invert(1); }
       `;
       document.head.appendChild(style);
