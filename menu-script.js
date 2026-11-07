@@ -1642,8 +1642,7 @@ function initSideMenu() {
   });
 
   document.getElementById("language-btn").addEventListener("click", openLanguageSelector);
-  document.getElementById("scan-btn").addEventListener("click", openRestaurantScanner);
-
+  
   // Etichetta del tema (il toggle vero lo gestisce theme.js tramite #theme)
   const updateThemeLabel = () => {
     const el = document.getElementById("theme-value");
