@@ -265,6 +265,18 @@ function getCustomizationLabel(customizations) {
   return labels.length > 0 ? ` (${labels.join(', ')})` : '';
 }
 
+// Etichetta prezzo di un item, in base a prezzo e presenza di customizzazioni
+function getPriceLabel(item) {
+  const hasCustomizations = !!item.customizable;
+
+  if (item.price <= 0) {
+    return hasCustomizations ? "Seleziona" : "Gratuito";
+  }
+
+  const price = `€${item.price.toFixed(2)}`;
+  return hasCustomizations ? `${price} + Modifica` : price;
+}
+
 function updateItemButtonUI(itemName) {
   const buttons = itemsContainer.querySelectorAll("button");
   
@@ -1099,7 +1111,8 @@ function renderItems(category) {
       title.appendChild(titleText);
 
       const price = document.createElement("p");
-      price.textContent = `€${item.price.toFixed(2)}`;
+      price.textContent = getPriceLabel(item);
+      if (item.customizable) price.classList.add("customizable-price");
 
       btn.appendChild(img);
       btn.appendChild(title);
