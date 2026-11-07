@@ -283,7 +283,7 @@
 }
 
 .menu-left span {
-  font-size: 0.8rem;
+  font-size: 1rem;
   font-weight: 500;
 }
 
@@ -470,9 +470,6 @@
   }
   .menu-item {
     padding: 1.25rem;
-  }
-  .menu-left span {
-    font-size: 1rem;
   }
 }
 
