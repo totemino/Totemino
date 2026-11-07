@@ -468,6 +468,9 @@
     height: 5rem;
     font-size: 2rem;
   }
+  .menu-item {
+    padding: 1.25rem;
+  }
   .menu-left span {
     font-size: 1rem;
   }
