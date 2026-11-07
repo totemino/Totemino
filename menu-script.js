@@ -34,12 +34,10 @@ isViewOnlyMode = true;
 document.documentElement.classList.add('view-only');
 
 // ===== VISUALIZZAZIONE (griglia / dettagliata) =====
-const VIEW_MODE_KEY = 'totemino_view_mode';
+// La modalità iniziale è sempre quella scelta dal ristorante (settings.menu.defaultView),
+// letta ad ogni caricamento/refresh. La scelta del cliente vale solo finché la pagina resta aperta.
 let viewMode = 'grid';
-try {
-  const v = localStorage.getItem(VIEW_MODE_KEY);
-  if (v === 'list' || v === 'grid') viewMode = v;
-} catch (e) {}
+try { localStorage.removeItem('totemino_view_mode'); } catch (e) {} // vecchia chiave: non serve più
 
 // ===== CATEGORIA CORRENTE (ripristinata dopo il ricaricamento) =====
 let categoryStorageKey = null;
@@ -864,6 +862,17 @@ async function loadMenu() {
     return;
   }
 
+  // Visualizzazione predefinita scelta dal ristorante (griglia / dettagliata)
+  try {
+    const sRes = await fetch(`IDs/${restaurantId}/settings.json`, { cache: "no-store" });
+    if (sRes.ok) {
+      const s = await sRes.json();
+      setViewMode(s.menu?.defaultView === "detailed" ? "list" : "grid", false);
+    }
+  } catch (e) {
+    console.warn("Impossibile leggere la visualizzazione predefinita:", e);
+  }
+
   const res = await fetch(`IDs/${restaurantId}/menu.json`);
   const menuJson = await res.json();
   
@@ -1493,7 +1502,6 @@ if (itemsContainer) {
 // ===== MENU LATERALE (hamburger) =====
 function setViewMode(mode, rerender = true) {
   viewMode = mode;
-  try { localStorage.setItem(VIEW_MODE_KEY, mode); } catch (e) {}
 
   itemsContainer.classList.toggle("list-view", mode === "list");
   document.querySelectorAll(".side-segmented button").forEach(b => {

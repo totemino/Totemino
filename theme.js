@@ -1,33 +1,10 @@
 // ===============================
 // THEME MANAGER
-// Applica tema (chiaro/scuro), palette, luci e sfondo scelti in settings.html.
+// Applica tema (chiaro/scuro), palette e sfondo scelti in settings.html.
 // Funziona solo nelle pagine con ?id= nell'URL.
 // ===============================
 const BG_PATH_RE = /^img\/sfondi\/[\w.-]+\.svg$/;   // solo gli sfondi previsti
 const HEX_RE = /^#[0-9a-f]{6}$/i;
-
-// HEX -> HSL (h in gradi, s e l tra 0 e 1)
-function hexToHsl(hex) {
-  const r = parseInt(hex.slice(1, 3), 16) / 255;
-  const g = parseInt(hex.slice(3, 5), 16) / 255;
-  const b = parseInt(hex.slice(5, 7), 16) / 255;
-  const max = Math.max(r, g, b), min = Math.min(r, g, b);
-  const l = (max + min) / 2;
-  const d = max - min;
-  let h = 0, s = 0;
-  if (d !== 0) {
-    s = d / (1 - Math.abs(2 * l - 1));
-    if (max === r) h = ((g - b) / d) % 6;
-    else if (max === g) h = (b - r) / d + 2;
-    else h = (r - g) / d + 4;
-    h *= 60;
-    if (h < 0) h += 360;
-  }
-  return { h, s, l };
-}
-
-const hsla = (h, s, l, a = 1) =>
-  `hsla(${Math.round(((h % 360) + 360) % 360)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%, ${a})`;
 
 class ThemeManager {
   constructor() {
@@ -45,6 +22,12 @@ class ThemeManager {
   }
 
   init() {
+    // Al refresh della pagina la scelta del cliente viene scartata:
+    // torna a valere la modalità (chiaro/scuro/auto) impostata dal ristorante.
+    if (this.isReload()) {
+      try { localStorage.removeItem("totemino_theme"); } catch (e) {}
+    }
+
     // Ultima configurazione nota: evita lo sfarfallio tra una pagina e l'altra
     if (this.cacheKey) {
       try {
@@ -57,6 +40,16 @@ class ThemeManager {
 
     this.loadSettings();
     this.themeButton?.addEventListener("click", () => this.toggleTheme());
+  }
+
+  isReload() {
+    try {
+      const nav = performance.getEntriesByType && performance.getEntriesByType("navigation")[0];
+      if (nav) return nav.type === "reload";
+      return !!(performance.navigation && performance.navigation.type === 1);
+    } catch (e) {
+      return false;
+    }
   }
 
   // Priorità: scelta del cliente (bottone tema) > modalità del ristorante > sistema
@@ -134,56 +127,31 @@ class ThemeManager {
     this.updateAccentGold();
   }
 
-  // Colori: se il ristorante ha scelto una palette si usa quella (accenti + luci di sfondo),
+  // Colori: se il ristorante ha scelto una palette si usa quella,
   // altrimenti resta il comportamento originale basato sull'hue.
-  // --text-accent non viene mai toccato: titolo e hamburger restano come da CSS.
   updateAccentGold() {
-    const dark = (this.html.getAttribute("data-theme") || "light") === "dark";
+    const currentTheme = this.html.getAttribute("data-theme") || "light";
     const colors = this.appearance?.theme?.colors;
 
     if (colors && HEX_RE.test(colors.accent) && HEX_RE.test(colors.accent2)) {
-      const a = hexToHsl(colors.accent);
-      const b = hexToHsl(colors.accent2);
-
-      // In chiaro restano quelli della palette (testo nero leggibile);
-      // in scuro si abbassa la luminosità (testo crema leggibile, es. tag "Novità")
-      const accent = dark ? hsla(a.h, Math.min(a.s, 0.65), 0.42) : colors.accent;
-      const glow = dark ? hsla(a.h, Math.min(a.s, 0.65), 0.42, 0.8) : colors.accent + "cc";
-      const accent2 = dark ? hsla(b.h, b.s, 0.45) : colors.accent2;
-
-      this.html.style.setProperty("--accent-gold", accent);
-      this.html.style.setProperty("--selected-glow", glow);
-      this.html.style.setProperty("--accent-pink", accent2);
-
-      // Luci di sfondo: stesse tonalità della palette, stessa trasparenza delle originali
-      const sa = Math.min(1, a.s + 0.2);
-      const sb = Math.min(1, b.s + 0.1);
-      if (dark) {
-        this.html.style.setProperty("--light1", hsla(a.h, sa, 0.5, 0.6));
-        this.html.style.setProperty("--light2", hsla(b.h, sb, 0.5, 0.8));
-        this.html.style.setProperty("--light3", hsla(b.h + 30, sb, 0.5, 0.6));
-      } else {
-        this.html.style.setProperty("--light1", hsla(a.h, sa, 0.7, 0.65));
-        this.html.style.setProperty("--light2", hsla(b.h, sb, 0.65, 0.5));
-        this.html.style.setProperty("--light3", hsla(b.h + 30, sb, 0.65, 0.3));
-      }
-
-      // il vecchio hue-rotate non deve spostare i colori della palette
-      this.html.style.setProperty("--bg-hue", "0deg");
-      this.html.style.setProperty("--bg-sat", "1");
+      const text = currentTheme === "dark" ? colors.textDark : colors.textLight;
+      this.html.style.setProperty("--accent-gold", colors.accent);
+      this.html.style.setProperty("--selected-glow", colors.accent + "cc");
+      this.html.style.setProperty("--accent-pink", colors.accent2);
+      if (HEX_RE.test(text)) this.html.style.setProperty("--text-accent", text);
       return;
     }
 
-    // palette "Classico": rimuove ogni override e usa la logica originale
+    // palette "Classico": rimuove eventuali override e usa la logica originale
     this.html.style.removeProperty("--accent-pink");
-    ["--light1", "--light2", "--light3"].forEach(v => this.html.style.removeProperty(v));
+    this.html.style.removeProperty("--text-accent");
 
     const hue = parseFloat(
       getComputedStyle(this.html).getPropertyValue("--bg-hue").trim()
     );
 
     let accentColor;
-    if (!dark) {
+    if (currentTheme === "light") {
       if (hue >= 0 && hue < 60) accentColor = "#ffd700";
       else if (hue >= 60 && hue < 120) accentColor = "#c4ff30";
       else if (hue >= 120 && hue < 180) accentColor = "#2aff95";
@@ -203,7 +171,7 @@ class ThemeManager {
     this.html.style.setProperty("--selected-glow", accentColor + "cc");
   }
 
-  // Sfondo: livello fisso sotto alle luci, con sfumatura dall'alto
+  // Sfondo: livello fisso sotto alle luci, chiaro al 20%
   applyBackground() {
     if (!this.restaurantId) return;
 
@@ -218,12 +186,8 @@ class ThemeManager {
           position: fixed; inset: 0; z-index: -2; pointer-events: none;
           background-position: center; background-size: cover; background-repeat: no-repeat;
           opacity: 0; transition: opacity .4s;
-
-          /* invisibile fino a 72px, poi sfuma fino a pieno a 384px */
-          -webkit-mask-image: linear-gradient(to bottom, transparent 72px, #000 384px);
-                  mask-image: linear-gradient(to bottom, transparent 72px, #000 384px);
         }
-        .bg-pattern.show { opacity: .08; }
+        .bg-pattern.show { opacity: .2; }
         [data-theme="dark"] .bg-pattern { filter: invert(1); }
       `;
       document.head.appendChild(style);
