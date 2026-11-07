@@ -468,6 +468,9 @@
     height: 5rem;
     font-size: 2rem;
   }
+  .menu-left span {
+    font-size: 1rem;
+  }
 }
 
 @media (min-width: 1200px) {
