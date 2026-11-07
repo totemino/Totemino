@@ -170,8 +170,12 @@ class ThemeManager {
           position: fixed; inset: 0; z-index: -2; pointer-events: none;
           background-position: center; background-size: cover; background-repeat: no-repeat;
           opacity: 0; transition: opacity .4s;
+      
+          /* trasparente in alto, pienamente visibile da 128px in giù */
+          -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 128px);
+                  mask-image: linear-gradient(to bottom, transparent 0, #000 128px);
         }
-        .bg-pattern.show { opacity: .2; }
+        .bg-pattern.show { opacity: .15; }
         [data-theme="dark"] .bg-pattern { filter: invert(1); }
       `;
       document.head.appendChild(style);
