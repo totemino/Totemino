@@ -227,12 +227,12 @@ input[type="number"]::-webkit-outer-spin-button {
 /* ===== LUCI ANIMATE ===== */
 .bg-light {
   position: fixed;
-  width: 90vw;
-  height: 90vw;
+  width: 150vw;
+  height: 150vw;
   border-radius: 50%;
   filter: hue-rotate(var(--bg-hue)) saturate(var(--bg-sat)); /* niente blur(100px): troppo pesante per la GPU */
   will-change: transform;
-  opacity: 0.5;
+  opacity: 0.4;
   pointer-events: none;
   z-index: -1;
 }
