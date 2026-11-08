@@ -186,8 +186,8 @@ class ThemeManager {
           background-image: var(--bg-img);
           background-position: center; background-size: cover; background-repeat: no-repeat;
         }
-        /* schermo in verticale (height > width): nessuno sfondo */
-        @media (orientation: portrait) {
+        /* schermo in verticale (height < width): nessuno sfondo */
+        @media (orientation: landscape) {
           .bg-pattern { display: none; }
         }
         .bg-pattern.show { opacity: .08; }
