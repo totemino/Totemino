@@ -392,7 +392,7 @@ input[type="number"]::-webkit-outer-spin-button {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 1rem;
-  padding: 0 1rem 15rem 1rem;
+  padding: 0 1rem 15rem;
 }
 
 .items button {
@@ -911,7 +911,6 @@ input[type="number"]::-webkit-outer-spin-button {
 @media (min-width: 768px) {
   .items {
     gap: 1.2rem;
-    padding: 0 1rem;
   }
   .cart-popup {
     left: 50%;
@@ -953,9 +952,9 @@ input[type="number"]::-webkit-outer-spin-button {
 @media (min-width: 1200px) {
   .items {
     gap: 1.5rem;
-    padding: 0 2rem 1rem;
+    padding: 0 2rem 15rem;
     max-width: 1400px;
-    margin: 0 auto 16.5vh;
+    margin: 0 auto;
   }
 
   .items button {
