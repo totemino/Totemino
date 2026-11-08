@@ -22,12 +22,6 @@ class ThemeManager {
   }
 
   init() {
-    // Al refresh della pagina la scelta del cliente viene scartata:
-    // torna a valere la modalità (chiaro/scuro/auto) impostata dal ristorante.
-    if (this.isReload()) {
-      try { localStorage.removeItem("totemino_theme"); } catch (e) {}
-    }
-
     // Ultima configurazione nota: evita lo sfarfallio tra una pagina e l'altra
     if (this.cacheKey) {
       try {
@@ -42,19 +36,11 @@ class ThemeManager {
     this.themeButton?.addEventListener("click", () => this.toggleTheme());
   }
 
-  isReload() {
-    try {
-      const nav = performance.getEntriesByType && performance.getEntriesByType("navigation")[0];
-      if (nav) return nav.type === "reload";
-      return !!(performance.navigation && performance.navigation.type === 1);
-    } catch (e) {
-      return false;
-    }
-  }
-
-  // Priorità: scelta del cliente (bottone tema) > modalità del ristorante > sistema
+  // Priorità: scelta del cliente (persistente, anche dopo mesi)
+  //           > modalità di default del ristorante > sistema
   resolveTheme() {
-    const saved = localStorage.getItem("totemino_theme");
+    let saved = null;
+    try { saved = localStorage.getItem("totemino_theme"); } catch (e) {}
     if (saved === "dark" || saved === "light") return saved;
 
     const mode = this.appearance?.theme?.mode;
@@ -66,7 +52,9 @@ class ThemeManager {
   // persist = true solo quando è il cliente a scegliere con il bottone
   setTheme(theme, persist = false) {
     this.html.setAttribute("data-theme", theme);
-    if (persist) localStorage.setItem("totemino_theme", theme);
+    if (persist) {
+      try { localStorage.setItem("totemino_theme", theme); } catch (e) {}
+    }
 
     if (this.customTheme) {
       this.applyCustomTheme();
@@ -171,7 +159,9 @@ class ThemeManager {
     this.html.style.setProperty("--selected-glow", accentColor + "cc");
   }
 
-  // Sfondo: livello fisso sotto alle luci, chiaro al 20%
+  // Sfondo: livello fisso sotto alle luci, chiaro all'8%.
+  // Con schermo in verticale (height > width) l'immagine è ruotata di 90°;
+  // la rotazione è sul ::before, così la sfumatura in alto (mask) resta verticale.
   applyBackground() {
     if (!this.restaurantId) return;
 
@@ -184,12 +174,25 @@ class ThemeManager {
       style.textContent = `
         .bg-pattern {
           position: fixed; inset: 0; z-index: -2; pointer-events: none;
-          background-position: center; background-size: cover; background-repeat: no-repeat;
+          overflow: hidden;
           opacity: 0; transition: opacity .4s;
-      
-          /* invisibile fino a 100px, poi sfuma fino a pieno a 200px */
+
+          /* invisibile fino a 72px, poi sfuma fino a pieno a 384px */
           -webkit-mask-image: linear-gradient(to bottom, transparent 72px, #000 384px);
                   mask-image: linear-gradient(to bottom, transparent 72px, #000 384px);
+        }
+        .bg-pattern::before {
+          content: ""; position: absolute; inset: 0;
+          background-image: var(--bg-img);
+          background-position: center; background-size: cover; background-repeat: no-repeat;
+        }
+        /* schermo in verticale (height > width): immagine ruotata di 90° */
+        @media (orientation: portrait) {
+          .bg-pattern::before {
+            inset: auto; top: 50%; left: 50%;
+            width: 100vh; height: 100vw;
+            transform: translate(-50%, -50%) rotate(90deg);
+          }
         }
         .bg-pattern.show { opacity: .08; }
         [data-theme="dark"] .bg-pattern { filter: invert(1); }
@@ -205,7 +208,7 @@ class ThemeManager {
       this.bgEl.classList.remove("show");
       return;
     }
-    this.bgEl.style.backgroundImage = `url("${path}")`;
+    this.bgEl.style.setProperty("--bg-img", `url("${path}")`);
     requestAnimationFrame(() => this.bgEl.classList.add("show"));
   }
 
