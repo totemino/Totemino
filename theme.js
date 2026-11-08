@@ -160,8 +160,8 @@ class ThemeManager {
   }
 
   // Sfondo: livello fisso sotto alle luci, chiaro all'8%.
-  // Con schermo in verticale (height > width) l'immagine è ruotata di 90°;
-  // la rotazione è sul ::before, così la sfumatura in alto (mask) resta verticale.
+  // Visibile solo con schermo in orizzontale; se height > width (telefoni in verticale)
+  // lo sfondo non viene mostrato affatto.
   applyBackground() {
     if (!this.restaurantId) return;
 
@@ -186,13 +186,9 @@ class ThemeManager {
           background-image: var(--bg-img);
           background-position: center; background-size: cover; background-repeat: no-repeat;
         }
-        /* schermo in verticale (height > width): immagine ruotata di 90° */
+        /* schermo in verticale (height > width): nessuno sfondo */
         @media (orientation: portrait) {
-          .bg-pattern::before {
-            inset: auto; top: 50%; left: 50%;
-            width: 100vh; height: 100vw;
-            transform: translate(-50%, -50%) rotate(90deg);
-          }
+          .bg-pattern { display: none; }
         }
         .bg-pattern.show { opacity: .08; }
         [data-theme="dark"] .bg-pattern { filter: invert(1); }
