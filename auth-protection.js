@@ -28,8 +28,9 @@ function showMessage(message, type = 'error') {
 }
 
 function redirectToLogin(message = null) {
-    if (message) showMessage(message);
-    setTimeout(() => window.location.href = CONFIG.LOGIN_PAGE, 1500);
+    // redirect immediato; il messaggio (opzionale) lo mostra la pagina di login
+    try { if (message) sessionStorage.setItem('loginMessage', message); } catch (e) {}
+    window.location.replace(CONFIG.LOGIN_PAGE);
 }
 
 function updateUrl(userId) {
@@ -42,8 +43,8 @@ function updateUrl(userId) {
 async function apiCall(endpoint, options = {}) {
     const response = await fetch(endpoint, {
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...options.headers },
-        ...options
+        ...options,
+        headers: { 'Content-Type': 'application/json', ...options.headers }
     });
     const data = await response.json();
     if (data.requireLogin) throw new Error('REQUIRE_LOGIN');
@@ -67,7 +68,7 @@ function applyUserInfo(user) {
 // === AUTENTICAZIONE ===
 async function validateAccess() {
     const user = await checkSession();
-    if (!user) return redirectToLogin('Sessione non valida');
+    if (!user) return redirectToLogin();
 
     // Verifica URL
     const urlId = new URLSearchParams(window.location.search).get('id');
@@ -122,10 +123,14 @@ function initialize() {
 
     validateAccess();
 
-    window.addEventListener('focus', () => currentUser && checkSession());
-    document.addEventListener('visibilitychange', () => {
-        if (!document.hidden && currentUser) checkSession();
-    });
+    const recheck = async () => {
+        if (!currentUser) return;
+        if (!(await checkSession())) redirectToLogin('Sessione scaduta');
+    };
+    window.addEventListener('focus', recheck);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) recheck(); });
+    // pagina ripresa dalla cache del browser (tasto indietro): ricontrolla
+    window.addEventListener('pageshow', (e) => { if (e.persisted) recheck(); });
 }
 
 // === API PUBBLICHE ===

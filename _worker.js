@@ -21,7 +21,9 @@
  */
 
 const SESSION_COOKIE = 'tm_session';
-const SESSION_MAX_AGE = 14 * 24 * 60 * 60; // 14 giorni
+// Sessione "permanente": 365 giorni (i browser accettano al massimo 400 per un cookie).
+// Viene rinnovata a ogni visita (handleMe), quindi scade solo dopo 365 giorni di inattività.
+const SESSION_MAX_AGE = 365 * 24 * 60 * 60;
 const USERS_KEY = 'userdata/users.json';
 const MAX_BACKUPS = 3;
 const REQUESTS_PREFIX = 'Richieste/';
@@ -35,6 +37,10 @@ const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 const IMG_GRACE_MS = 2 * 60 * 60 * 1000; // foto appena caricate non vengono toccate per 2 ore
 const REF_FILES = ['menu.json', 'banners.json', 'promo.json', 'customizations.json', 'settings.json', 'menuTypes.json'];
 const PBKDF2_ITERATIONS = 100000; // massimo consentito da Workers
+
+// Pagine di gestione: senza sessione valida il server non invia l'HTML (302 a login).
+// Devono comparire anche in _routes.json, altrimenti il worker non viene invocato.
+const PROTECTED_PAGES = new Set(['/profile', '/gestione-menu', '/settings', '/create-banners']);
 
 const ID_RE = /^[\w-]{1,20}$/;
 const DEFAULT_MENU_TYPES = {
@@ -602,6 +608,24 @@ export default {
           }
         }
         return fail(404, 'Endpoint non trovato');
+      }
+
+      // ---------- Pagine di gestione: senza sessione il server non invia nulla ----------
+      const pagePath = path.replace(/\/index\.html$/, '/').replace(/\.html$/, '').replace(/(.)\/$/, '$1');
+      if (PROTECTED_PAGES.has(pagePath) && (method === 'GET' || method === 'HEAD')) {
+        const session = await readSession(request, env);
+        if (!session) return Response.redirect(new URL('/login.html', url).toString(), 302);
+
+        // l'allineamento di ?id= ora lo fa il server
+        if (url.searchParams.get('id') !== session.userCode) {
+          url.searchParams.set('id', session.userCode);
+          return Response.redirect(url.toString(), 302);
+        }
+
+        const res = await env.ASSETS.fetch(request);
+        const out = new Response(res.body, res);
+        out.headers.set('Cache-Control', 'no-store'); // dopo il logout "indietro" non la mostra
+        return out;
       }
 
       // ---------- Tutto il resto: file statici del sito ----------

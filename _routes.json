@@ -1,5 +1,11 @@
 {
   "version": 1,
-  "include": ["/api/*", "/IDs/*", "/save-*", "/upload-image", "/userdata/*"],
+  "include": [
+    "/api/*", "/IDs/*", "/save-*", "/upload-image", "/userdata/*",
+    "/profile", "/profile.html",
+    "/gestione-menu", "/gestione-menu.html",
+    "/settings", "/settings.html",
+    "/create-banners", "/create-banners.html"
+  ],
   "exclude": []
 }
