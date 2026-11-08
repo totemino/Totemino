@@ -242,7 +242,7 @@
 
 .price-display span {
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-primary);
 }
 
