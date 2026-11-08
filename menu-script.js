@@ -703,7 +703,7 @@ function openCustomizationScreen(item) {
         if (opt.priceModifier !== 0) {
           const priceText = item.price < 0.01 ? `€${opt.priceModifier.toFixed(2)}` : `+ €${opt.priceModifier.toFixed(2)}`;
           optPrice.textContent = priceText;
-          optPrice.style.fontWeight = '600';
+          optPrice.style.fontWeight = '500';
           optPrice.style.whiteSpace = 'nowrap';
           optPrice.style.marginRight = '0.5rem';
         }
