@@ -261,7 +261,7 @@ svg.ic { width: 16px; height: 16px; flex-shrink: 0; }
   .icon-row { flex-direction: column; }
   .pop-body { padding: 4px 14px 12px; }
   .management-popup .popup-title { padding: 16px 48px 8px 14px; }
-  .management-popup > .popup-actions { padding: 10px 14px 14px; }
+  .management-popup > .popup-actions { padding: 10px 14px 12px; }
   .notification { left: 12px; right: 12px; max-width: none; }
   .savebar { max-width: calc(100vw - 20px); }
 }
