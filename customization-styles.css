@@ -73,4 +73,5 @@
   .customization-option { flex-wrap: wrap; }
   .option-name-input { flex: 1 1 100%; }
   .option-price-group { flex: 1; justify-content: space-between; }
+  .popup-content { border-radius: 1rem; }
 }
