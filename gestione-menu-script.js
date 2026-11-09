@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   area.onclick = () => $('product-image').click();
   area.ondragover = e => { e.preventDefault(); area.classList.add('dragover'); };
   area.ondragleave = () => area.classList.remove('dragover');
-  area.ondrop = e => { e.preventDefault(); area.classList.remove('dragover'); const f = e.dataTransfer.files[0]; if (f?.type.startsWith('image/')) processImage(f); };
+  area.ondrop = e => { e.preventDefault(); area.classList.remove('dragover'); const f = e.dataTransfer.files[0]; if (f?.type.startsWith('image/')) processImage(f); else { const u = (e.dataTransfer.getData('text/uri-list') || '').split('\n')[0].trim(); if (/^https?:/.test(u)) imageFromUrl(u); } };
   $('product-image').onchange = e => e.target.files[0] && processImage(e.target.files[0]);
 
   const list = $('draggable-items-list');
@@ -319,6 +319,8 @@ const actions = {
   'item-save': saveItem,
   'item-delete': deleteItem,
   'remove-image': () => { uploadedImage = null; setPreview(''); },
+  'search-image': searchImage,
+  'paste-image': pasteImage,
 
   'type-new': () => openTypePopup(null),
   'type-edit': t => openTypePopup(+t.dataset.i),
@@ -489,6 +491,62 @@ function setPreview(src) {
   p.classList.toggle('hidden', !src);
   $('product-placeholder').classList.toggle('hidden', !!src);
   $('remove-image').classList.toggle('hidden', !src);
+  $('search-image').classList.toggle('hidden', !!src);
+  $('paste-image').classList.toggle('hidden', !!src);
+}
+
+// Cerca: apre Google Immagini ("[nome] png") in una finestra stretta sul bordo destro dello schermo.
+// Scelta la foto: tasto destro → "Copia immagine", poi Incolla (o Ctrl+V) qui.
+let searchWin = null;
+function searchImage() {
+  const name = $('item-name').value.trim();
+  if (!name) return notify('Inserisci prima il nome del prodotto', 'error');
+  const url = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(name + ' png')}`;
+  const w = Math.min(520, screen.availWidth), h = screen.availHeight;
+  const left = (screen.availLeft ?? 0) + screen.availWidth - w, top = screen.availTop ?? 0;
+  searchWin = window.open(url, 'img-search', `popup=yes,width=${w},height=${h},left=${left},top=${top}`);
+  if (!searchWin) return notify('Popup bloccato: consenti i popup per questo sito', 'error');
+  searchWin.focus();
+  notify('Scegli la foto, tasto destro → “Copia immagine”, poi torna qui e premi Incolla');
+}
+
+const closeSearchWin = () => { if (searchWin && !searchWin.closed) searchWin.close(); };
+function imageFileName(type) {
+  const n = $('item-name').value.trim() || 'immagine';
+  return `${n}.${(type.split('/')[1] || 'png').replace('jpeg', 'jpg').replace('svg+xml', 'svg')}`;
+}
+
+async function pasteImage() {
+  try {
+    for (const it of await navigator.clipboard.read()) {
+      const type = it.types.find(t => t.startsWith('image/'));
+      if (type) {
+        const blob = await it.getType(type);
+        closeSearchWin();
+        return processImage(new File([blob], imageFileName(type), { type }));
+      }
+    }
+    notify('Nessuna immagine negli appunti: in Google usa “Copia immagine”', 'error');
+  } catch { notify('Impossibile leggere gli appunti: prova con Ctrl+V', 'error'); }
+}
+
+// Ctrl+V / Cmd+V con il popup elemento aperto (fuori dai campi di testo)
+document.addEventListener('paste', e => {
+  if ($('edit-popup').classList.contains('hidden') || e.target.closest('input, textarea')) return;
+  const f = [...(e.clipboardData?.files || [])].find(f => f.type.startsWith('image/'));
+  if (!f) return;
+  e.preventDefault(); closeSearchWin();
+  processImage(new File([f], imageFileName(f.type), { type: f.type }));
+});
+
+// Trascinando un'immagine da Google sull'area di upload arriva spesso solo l'URL: si prova a scaricarla
+async function imageFromUrl(url) {
+  try {
+    const blob = await (await fetch(url)).blob();
+    if (!blob.type.startsWith('image/')) throw 0;
+    closeSearchWin();
+    await processImage(new File([blob], imageFileName(blob.type), { type: blob.type }));
+  } catch { notify('Immagine non scaricabile da qui: usa “Copia immagine” e Incolla', 'error'); }
 }
 
 function openPopup(idx, cat) {
