@@ -1464,6 +1464,7 @@ input[type="number"]::-webkit-outer-spin-button {
   overflow-wrap: anywhere;
   text-align: left;
   min-width: 0;
+  width: 100%;
 }
 
 .items.list-view h3 .title-text {
