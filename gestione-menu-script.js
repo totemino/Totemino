@@ -222,7 +222,6 @@ function initItemDrag() {
     }
     dest.splice(pos, 0, moved);
     setDirty(true); render();
-    notify(t.cat === from.cat ? 'Elemento spostato' : `Elemento spostato in “${t.cat}”`);
   };
 
   // --- mouse ---
