@@ -90,6 +90,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   initItemDrag();
   document.addEventListener('click', onClick);
+  document.addEventListener('mousedown', e => { downOnBackdrop = e.target.classList.contains('popup'); }, true);
   document.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); if (hasChanges) saveMenu(); }
     if (e.key === 'Escape') [...document.querySelectorAll('.popup:not(.hidden)')].pop()?.querySelector('.close-popup, .btn-secondary')?.click();
@@ -276,7 +277,7 @@ function onClick(e) {
   if (item) return openPopup(+item.dataset.i, item.closest('.cat').dataset.cat);
   const head = e.target.closest('.cat-head');
   if (head) return toggleCollapse(head.closest('.cat'));
-  if (e.target.classList.contains('popup') && ['edit-popup', 'confirm-popup'].includes(e.target.id)) e.target.querySelector('.close-popup, .btn-secondary')?.click();
+  if (downOnBackdrop && e.target.classList.contains('popup') && ['edit-popup', 'confirm-popup'].includes(e.target.id)) e.target.querySelector('.close-popup, .btn-secondary')?.click();
 }
 
 const catOf = el => el.closest('.cat').dataset.cat;
