@@ -1690,7 +1690,7 @@ function fitGridTitles() {
     return;
   }
 
-  const maxW = spans[0].clientWidth;        // tutte le card della griglia hanno la stessa larghezza
+  const maxW = spans[0].parentElement.clientWidth;        // tutte le card della griglia hanno la stessa larghezza
   if (!maxW) return;
   const cs = getComputedStyle(spans[0]);
   titleMeasureCtx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
