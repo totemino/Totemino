@@ -320,7 +320,6 @@ const actions = {
   'item-delete': deleteItem,
   'remove-image': () => { uploadedImage = null; setPreview(''); },
   'search-image': searchImage,
-  'paste-image': pasteImage,
 
   'type-new': () => openTypePopup(null),
   'type-edit': t => openTypePopup(+t.dataset.i),
@@ -492,11 +491,10 @@ function setPreview(src) {
   $('product-placeholder').classList.toggle('hidden', !!src);
   $('remove-image').classList.toggle('hidden', !src);
   $('search-image').classList.toggle('hidden', !!src);
-  $('paste-image').classList.toggle('hidden', !!src);
 }
 
 // Cerca: apre Google Immagini ("[nome] png") in una finestra stretta sul bordo destro dello schermo.
-// Scelta la foto: tasto destro → "Copia immagine", poi Incolla (o Ctrl+V) qui.
+// Scelta la foto: tasto destro → "Copia immagine", poi Ctrl+V qui.
 let searchWin = null;
 function searchImage() {
   const name = $('item-name').value.trim();
@@ -507,7 +505,7 @@ function searchImage() {
   searchWin = window.open(url, 'img-search', `popup=yes,width=${w},height=${h},left=${left},top=${top}`);
   if (!searchWin) return notify('Popup bloccato: consenti i popup per questo sito', 'error');
   searchWin.focus();
-  notify('Scegli la foto, tasto destro → “Copia immagine”, poi torna qui e premi Incolla');
+  notify('Scegli la foto, tasto destro → “Copia immagine”, poi torna qui e premi Ctrl+V');
 }
 
 const closeSearchWin = () => { if (searchWin && !searchWin.closed) searchWin.close(); };
@@ -516,26 +514,12 @@ function imageFileName(type) {
   return `${n}.${(type.split('/')[1] || 'png').replace('jpeg', 'jpg').replace('svg+xml', 'svg')}`;
 }
 
-async function pasteImage() {
-  try {
-    for (const it of await navigator.clipboard.read()) {
-      const type = it.types.find(t => t.startsWith('image/'));
-      if (type) {
-        const blob = await it.getType(type);
-        closeSearchWin();
-        return processImage(new File([blob], imageFileName(type), { type }));
-      }
-    }
-    notify('Nessuna immagine negli appunti: in Google usa “Copia immagine”', 'error');
-  } catch { notify('Impossibile leggere gli appunti: prova con Ctrl+V', 'error'); }
-}
-
 // Ctrl+V / Cmd+V con il popup elemento aperto (fuori dai campi di testo)
 document.addEventListener('paste', e => {
   if ($('edit-popup').classList.contains('hidden') || e.target.closest('input, textarea')) return;
   const f = [...(e.clipboardData?.files || [])].find(f => f.type.startsWith('image/'));
   if (!f) return;
-  e.preventDefault(); closeSearchWin();
+  e.preventDefault();
   processImage(new File([f], imageFileName(f.type), { type: f.type }));
 });
 
@@ -544,9 +528,8 @@ async function imageFromUrl(url) {
   try {
     const blob = await (await fetch(url)).blob();
     if (!blob.type.startsWith('image/')) throw 0;
-    closeSearchWin();
     await processImage(new File([blob], imageFileName(blob.type), { type: blob.type }));
-  } catch { notify('Immagine non scaricabile da qui: usa “Copia immagine” e Incolla', 'error'); }
+  } catch { notify('Immagine non scaricabile da qui: usa “Copia immagine” e Ctrl+V', 'error'); }
 }
 
 function openPopup(idx, cat) {
@@ -737,6 +720,7 @@ async function processImage(file) {
     if (!r.success) throw new Error(r.message);
     uploadedImage = r.imageUrl || `img/${r.fileName}`;
     setPreview(base64);
+    closeSearchWin();
   } catch (err) { console.error(err); notify('Errore caricamento immagine', 'error'); }
   area.classList.remove('busy'); $('product-image').value = '';
 }
