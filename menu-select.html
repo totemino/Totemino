@@ -191,7 +191,7 @@
             // Se c'è SOLO 1 menu E NON ci sono prenotazioni -> redirect automatico
             // Altrimenti mostra la pagina di selezione
             if (availableMenus.length === 1) {
-                window.location.href = `/${id}?type=${encodeURIComponent(availableMenus[0].id)}`;
+                window.location.href = `/${id}`;
                 return;
             }
             
@@ -203,7 +203,9 @@
                 const menuType = availableMenus[i];
                 const menuCard = document.createElement('a');
                 menuCard.className = 'menu-card';
-                menuCard.href = `/${id}?type=${encodeURIComponent(menuType.id)}`;
+                menuCard.href = menuType.id === 'default'
+                    ? `/${id}`
+                    : `/${id}?type=${encodeURIComponent(menuType.id)}`;
                 
                 const iconNumber = menuType.icon || 1;
                 
