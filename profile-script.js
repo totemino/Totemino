@@ -254,7 +254,7 @@ function setMenuLinks() {
             if (menus.length > 1) {
                 window.location.href = `/select/${restaurantId}`;
             } else {
-                const type = menus.length === 1
+                const type = (menus.length === 1 && menus[0].id !== 'default')
                     ? `?type=${encodeURIComponent(menus[0].id)}`
                     : '';
 
@@ -351,7 +351,9 @@ function initQRCode() {
 
         const menuUrl = menuType === 'menu-select'
             ? `${QR_BASE}/select/${encodeURIComponent(restaurantId)}`
-            : `${QR_BASE}/${encodeURIComponent(restaurantId)}?type=${encodeURIComponent(menuType)}`;
+            : menuType === 'default'
+                ? `${QR_BASE}/${encodeURIComponent(restaurantId)}`
+                : `${QR_BASE}/${encodeURIComponent(restaurantId)}?type=${encodeURIComponent(menuType)}`;
 
         qrMenuName.textContent = currentMenuName;
         canvas.textContent = 'Generazione QR Code...';
