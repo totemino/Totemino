@@ -72,11 +72,9 @@ async function validateAccess() {
 
     // Verifica URL
     const urlId = new URLSearchParams(window.location.search).get('id');
-    if (!urlId) {
-        updateUrl(user.userCode);
-    } else if (urlId !== user.userCode) {
-        updateUrl(user.userCode);
-        return window.location.reload();
+    // URL pulito (/profile, /settings...): l'id arriva dal server, non si rimette ?id=
+    if (urlId && urlId !== user.userCode) {
+        return window.location.replace(window.location.pathname);
     }
 
     currentUser = user;

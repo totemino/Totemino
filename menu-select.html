@@ -2,6 +2,7 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
+    <base href="/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scegli Menu - Totemino</title>
     <link rel="icon" type="image/png" href="img/favicon.png">
@@ -14,7 +15,7 @@
                 }
             });
             const urlParams = new URLSearchParams(window.location.search);
-            const id = urlParams.get('id');
+            const id = urlParams.get('id') || (location.pathname.match(/^\/select\/(\d+)\/?$/) || [])[1];
             
             if (!id) {
                 window.location.href = 'index.html';
@@ -172,7 +173,7 @@
             }
             
             const urlParams = new URLSearchParams(window.location.search);
-            const id = urlParams.get('id');
+            const id = urlParams.get('id') || (location.pathname.match(/^\/select\/(\d+)\/?$/) || [])[1];
             
             const { settings, menuData } = window.menuSelectionData;
             
@@ -190,7 +191,7 @@
             // Se c'è SOLO 1 menu E NON ci sono prenotazioni -> redirect automatico
             // Altrimenti mostra la pagina di selezione
             if (availableMenus.length === 1) {
-                window.location.href = `menu.html?id=${id}&type=${availableMenus[0].id}`;
+                window.location.href = `/${id}?type=${encodeURIComponent(availableMenus[0].id)}`;
                 return;
             }
             
@@ -202,7 +203,7 @@
                 const menuType = availableMenus[i];
                 const menuCard = document.createElement('a');
                 menuCard.className = 'menu-card';
-                menuCard.href = `menu.html?id=${id}&type=${menuType.id}`;
+                menuCard.href = `/${id}?type=${encodeURIComponent(menuType.id)}`;
                 
                 const iconNumber = menuType.icon || 1;
                 

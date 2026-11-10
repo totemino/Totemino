@@ -282,7 +282,7 @@ function onClick(e) {
 const catOf = el => el.closest('.cat').dataset.cat;
 const idxOf = el => +el.closest('.item').dataset.i;
 const actions = {
-  back: () => location.href = `profile.html?id=${restaurantId}`,
+  back: () => location.href = '/profile',
   close: t => t.dataset.p === 'edit-popup' ? closeItemPopup() : hide(t.dataset.p),
   view: t => { view = t.dataset.v; store.set('gm_view', view); render(); },
   'toggle-all': () => {

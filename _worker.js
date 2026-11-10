@@ -616,16 +616,27 @@ export default {
         const session = await readSession(request, env);
         if (!session) return Response.redirect(new URL('/login.html', url).toString(), 302);
 
-        // l'allineamento di ?id= ora lo fa il server
-        if (url.searchParams.get('id') !== session.userCode) {
-          url.searchParams.set('id', session.userCode);
-          return Response.redirect(url.toString(), 302);
+        // URL pulito: /profile (senza .html e senza ?id=). L'id viene dalla sessione.
+        if (path !== pagePath || url.searchParams.has('id')) {
+          const clean = new URL(url);
+          clean.pathname = pagePath;
+          clean.searchParams.delete('id');
+          return Response.redirect(clean.toString(), 302);
         }
 
-        const res = await env.ASSETS.fetch(request);
-        const out = new Response(res.body, res);
-        out.headers.set('Cache-Control', 'no-store'); // dopo il logout "indietro" non la mostra
-        return out;
+        const internal = new URL(url);
+        internal.searchParams.set('id', session.userCode);
+        const res = await env.ASSETS.fetch(new Request(internal, request));
+
+        // Gli script della pagina leggono ?id= all'avvio: lo mostro solo fino al caricamento, poi l'URL torna pulito.
+        const rid = JSON.stringify(String(session.userCode)).replace(/</g, '\\u003c');
+        const inject = `<script>(function(){var p=location.pathname;history.replaceState(null,'',p+'?id='+encodeURIComponent(${rid}));addEventListener('load',function(){history.replaceState(null,'',p)});})();</script>`;
+        const out = new HTMLRewriter()
+          .on('head', { element(el) { el.prepend(inject, { html: true }); } })
+          .transform(res);
+        const outRes = new Response(out.body, out);
+        outRes.headers.set('Cache-Control', 'no-store'); // dopo il logout "indietro" non la mostra
+        return outRes;
       }
 
       // ---------- URL pulito per i menu: /2371 <-> menu.html?id=2371 ----------
@@ -636,6 +647,21 @@ export default {
           url.searchParams.delete('id');
           const rest = url.searchParams.toString();
           return Response.redirect(new URL(`/${id}${rest ? '?' + rest : ''}`, url).toString(), 302);
+        }
+        // /menu-select.html?id=2371 -> /select/2371
+        if ((path === '/menu-select' || path === '/menu-select.html') && /^\d+$/.test(url.searchParams.get('id') || '')) {
+          const id = url.searchParams.get('id');
+          url.searchParams.delete('id');
+          const rest = url.searchParams.toString();
+          return Response.redirect(new URL(`/select/${id}${rest ? '?' + rest : ''}`, url).toString(), 302);
+        }
+        // /select/2371 -> serve menu-select.html senza cambiare l'URL
+        const sel = path.match(/^\/select\/(\d+)\/?$/);
+        if (sel) {
+          const internal = new URL(url);
+          internal.pathname = '/menu-select';
+          internal.searchParams.set('id', sel[1]);
+          return env.ASSETS.fetch(new Request(internal, request));
         }
         // /2371/ -> /2371 (così i percorsi relativi di menu.html restano validi)
         const trailing = path.match(/^\/(\d+)\/$/);

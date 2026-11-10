@@ -262,12 +262,12 @@
         /* ===== Avvio ===== */
         document.addEventListener('DOMContentLoaded', async () => {
             restaurantId = new URLSearchParams(location.search).get('id');
-            if (!restaurantId) { location.href = 'profile.html'; return; }
+            if (!restaurantId) { location.href = '/profile'; return; }
 
             $('back-btn').addEventListener('click', () => {
                 if (isDirty() && !confirm('Hai modifiche non salvate. Vuoi uscire lo stesso?')) return;
                 window.onbeforeunload = null;
-                location.href = `profile.html?id=${restaurantId}`;
+                location.href = '/profile';
             });
 
             // sfondo

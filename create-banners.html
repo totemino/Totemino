@@ -295,9 +295,9 @@
         /* ===== Init ===== */
         document.addEventListener('DOMContentLoaded', async () => {
             restaurantId = new URLSearchParams(location.search).get('id');
-            if (!restaurantId) { location.href = 'profile.html'; return; }
+            if (!restaurantId) { location.href = '/profile'; return; }
 
-            $('back-btn').addEventListener('click', () => location.href = `profile.html?id=${restaurantId}`);
+            $('back-btn').addEventListener('click', () => location.href = '/profile');
             $('add-btn').addEventListener('click', () => openPopup(null));
             $('search').addEventListener('input', renderBanners);
             $('close-popup').addEventListener('click', closePopup);

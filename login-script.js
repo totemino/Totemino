@@ -183,7 +183,7 @@ async function handleLogin(e) {
         
         // Redirect dopo breve delay
         setTimeout(() => {
-            window.location.href = `profile.html?id=${userCode}`;
+            window.location.href = '/profile';
         }, 500);
         
     } catch (error) {
@@ -269,7 +269,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const authData = await AuthAPI.checkAuth();
     if (authData && authData.success) {
         
-        window.location.href = `profile.html?id=${authData.user.userCode}`;
+        window.location.href = '/profile';
     }
     
     

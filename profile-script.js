@@ -10,7 +10,7 @@ if (!restaurantId) {
             if (!data.success || data.requireLogin) {
                 window.location.href = 'index.html';
             } else {
-                window.location.href = `profile.html?id=${data.user.restaurantId}`;
+                window.location.href = '/profile';
             }
         })
         .catch(() => window.location.href = 'index.html');
@@ -234,12 +234,12 @@ logoInput.addEventListener('change', async () => {
 // Set menu links
 
 function setMenuLinks() {
-    document.getElementById('menuCard').href = `gestione-menu.html?id=${restaurantId}`;
-    document.getElementById('settingsCard').href = `settings.html?id=${restaurantId}`;
-    document.getElementById('bannersCard').href = `create-banners.html?id=${restaurantId}`;
+    document.getElementById('menuCard').href = '/gestione-menu';
+    document.getElementById('settingsCard').href = '/settings';
+    document.getElementById('bannersCard').href = '/create-banners';
     
     const previewCard = document.getElementById('previewCard');
-    previewCard.href = `menu.html?id=${restaurantId}`;
+    previewCard.href = `/${restaurantId}`;
 
     previewCard.addEventListener('click', async (e) => {
         e.preventDefault();
@@ -252,13 +252,13 @@ function setMenuLinks() {
             const menus = data.menuTypes || [];
 
             if (menus.length > 1) {
-                window.location.href = `menu-select.html?id=${restaurantId}`;
+                window.location.href = `/select/${restaurantId}`;
             } else {
                 const type = menus.length === 1
-                    ? `&type=${encodeURIComponent(menus[0].id)}`
+                    ? `?type=${encodeURIComponent(menus[0].id)}`
                     : '';
 
-                window.location.href = `menu.html?id=${restaurantId}${type}`;
+                window.location.href = `/${restaurantId}${type}`;
             }
         } catch (error) {
             console.error('Errore durante il controllo dei menu:', error);
@@ -350,8 +350,8 @@ function initQRCode() {
         const qrMenuName = document.getElementById('qrMenuName');
 
         const menuUrl = menuType === 'menu-select'
-            ? `${QR_BASE}/menu-select.html?id=${encodeURIComponent(restaurantId)}`
-            : `${QR_BASE}/menu.html?id=${encodeURIComponent(restaurantId)}&type=${encodeURIComponent(menuType)}`;
+            ? `${QR_BASE}/select/${encodeURIComponent(restaurantId)}`
+            : `${QR_BASE}/${encodeURIComponent(restaurantId)}?type=${encodeURIComponent(menuType)}`;
 
         qrMenuName.textContent = currentMenuName;
         canvas.textContent = 'Generazione QR Code...';
