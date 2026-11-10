@@ -21,7 +21,7 @@
 
 			try {
 				const urlParams = new URLSearchParams(window.location.search);
-				const restaurantId = urlParams.get('id');
+				const restaurantId = urlParams.get('id') || (location.pathname.match(/^\/(\d+)\/?$/) || [])[1];
 				
 				if (!restaurantId) return;
 				

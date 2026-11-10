@@ -131,7 +131,7 @@
   
 	// Get restaurant ID from URL
 	const urlParams = new URLSearchParams(window.location.search);
-	const restaurantId = urlParams.get('id') || 'default';
+	const restaurantId = urlParams.get('id') || (window.location.pathname.match(/^\/(\d+)\/?$/) || [])[1] || 'default';
   
 	// Create banner element
 	function createBannerElement() {

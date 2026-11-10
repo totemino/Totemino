@@ -628,6 +628,30 @@ export default {
         return out;
       }
 
+      // ---------- URL pulito per i menu: /2371 <-> menu.html?id=2371 ----------
+      if (method === 'GET' || method === 'HEAD') {
+        // /menu.html?id=2371 (o /menu?id=2371) -> redirect a /2371 (altri parametri, es. type, restano)
+        if ((path === '/menu' || path === '/menu.html') && /^\d+$/.test(url.searchParams.get('id') || '')) {
+          const id = url.searchParams.get('id');
+          url.searchParams.delete('id');
+          const rest = url.searchParams.toString();
+          return Response.redirect(new URL(`/${id}${rest ? '?' + rest : ''}`, url).toString(), 302);
+        }
+        // /2371/ -> /2371 (così i percorsi relativi di menu.html restano validi)
+        const trailing = path.match(/^\/(\d+)\/$/);
+        if (trailing) {
+          return Response.redirect(new URL(`/${trailing[1]}${url.search}`, url).toString(), 302);
+        }
+        // /2371 -> serve menu.html senza cambiare l'URL nel browser
+        const clean = path.match(/^\/(\d+)$/);
+        if (clean) {
+          const internal = new URL(url);
+          internal.pathname = '/menu';
+          internal.searchParams.set('id', clean[1]);
+          return env.ASSETS.fetch(new Request(internal, request));
+        }
+      }
+
       // ---------- Tutto il resto: file statici del sito ----------
       return env.ASSETS.fetch(request);
     } catch (error) {

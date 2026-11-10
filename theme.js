@@ -14,7 +14,8 @@ class ThemeManager {
     this.appearance = null;      // nuovo: { background, theme: { preset, mode, colors } }
     this.bgEl = null;
 
-    const id = new URLSearchParams(window.location.search).get("id");
+    const id = new URLSearchParams(window.location.search).get("id")
+      || (window.location.pathname.match(/^\/(\d+)\/?$/) || [])[1];
     this.restaurantId = id && /^[\w-]{1,20}$/.test(id) ? id : null;
     this.cacheKey = this.restaurantId ? `totemino_appearance_${this.restaurantId}` : null;
 

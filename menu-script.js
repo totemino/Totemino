@@ -856,7 +856,7 @@ function openCustomizationScreen(item) {
 // === MENU ===
 async function loadMenu() {
   const params = new URLSearchParams(window.location.search);
-  restaurantId = params.get("id");
+  restaurantId = params.get("id") || (location.pathname.match(/^\/(\d+)\/?$/) || [])[1] || null;
   if (!restaurantId) {
     console.error("ID del menu non specificato nell'URL.");
     return;
