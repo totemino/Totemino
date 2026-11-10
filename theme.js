@@ -161,8 +161,8 @@ class ThemeManager {
   }
 
   // Sfondo: livello fisso sotto alle luci, chiaro all'8%.
-  // Visibile solo con schermo in orizzontale; se height > width (telefoni in verticale)
-  // lo sfondo non viene mostrato affatto.
+  // Altezza fissa (lvh) per non muoversi quando cambia la UI del browser.
+  // Con schermo in orizzontale (height < width) l'immagine, portrait, viene ruotata di 90°.
   applyBackground() {
     if (!this.restaurantId) return;
 
@@ -174,7 +174,11 @@ class ThemeManager {
       const style = document.createElement("style");
       style.textContent = `
         .bg-pattern {
-          position: fixed; inset: 0; z-index: -2; pointer-events: none;
+          position: fixed; top: 0; left: 0; width: 100%; z-index: -2; pointer-events: none;
+          /* Altezza = viewport "grande" (barra del browser nascosta): non cambia
+             quando la UI del browser compare/scompare durante lo scroll */
+          height: 100vh;
+          height: 100lvh;
           overflow: hidden;
           opacity: 0; transition: opacity .4s;
 
@@ -187,9 +191,19 @@ class ThemeManager {
           background-image: var(--bg-img);
           background-position: center; background-size: cover; background-repeat: no-repeat;
         }
-        /* schermo in verticale (height < width): nessuno sfondo */
+        /* schermo in orizzontale (height < width): l'SVG è portrait (1:2), quindi lo
+           ruoto di 90° così occupa il frame senza ingrandirsi a dismisura.
+           Prima della rotazione il box è largo quanto l'altezza dello schermo e alto
+           quanto la larghezza (portrait), dopo la rotazione copre esattamente lo schermo. */
         @media (orientation: landscape) {
-          .bg-pattern { display: none; }
+          .bg-pattern::before {
+            inset: auto;
+            top: 50%; left: 50%;
+            width: 100vh;
+            width: 100lvh;
+            height: 100vw;
+            transform: translate(-50%, -50%) rotate(90deg);
+          }
         }
         .bg-pattern.show { opacity: .08; }
         [data-theme="dark"] .bg-pattern { filter: invert(1); }
