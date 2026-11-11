@@ -9,12 +9,29 @@
             const theme = saved || 
                 (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
             document.documentElement.setAttribute('data-theme', theme);
-            
-            window.addEventListener('pageshow', function(event) {
-                if (event.persisted || performance.getEntriesByType('navigation')[0]?.type === 'back_forward') {
+
+            // Forza il refresh su back/forward SENZA mostrare la pagina in cache:
+            // nascondo subito tutto e ricarico prima del primo paint.
+            const root = document.documentElement;
+            const hideAndReload = () => {
+                root.style.visibility = 'hidden';
                 location.reload();
-                }
+            };
+
+            // Caso 1: navigazione back/forward senza bfcache (lo script gira prima del body)
+            const navType = performance.getEntriesByType('navigation')[0]?.type;
+            if (navType === 'back_forward') {
+                hideAndReload();
+                return;
+            }
+
+            // Caso 2: ripristino da bfcache (lo script non rigira, scatta solo pageshow)
+            window.addEventListener('pageshow', function(event) {
+                if (event.persisted) hideAndReload();
             });
+
+            // Un handler "unload" vuoto disabilita il bfcache nella maggior parte dei browser
+            window.addEventListener('unload', function() {});
         })();
     </script>
     <title>Totemino</title>
@@ -582,32 +599,72 @@
             return Array.from(inputs).every(input => input.value.trim() !== '');
         }
 
+        // Focus senza far scorrere il contenitore (overflow: hidden) della card
+        function safeFocus(el) {
+            if (!el) return;
+            el.focus({ preventScroll: true });
+            loginCard.scrollLeft = 0;
+            loginCard.scrollTop = 0;
+        }
+
         inputs.forEach((input, index) => {
+            input.setAttribute('enterkeyhint', 'go');
+
+            // Ricordo se la casella era vuota PRIMA della digitazione
+            input.addEventListener('beforeinput', () => {
+                input._wasEmpty = input.value === '';
+            });
+
             input.addEventListener('input', (e) => {
                 // Only allow numbers
-                e.target.value = e.target.value.replace(/[^0-9]/g, '');
-                
-                if (input.value && index < inputs.length - 1) {
-                    inputs[index + 1].focus();
+                const digits = e.target.value.replace(/[^0-9]/g, '');
+                e.target.value = digits.slice(-1);
+
+                if (!input.value) return;
+
+                let placedIndex = index;
+
+                // Se la casella era vuota ma ce n'è una vuota prima, il numero va "indietro"
+                const wasEmpty = input._wasEmpty !== false;
+                const firstEmpty = Array.from(inputs).findIndex(i => i.value === '' );
+                if (wasEmpty && firstEmpty !== -1 && firstEmpty < index) {
+                    inputs[firstEmpty].value = input.value;
+                    input.value = '';
+                    placedIndex = firstEmpty;
                 }
-                if (allInputsFilled()) {
-                    inputs[inputs.length - 1].blur();
+                input._wasEmpty = undefined;
+
+                // Passo alla prossima casella vuota dopo quella appena riempita
+                const nextEmpty = Array.from(inputs).findIndex((i, k) => k > placedIndex && i.value === '');
+                if (nextEmpty !== -1) {
+                    safeFocus(inputs[nextEmpty]);
+                } else if (allInputsFilled()) {
+                    inputs[placedIndex].blur();
                 }
             });
 
             input.addEventListener('keydown', (e) => {
                 if (e.key === "Backspace" && !input.value && index > 0) {
-                    inputs[index - 1].focus();
+                    safeFocus(inputs[index - 1]);
+                }
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    submitBtn.click();
                 }
             });
         });
 
         // Submit button
+        let isSubmitting = false;
+
         submitBtn.addEventListener('click', async () => {
+            if (isSubmitting) return;
             const code = Array.from(inputs, i => i.value).join("");
             
             if (!/^\d{4}$/.test(code)) return;
             
+            isSubmitting = true;
             try {
                 const response = await fetch('userdata/users.json');
                 const users = await response.json();
@@ -631,79 +688,105 @@
                             i.classList.remove('error');
                             i.value = '';
                         });
-                        inputs[0].focus();
+                        // Rifocalizzo solo se non sono nella cronologia (evita il div tagliato a metà)
+                        if (!sheetHistory.classList.contains('active')) {
+                            safeFocus(inputs[0]);
+                        }
+                        isSubmitting = false;
                     }
                 }, 1200);
             } catch (error) {
                 console.error('Error validating code:', error);
+                isSubmitting = false;
             }
         });
 
         // History management
+        function escapeHTML(str) {
+            return String(str).replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
+        }
+
+        async function buildHistoryItem(id) {
+            let logo = 'img/favicon.png';
+            let name = id;
+            try {
+                const response = await fetch(`IDs/${id}/settings.json`);
+                const settings = await response.json();
+                logo = settings.restaurant?.logo || logo;
+                name = settings.restaurant?.name || name;
+            } catch (error) {
+                // fallback: logo e nome di default
+            }
+
+            // Precarico il logo, così è già pronto quando apri la cronologia
+            await new Promise(resolve => {
+                const pre = new Image();
+                pre.onload = pre.onerror = resolve;
+                pre.src = logo;
+            });
+
+            const item = document.createElement('a');
+            item.className = 'history-item';
+            item.href = `menu-select.html?id=${encodeURIComponent(id)}`;
+            item.innerHTML = `
+                <img class="restaurant-logo" src="${escapeHTML(logo)}" alt="${escapeHTML(name)}">
+                <span class="history-item-name">${escapeHTML(name)}</span>
+                <img class="arrow" src="img/arrow_select.png" alt="Vai">
+            `;
+            return item;
+        }
+
+        // Caricata UNA volta all'avvio della pagina, in modo che sia già pronta all'apertura
         async function loadHistory() {
-            const history = JSON.parse(localStorage.getItem('totemino_history') || '[]');
-            historyList.innerHTML = '';
-            
-            if (history.length === 0) {
+            let history = [];
+            try {
+                history = JSON.parse(localStorage.getItem('totemino_history') || '[]');
+            } catch (e) {}
+
+            if (!Array.isArray(history) || history.length === 0) {
                 historyList.innerHTML = '<p class="no-history">Qui troverai la tua cronologia!</p>';
                 return;
             }
-            
-            for (const id of history) {
-                try {
-                    const response = await fetch(`IDs/${id}/settings.json`);
-                    const settings = await response.json();
-                    
-                    const item = document.createElement('a');
-                    item.className = 'history-item';
-                    item.href = `menu-select.html?id=${id}`;
-                    
-                    const logo = settings.restaurant?.logo || 'img/favicon.png';
-                    const name = settings.restaurant?.name || id;
-                    
-                    item.innerHTML = `
-                        <img class="restaurant-logo" src="${logo}" alt="${name}">
-                        <span class="history-item-name">${name}</span>
-                        <img class="arrow" src="img/arrow_select.png" alt="Vai">
-                    `;
-                    
-                    historyList.appendChild(item);
-                } catch (error) {
-                    const item = document.createElement('a');
-                    item.className = 'history-item';
-                    item.href = `menu-select.html?id=${id}`;
-                    
-                    item.innerHTML = `
-                        <img class="restaurant-logo" src="img/favicon.png" alt="${id}">
-                        <span class="history-item-name">${id}</span>
-                        <img class="arrow" src="img/arrow_select.png" alt="Vai">
-                    `;
-                    
-                    historyList.appendChild(item);
-                }
-            }
+
+            // Carico tutto in parallelo e inserisco in un colpo solo (niente elementi che compaiono a scatti)
+            const items = await Promise.all(history.map(buildHistoryItem));
+            const fragment = document.createDocumentFragment();
+            items.forEach(item => fragment.appendChild(item));
+            historyList.replaceChildren(fragment);
         }
 
+        loadHistory();
+
+        // Il pannello nascosto non deve essere raggiungibile con Tab / focus
+        function setSheetState(historyOpen) {
+            sheetFirst.classList.toggle('shifted', historyOpen);
+            sheetHistory.classList.toggle('active', historyOpen);
+            sheetFirst.inert = historyOpen;
+            sheetHistory.inert = !historyOpen;
+            loginCard.scrollLeft = 0;
+            loginCard.scrollTop = 0;
+        }
+        setSheetState(false);
+
         recentOrdersLink.addEventListener('click', () => {
-            loadHistory();
-            sheetFirst.classList.add('shifted');
-            sheetHistory.classList.add('active');
+            if (document.activeElement) document.activeElement.blur();
+            setSheetState(true);
         });
 
         backBtn.addEventListener('click', () => {
-            sheetFirst.classList.remove('shifted');
-            sheetHistory.classList.remove('active');
+            setSheetState(false);
         });
-        function enableEnterSubmit() {
-            document.addEventListener('keydown', (e) => {
-                if (e.key === "Enter") {
-                    submitBtn.click();  
-                }
-            });
-        }
 
-        startBtn.addEventListener('click', () => {
-            enableEnterSubmit();
+        // Invio = "Vai al Menu" (solo quando la card è aperta e si è nella schermata del codice)
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== "Enter" || e.repeat) return;
+            if (!loginCard.classList.contains('active')) return;
+            if (sheetHistory.classList.contains('active')) return;
+            if (e.target.closest && e.target.closest('.history-item, .back-btn, .recent-orders-link')) return;
+            e.preventDefault();
+            submitBtn.click();
         });
     </script>
     <script src="logo-pop.js"></script>
