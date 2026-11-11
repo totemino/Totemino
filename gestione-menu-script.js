@@ -332,8 +332,24 @@ const actions = {
 };
 
 // ===== UI HELPERS =====
-const show = id => { $(id).classList.remove('hidden'); document.body.classList.add('popup-open'); };
-const hide = id => { $(id).classList.add('hidden'); if (!document.querySelector('.popup:not(.hidden)')) document.body.classList.remove('popup-open'); };
+// Posizione di scroll salvata all'apertura del primo popup e ripristinata alla chiusura dell'ultimo
+let lockY = 0;
+const restoreScroll = () => {
+  window.scrollTo(0, lockY);
+  requestAnimationFrame(() => window.scrollTo(0, lockY)); // di nuovo dopo il re-render/layout
+};
+const show = id => {
+  if (!document.querySelector('.popup:not(.hidden)')) lockY = window.scrollY;
+  $(id).classList.remove('hidden');
+  document.body.classList.add('popup-open');
+};
+const hide = id => {
+  $(id).classList.add('hidden');
+  if (!document.querySelector('.popup:not(.hidden)')) {
+    document.body.classList.remove('popup-open');
+    restoreScroll();
+  }
+};
 const setDirty = v => { hasChanges = v; $('savebar').classList.toggle('show', v); };
 const nameExists = n => Object.values(menuData).flat().some(i => i.name.toLowerCase() === n.toLowerCase());
 const allHidden = c => (menuData[c] || []).length > 0 && menuData[c].every(i => i.visible === false);
@@ -578,7 +594,7 @@ function saveItem() {
   };
   old ? menuData[currentEdit.category][currentEdit.index] = data : menuData[currentEdit.category].push(data);
 
-  setDirty(true); closeItemPopup(); render(); notify('Elemento salvato, ricorda di salvare il menu');
+  setDirty(true); closeItemPopup(); render(); restoreScroll(); notify('Elemento salvato, ricorda di salvare il menu');
 }
 
 async function deleteItem() {
@@ -588,7 +604,7 @@ async function deleteItem() {
   if (!menuData[cat].length && await ask('Categoria vuota', `"${cat}" è vuota. Vuoi rimuoverla?`, 'Rimuovi')) {
     delete menuData[cat]; categories = categories.filter(c => c !== cat);
   }
-  setDirty(true); closeItemPopup(); render(); notify('Elemento eliminato');
+  setDirty(true); closeItemPopup(); render(); restoreScroll(); notify('Elemento eliminato');
 }
 
 // ===== IMMAGINE =====
@@ -782,7 +798,7 @@ function saveCategory() {
     }
     menuData[name] = editingItems;
   }
-  setDirty(true); hide('edit-category-popup'); render();
+  setDirty(true); hide('edit-category-popup'); render(); restoreScroll();
   notify(editingCat === null ? 'Categoria aggiunta' : 'Categoria aggiornata');
 }
 
