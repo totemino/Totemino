@@ -235,6 +235,7 @@ logoInput.addEventListener('change', async () => {
 
 function setMenuLinks() {
     document.getElementById('menuCard').href = '/gestione-menu';
+    document.getElementById('giftCard').href = '/sconti';
     document.getElementById('settingsCard').href = '/settings';
     document.getElementById('bannersCard').href = '/create-banners';
     
