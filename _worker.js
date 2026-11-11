@@ -40,7 +40,7 @@ const PBKDF2_ITERATIONS = 100000; // massimo consentito da Workers
 
 // Pagine di gestione: senza sessione valida il server non invia l'HTML (302 a login).
 // Devono comparire anche in _routes.json, altrimenti il worker non viene invocato.
-const PROTECTED_PAGES = new Set(['/profile', '/gestione-menu', '/settings', '/create-banners']);
+const PROTECTED_PAGES = new Set(['/profile', '/gestione-menu', '/sconti', '/settings','/create-banners']);
 
 const ID_RE = /^[\w-]{1,20}$/;
 const DEFAULT_MENU_TYPES = {
