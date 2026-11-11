@@ -4,6 +4,7 @@
     "/api/*", "/IDs/*", "/save-*", "/upload-image", "/userdata/*",
     "/profile", "/profile.html",
     "/gestione-menu", "/gestione-menu.html",
+    "/sconti", "/sconti.html",
     "/settings", "/settings.html",
     "/create-banners", "/create-banners.html",
     "/menu", "/menu.html",
