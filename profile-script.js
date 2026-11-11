@@ -269,7 +269,7 @@ function setMenuLinks() {
 
 // ===== QR CODE: configurazione =====
 // Link fisso (reindirizza al dominio attuale tramite _redirects): i QR stampati non si rompono se cambi dominio
-const QR_BASE = 'https://totemino.pages.dev';
+const QR_BASE = 'https://totemino.app';
 // Logo al centro del QR: link fisso su GitHub (il repo deve essere pubblico)
 const QR_LOGO = 'https://raw.githubusercontent.com/totemino/Totemino/refs/heads/main/img/faviconQR.png';
 
