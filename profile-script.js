@@ -361,12 +361,12 @@ function initQRCode() {
 
         const params = new URLSearchParams({
             text: menuUrl,
-            size: '400',
+            size: '256',
             format: 'png',
             margin: '4',            // quiet zone standard: con 1 molti lettori non scansionano
             ecLevel: 'H',
             centerImageUrl: QR_LOGO,
-            centerImageSizeRatio: '0.22'
+            centerImageSizeRatio: '0.294'
         });
         const qrImageUrl = `https://quickchart.io/qr?${params}`;
 
