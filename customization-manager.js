@@ -88,12 +88,12 @@ function getNextGroupId() {
 function openGroupSelectionPopup() {
   renderGroupsList();
   document.getElementById('group-selection-popup').classList.remove('hidden');
-  document.body.classList.add('noscroll');
+  lockScroll();
 }
 
 function closeGroupSelectionPopup() {
   document.getElementById('group-selection-popup').classList.add('hidden');
-  document.body.classList.remove('noscroll');
+  unlockIfIdle();
 }
 
 function renderGroupsList() {
@@ -149,12 +149,12 @@ function openCustomizationGroupPopup(groupId = null) {
   groupId ? loadCustomizationGroup(groupId) : resetCustomizationForm();
   
   document.getElementById('customization-popup').classList.remove('hidden');
-  document.body.classList.add('noscroll');
+  lockScroll();
 }
 
 function closeCustomizationGroupPopup() {
   document.getElementById('customization-popup').classList.add('hidden');
-  document.body.classList.remove('noscroll');
+  unlockIfIdle();
   editingGroupId = null;
 }
 

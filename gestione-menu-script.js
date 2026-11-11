@@ -332,22 +332,34 @@ const actions = {
 };
 
 // ===== UI HELPERS =====
-// Posizione di scroll salvata all'apertura del primo popup e ripristinata alla chiusura dell'ultimo
-let lockY = 0;
+// Blocco scroll unico per tutti i popup (anche quelli di customization-manager.js).
+// Il body viene fissato in JS con top negativo: la pagina resta visivamente ferma e
+// alla chiusura dell'ultimo popup si torna esattamente alla posizione di prima.
+let lockY = 0, scrollLocked = false;
+function lockScroll() {
+  if (scrollLocked) return;
+  scrollLocked = true; lockY = window.scrollY;
+  Object.assign(document.body.style, { position: 'fixed', top: `-${lockY}px`, left: '0', right: '0', width: '100%' });
+}
+function unlockScroll() {
+  if (!scrollLocked) return;
+  scrollLocked = false;
+  Object.assign(document.body.style, { position: '', top: '', left: '', right: '', width: '' });
+  window.scrollTo(0, lockY);
+}
+// Sblocca solo se non resta aperto nessun popup
+function unlockIfIdle() { if (!document.querySelector('.popup:not(.hidden)')) unlockScroll(); }
 const restoreScroll = () => {
+  if (scrollLocked) return;
   window.scrollTo(0, lockY);
   requestAnimationFrame(() => window.scrollTo(0, lockY)); // di nuovo dopo il re-render/layout
 };
-const show = id => {
-  if (!document.querySelector('.popup:not(.hidden)')) lockY = window.scrollY;
-  $(id).classList.remove('hidden');
-  document.body.classList.add('popup-open');
-};
+const show = id => { lockScroll(); $(id).classList.remove('hidden'); document.body.classList.add('popup-open'); };
 const hide = id => {
   $(id).classList.add('hidden');
   if (!document.querySelector('.popup:not(.hidden)')) {
     document.body.classList.remove('popup-open');
-    restoreScroll();
+    unlockScroll();
   }
 };
 const setDirty = v => { hasChanges = v; $('savebar').classList.toggle('show', v); };
