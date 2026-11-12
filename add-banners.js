@@ -316,6 +316,20 @@
 		const response = await fetch(`/IDs/${restaurantId}/banners.json`);
 		if (response.ok) {
 		  banners = await response.json();
+		  if (!Array.isArray(banners)) banners = [];
+
+		  // Durata: mostra solo i banner attivi oggi (il server elimina gia' gli scaduti,
+		  // ma chi e' loggato come proprietario riceve anche quelli programmati)
+		  const pad = n => String(n).padStart(2, '0');
+		  const now = new Date();
+		  const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+		  banners = banners.filter(b => {
+			const d = b.duration;
+			if (!d) return true; // banner vecchi: per sempre
+			if (d.type === 'range') return (!d.from || today >= d.from) && (!d.to || today <= d.to);
+			if (d.type === 'days') return !d.until || today <= d.until;
+			return true;
+		  });
 		  
 		  if (banners.length > 0) {
 			banners.forEach((b, i) => { b._color = colors[i % colors.length]; });
