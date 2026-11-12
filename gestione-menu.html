@@ -129,6 +129,7 @@
           <div class="customization-controls" id="customization-controls" style="display:none;">
             <input type="hidden" id="customization-group-id" />
             <button type="button" class="btn-group-id-display" id="btn-group-id-display" onclick="openCurrentGroupOrSelection()">-</button>
+            <button type="button" class="btn-fav" id="btn-fav-group" onclick="toggleCurrentGroupFavorite()" title="Salva nei preferiti" aria-label="Salva nei preferiti">☆</button>
             <button type="button" class="btn-secondary btn-sm btn-choose-group" onclick="openGroupSelectionPopup()">Scegli Gruppo</button>
             <button type="button" class="btn-primary btn-sm btn-add-group" onclick="createNewGroup()">+ Aggiungi Gruppo</button>
           </div>
@@ -225,6 +226,9 @@
       <button class="close-popup" onclick="closeCustomizationGroupPopup()"><img src="img/x.png" alt="Chiudi"></button>
       <h2 class="popup-title" id="customization-popup-title">Crea nuovo gruppo</h2>
       <div class="pop-body">
+        <label class="checkbox-label group-fav-toggle">
+          <input type="checkbox" id="group-favorite"><span class="checkmark"></span><span class="checkbox-text">★ Salva nei preferiti (riutilizzabile da "Scegli Gruppo")</span>
+        </label>
         <div id="customization-sections-container"></div>
         <button class="btn-primary add-section-btn" onclick="addCustomizationSection()">+ Aggiungi nuova sezione</button>
       </div>

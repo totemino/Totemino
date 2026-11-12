@@ -1,9 +1,68 @@
 // ===== STATE =====
 let customData = {};
 let editingGroupId = null;
+let favorites = []; // id dei gruppi preferiti (stringhe)
+
+const isFav = id => favorites.includes(String(id));
+
+async function loadFavorites() {
+  try {
+    const res = await fetch(`/IDs/${restaurantId}/custom-favorites.json`);
+    const data = res.ok ? await res.json() : [];
+    favorites = Array.isArray(data) ? data.map(String) : [];
+  } catch { favorites = []; }
+}
+
+async function saveFavorites() {
+  try {
+    const res = await fetch(`/save-custom-favorites/${restaurantId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ favorites })
+    });
+    const result = await res.json();
+    if (!result.success) throw new Error(result.message);
+    return true;
+  } catch (err) {
+    console.error(err);
+    notify('Errore salvataggio preferiti', 'error');
+    return false;
+  }
+}
+
+async function setFavorite(id, on) {
+  id = String(id);
+  favorites = on ? [...new Set([...favorites, id])] : favorites.filter(f => f !== id);
+  await saveFavorites();
+  updateGroupIdButton();
+  if (!document.getElementById('group-selection-popup').classList.contains('hidden')) renderGroupsList();
+}
+
+function toggleCurrentGroupFavorite() {
+  const id = document.getElementById('customization-group-id').value;
+  if (!id || !customData[id]) return notify('Scegli o crea prima un gruppo', 'error');
+  setFavorite(id, !isFav(id));
+  notify(isFav(id) ? `Gruppo ${id} salvato nei preferiti` : `Gruppo ${id} rimosso dai preferiti`);
+}
+
+// Elimina i gruppi non usati da nessun elemento e non preferiti.
+// Si esegue dopo il salvataggio del menu (le modifiche non salvate non contano).
+async function pruneCustomizations() {
+  const used = new Set(Object.values(menuData).flat().map(i => i.customizationGroup).filter(Boolean).map(String));
+  // gruppo scelto nel popup elemento ancora aperto e non ancora salvato
+  if (!document.getElementById('edit-popup').classList.contains('hidden')) {
+    const cur = document.getElementById('customization-group-id').value;
+    if (cur) used.add(String(cur));
+  }
+  const unused = Object.keys(customData).filter(id => !used.has(id) && !isFav(id));
+  if (!unused.length) return;
+  unused.forEach(id => delete customData[id]);
+  await saveCustomizations(true);
+}
 
 // ===== INIT =====
 async function loadCustomizations() {
+  await loadFavorites();
   try {
     const res = await fetch(`/IDs/${restaurantId}/customizations.json`);
     customData = res.ok ? await res.json() : createDefaults();
@@ -57,7 +116,7 @@ function createDefaults() {
   };
 }
 
-async function saveCustomizations() {
+async function saveCustomizations(silent = false) {
   try {
     const res = await fetch(`/save-customizations/${restaurantId}`, {
       method: 'POST',
@@ -68,7 +127,7 @@ async function saveCustomizations() {
     const result = await res.json();
     if (!result.success) throw new Error(result.message);
     
-    notify('Customizzazioni salvate!', 'success');
+    if (!silent) notify('Customizzazioni salvate!', 'success');
     return true;
   } catch (err) {
     console.error(err);
@@ -98,32 +157,34 @@ function closeGroupSelectionPopup() {
 
 function renderGroupsList() {
   const container = document.getElementById('groups-list');
-  const groups = Object.keys(customData).sort((a, b) => parseInt(a) - parseInt(b));
-  
-  container.innerHTML = !groups.length 
-    ? '<p class="no-groups-message">Nessun gruppo disponibile. Creane uno nuovo!</p>'
-    : groups.map(id => {
-        const sections = customData[id].map(s => s.name).join(', ');
-        return `
-          <div class="group-card">
-            <div class="group-card-header">
-              <h3>Gruppo ${id}</h3>
-              <div class="group-card-actions">
-                <button class="group-edit-btn" onclick="editGroup('${id}')">
-                  <img src="img/edit.png" alt="Modifica">
-                </button>
-                <button class="group-delete-btn" onclick="deleteGroup('${id}')">
-                  <img src="img/delete.png" alt="Elimina">
-                </button>
-              </div>
-            </div>
-            <p class="group-sections">${sections}</p>
-            <button class="btn-primary select-group-btn" onclick="selectGroup('${id}')">
-              Seleziona Gruppo
-            </button>
+  // solo i preferiti (che esistono ancora)
+  const groups = favorites.filter(id => customData[id]).sort((a, b) => parseInt(a) - parseInt(b));
+
+  if (!groups.length) {
+    container.innerHTML = '<p class="no-groups-message">Nessun gruppo preferito.<br>Crea un gruppo e salvalo con la ★ per riutilizzarlo qui.</p>';
+    return;
+  }
+
+  container.innerHTML = groups.map(id => {
+    const sections = customData[id];
+    const opts = sections.flatMap(s => s.options || []);
+    const first = opts.slice(0, 2).map(o => `<span class="group-opt">${esc(o.name)}</span>`).join('');
+    const more = opts.length > 2 ? `<span class="group-opt more">+${opts.length - 2}</span>` : '';
+    const extraSections = sections.length > 1 ? ` <span class="group-more-sec">+${sections.length - 1} sez.</span>` : '';
+    return `
+      <div class="group-card" onclick="selectGroup('${id}')">
+        <div class="group-card-header">
+          <h3>Gruppo ${id}</h3>
+          <div class="group-card-actions">
+            <button class="group-fav-btn on" title="Rimuovi dai preferiti" onclick="event.stopPropagation(); setFavorite('${id}', false)">★</button>
+            <button class="group-edit-btn" title="Modifica" onclick="event.stopPropagation(); editGroup('${id}')"><img src="img/edit.png" alt="Modifica"></button>
+            <button class="group-delete-btn" title="Elimina" onclick="event.stopPropagation(); deleteGroup('${id}')"><img src="img/delete.png" alt="Elimina"></button>
           </div>
-        `;
-      }).join('');
+        </div>
+        <p class="group-sections">${esc(sections[0]?.name || '')}${extraSections}</p>
+        <div class="group-opts">${first}${more}</div>
+      </div>`;
+  }).join('');
 }
 
 function selectGroup(groupId) {
@@ -147,6 +208,7 @@ function openCustomizationGroupPopup(groupId = null) {
     groupId ? `Modifica Gruppo ${groupId}` : 'Crea Nuovo Gruppo Customizzazione';
   
   groupId ? loadCustomizationGroup(groupId) : resetCustomizationForm();
+  document.getElementById('group-favorite').checked = groupId ? isFav(groupId) : false;
   
   document.getElementById('customization-popup').classList.remove('hidden');
   lockScroll();
@@ -302,18 +364,26 @@ async function saveCustomizationGroup() {
     });
   }
   
-  if (editingGroupId === null) {
-    const newId = getNextGroupId();
-    customData[newId] = groupData;
-    notify(`Gruppo ${newId} creato!`, 'success');
-  } else {
-    customData[editingGroupId] = groupData;
-    notify(`Gruppo ${editingGroupId} aggiornato!`, 'success');
-  }
-  
-  if (await saveCustomizations()) {
+  const wantFav = document.getElementById('group-favorite').checked;
+  const isNew = editingGroupId === null;
+  const gid = String(isNew ? getNextGroupId() : editingGroupId);
+  customData[gid] = groupData;
+
+  if (await saveCustomizations(true)) {
+    if (wantFav !== isFav(gid)) {
+      favorites = wantFav ? [...new Set([...favorites, gid])] : favorites.filter(f => f !== gid);
+      await saveFavorites();
+    }
+    if (isNew) {
+      // selezione automatica nell'elemento che si sta modificando
+      document.getElementById('item-customizable').checked = true;
+      document.getElementById('customization-group-id').value = gid;
+      updateCustomizationVisibility();
+    }
+    updateGroupIdButton();
     closeCustomizationGroupPopup();
     renderGroupsList();
+    notify(isNew ? `Gruppo ${gid} creato e selezionato` : `Gruppo ${gid} aggiornato`, 'success');
   }
 }
 
@@ -326,6 +396,7 @@ async function deleteGroup(groupId) {
   if (!confirm(`Sei sicuro di voler eliminare il Gruppo ${groupId}?\n\nGli elementi che lo usano non saranno più customizzabili.`)) return;
   
   delete customData[groupId];
+  if (isFav(groupId)) { favorites = favorites.filter(f => f !== String(groupId)); await saveFavorites(); }
   if (await saveCustomizations()) {
     notify(`Gruppo ${groupId} eliminato`, 'success');
     renderGroupsList();
@@ -357,6 +428,13 @@ function updateGroupIdButton() {
   if (groupInput && btnDisplay) {
     btnDisplay.textContent = groupInput.value || '-';
   }
+  const star = document.getElementById('btn-fav-group');
+  if (star) {
+    const on = !!groupInput?.value && isFav(groupInput.value);
+    star.textContent = on ? '★' : '☆';
+    star.classList.toggle('on', on);
+    star.title = on ? 'Rimuovi dai preferiti' : 'Salva nei preferiti';
+  }
 }
 
 function openCurrentGroupOrSelection() {
@@ -368,6 +446,9 @@ function openCurrentGroupOrSelection() {
 
 // ===== EXPORTS =====
 window.loadCustomizations = loadCustomizations;
+window.pruneCustomizations = pruneCustomizations;
+window.setFavorite = setFavorite;
+window.toggleCurrentGroupFavorite = toggleCurrentGroupFavorite;
 window.openGroupSelectionPopup = openGroupSelectionPopup;
 window.closeGroupSelectionPopup = closeGroupSelectionPopup;
 window.openCustomizationGroupPopup = openCustomizationGroupPopup;

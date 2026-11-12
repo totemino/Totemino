@@ -906,6 +906,7 @@ async function saveMenu() {
       }
     });
     setDirty(false); notify('Menu salvato!');
+    if (typeof pruneCustomizations === 'function') await pruneCustomizations();
   } catch (err) { console.error(err); notify('Errore salvataggio', 'error'); }
 }
 

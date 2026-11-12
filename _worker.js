@@ -58,6 +58,7 @@ const JSON_FILES = {
   'settings.json': {},
   'menuTypes.json': DEFAULT_MENU_TYPES,
   'customizations.json': {},
+  'custom-favorites.json': [],
   'banners.json': [],
   'promo.json': []
 };
@@ -527,6 +528,7 @@ const SAVE_ROUTES = {
   'save-settings': { file: 'settings.json', field: 'settings', missing: 'Impostazioni mancanti', wrap: (v) => v },
   'save-menu-types': { file: 'menuTypes.json', field: 'menuTypes', missing: 'Menu types mancanti', wrap: (v) => ({ menuTypes: v }) },
   'save-customizations': { file: 'customizations.json', field: 'customizations', missing: 'Customizzazioni mancanti', wrap: (v) => v },
+  'save-custom-favorites': { file: 'custom-favorites.json', field: 'favorites', array: true, missing: 'Preferiti non validi', wrap: (v) => v },
   'save-banners': { file: 'banners.json', field: 'banners', array: true, missing: 'Dati banner non validi', wrap: (v) => v },
   'save-promo': { file: 'promo.json', field: 'promos', array: true, missing: 'Dati promo non validi', wrap: (v) => v }
 };
