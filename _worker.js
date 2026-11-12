@@ -372,7 +372,61 @@ function handleLogout() {
 }
 
 // ==================== LETTURA DATI ====================
+// ---------- Durata dei banner ----------
+// banner.duration: { type:'forever' } | { type:'days', days, until:'YYYY-MM-DD' } | { type:'range', from, to }
+// Un banner senza "duration" (vecchi banner) resta per sempre.
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const ROME_DATE = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit' });
+const todayRome = () => ROME_DATE.format(new Date()); // "YYYY-MM-DD"
+
+function bannerEnd(b) {
+  const d = b && b.duration;
+  if (!d) return null;
+  const e = d.type === 'days' ? d.until : d.type === 'range' ? d.to : null;
+  return DATE_RE.test(e || '') ? e : null;
+}
+const bannerStart = (b) => (b && b.duration && b.duration.type === 'range' && DATE_RE.test(b.duration.from || '') ? b.duration.from : null);
+
+// Tiene solo i campi di durata validi; il resto diventa "per sempre"
+function sanitizeBanner(b) {
+  if (!b || typeof b !== 'object') return b;
+  const d = b.duration;
+  let clean = { type: 'forever' };
+  if (d && d.type === 'days' && Number.isInteger(d.days) && d.days >= 1 && d.days <= 365 && DATE_RE.test(d.until || '')) {
+    clean = { type: 'days', days: d.days, until: d.until };
+  } else if (d && d.type === 'range' && DATE_RE.test(d.from || '') && DATE_RE.test(d.to || '') && d.to >= d.from) {
+    clean = { type: 'range', from: d.from, to: d.to };
+  }
+  return { ...b, duration: clean };
+}
+
+// Legge banners.json, ELIMINA i banner scaduti (riscrivendo il file) e nasconde
+// ai clienti quelli programmati che non sono ancora iniziati (il proprietario li vede tutti).
+async function serveBanners(request, env, restaurantId) {
+  const key = `IDs/${restaurantId}/banners.json`;
+  const headers = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
+  const r2 = await env.BUCKET.get(key);
+  if (!r2) return request.method === 'HEAD' ? new Response(null, { headers }) : json([]);
+
+  let list;
+  try { list = JSON.parse(await r2.text()); } catch { list = []; }
+  if (!Array.isArray(list)) list = [];
+
+  const today = todayRome();
+  const alive = list.filter((b) => { const e = bannerEnd(b); return !e || today <= e; });
+  if (alive.length !== list.length && request.method === 'GET') {
+    try { await putJSON(env, key, alive); } catch (e) { console.error('purge banner:', e); }
+  }
+
+  const session = await readSession(request, env);
+  const isOwner = !!session && session.restaurantId === restaurantId;
+  const visible = isOwner ? alive : alive.filter((b) => { const s = bannerStart(b); return !s || today >= s; });
+
+  return request.method === 'HEAD' ? new Response(null, { headers }) : json(visible);
+}
+
 async function serveData(request, env, restaurantId, file) {
+  if (file === 'banners.json') return await serveBanners(request, env, restaurantId);
   const r2 = await env.BUCKET.get(`IDs/${restaurantId}/${file}`);
   if (r2) {
     return new Response(request.method === 'HEAD' ? null : r2.body, {
@@ -529,7 +583,7 @@ const SAVE_ROUTES = {
   'save-menu-types': { file: 'menuTypes.json', field: 'menuTypes', missing: 'Menu types mancanti', wrap: (v) => ({ menuTypes: v }) },
   'save-customizations': { file: 'customizations.json', field: 'customizations', missing: 'Customizzazioni mancanti', wrap: (v) => v },
   'save-custom-favorites': { file: 'custom-favorites.json', field: 'favorites', array: true, missing: 'Preferiti non validi', wrap: (v) => v },
-  'save-banners': { file: 'banners.json', field: 'banners', array: true, missing: 'Dati banner non validi', wrap: (v) => v },
+  'save-banners': { file: 'banners.json', field: 'banners', array: true, missing: 'Dati banner non validi', wrap: (v) => v.map(sanitizeBanner) },
   'save-promo': { file: 'promo.json', field: 'promos', array: true, missing: 'Dati promo non validi', wrap: (v) => v }
 };
 

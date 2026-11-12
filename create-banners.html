@@ -56,16 +56,16 @@
         .bn-link.none { opacity: .6; }
 
         /* ===== Segmented tipo link ===== */
-        .link-types { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .link-type {
+        .link-types, .dur-types { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .link-type, .dur-type {
             display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px;
             border: 1px solid var(--btn-secondary); border-radius: 10px; background: var(--card-bg);
             color: var(--text-primary); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
             transition: all .15s;
         }
-        .link-type svg { width: 20px; height: 20px; }
-        .link-type:hover { border-color: var(--accent-gold); }
-        .link-type[aria-pressed="true"] { background: var(--accent-gold); border-color: var(--accent-gold); box-shadow: 0 0 8px var(--selected-glow); }
+        .link-type svg, .dur-type svg { width: 20px; height: 20px; }
+        .link-type:hover, .dur-type:hover { border-color: var(--accent-gold); }
+        .link-type[aria-pressed="true"], .dur-type[aria-pressed="true"] { background: var(--accent-gold); border-color: var(--accent-gold); box-shadow: 0 0 8px var(--selected-glow); }
 
         .link-box { margin-top: 10px; padding: 12px; border: 1px dashed var(--btn-secondary); border-radius: 10px; }
         .link-box .form-field:last-child { margin-bottom: 0; }
@@ -91,6 +91,17 @@
         [data-theme="dark"] .pv-x { filter: invert(1); opacity: .8; }
 
         .field-err { border-color: #e53e3e !important; }
+
+        /* ===== Durata ===== */
+        .bn-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+        .bn-link.dur { background: var(--close-bg); }
+        .bn-link.dur.soon { background: #ffb40030; }
+        .dates-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .link-box input[type="number"], .link-box input[type="date"] {
+            width: 100%; box-sizing: border-box; padding: 10px 12px; font: inherit; font-size: 14px;
+            color: var(--text-primary); background: var(--input-bg);
+            border: 1px solid var(--btn-secondary); border-radius: 8px;
+        }
     </style>
 </head>
 
@@ -190,6 +201,44 @@
                     </div>
                 </div>
 
+                <span class="lbl">Per quanto tempo deve stare il banner?</span>
+                <div class="dur-types">
+                    <button type="button" class="dur-type" data-dur="days">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                        Max giorni
+                    </button>
+                    <button type="button" class="dur-type" data-dur="range">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+                        Da data a data
+                    </button>
+                    <button type="button" class="dur-type" data-dur="forever">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.2 8.5a4 4 0 1 0 0 7c2-1.5 3.3-7 5.8-7M5.8 15.5a4 4 0 1 0 0-7c-2 1.5-3.3 7-5.8 7" transform="translate(0 0)"/></svg>
+                        Per sempre
+                    </button>
+                </div>
+
+                <div class="link-box hidden" id="box-days">
+                    <div class="form-field">
+                        <label for="dur-days">Numero massimo di giorni</label>
+                        <input type="number" id="dur-days" min="1" max="365" step="1" inputmode="numeric" placeholder="Es. 7">
+                        <span class="hint">Si conta da oggi, oggi compreso. Passati i giorni scelti il banner viene eliminato automaticamente.</span>
+                    </div>
+                </div>
+
+                <div class="link-box hidden" id="box-range">
+                    <div class="dates-row">
+                        <div class="form-field">
+                            <label for="dur-from">Dal</label>
+                            <input type="date" id="dur-from">
+                        </div>
+                        <div class="form-field">
+                            <label for="dur-to">Al (compreso)</label>
+                            <input type="date" id="dur-to">
+                        </div>
+                    </div>
+                    <span class="hint">Il banner compare dal giorno di inizio e, dopo la data di fine, viene eliminato automaticamente.</span>
+                </div>
+
                 <span class="lbl">Anteprima</span>
                 <div class="preview-wrap">
                     <div class="pv" id="pv">
@@ -235,6 +284,7 @@
         let editingIndex = null;
         let deleteIndex = null;
         let linkType = 'whatsapp';
+        let durType = 'forever';
 
         const $ = id => document.getElementById(id);
         const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -292,6 +342,36 @@
             return b.link || { type: 'whatsapp', message: DEFAULT_MSG };
         }
 
+
+        /* ===== Durata ===== */
+        const pad = n => String(n).padStart(2, '0');
+        const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        const todayStr = () => ymd(new Date());
+        function addDays(str, n) {
+            const [y, m, d] = str.split('-').map(Number);
+            return ymd(new Date(y, m - 1, d + n));
+        }
+        const fmtDate = s => { const [y, m, d] = s.split('-'); return `${d}/${m}/${y}`; };
+
+        // banner legacy senza "duration" = per sempre
+        function getDuration(b) { return b.duration || { type: 'forever' }; }
+        function endDate(b) {
+            const d = getDuration(b);
+            return d.type === 'days' ? d.until : d.type === 'range' ? d.to : null;
+        }
+        function isExpired(b) { const e = endDate(b); return !!e && todayStr() > e; }
+
+        function durBadge(b) {
+            const d = getDuration(b);
+            const icon = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+            if (d.type === 'days') return `<div class="bn-link dur">${icon}<span>Fino al ${fmtDate(d.until)}</span></div>`;
+            if (d.type === 'range') {
+                const soon = d.from > todayStr();
+                return `<div class="bn-link dur${soon ? ' soon' : ''}">${icon}<span>${soon ? 'Programmato: ' : ''}${fmtDate(d.from)} → ${fmtDate(d.to)}</span></div>`;
+            }
+            return `<div class="bn-link dur">${icon}<span>Per sempre</span></div>`;
+        }
+
         /* ===== Init ===== */
         document.addEventListener('DOMContentLoaded', async () => {
             restaurantId = new URLSearchParams(location.search).get('id');
@@ -307,6 +387,7 @@
             $('confirm-yes').addEventListener('click', confirmDelete);
 
             document.querySelectorAll('.link-type').forEach(b => b.addEventListener('click', () => setLinkType(b.dataset.type)));
+            document.querySelectorAll('.dur-type').forEach(b => b.addEventListener('click', () => setDurType(b.dataset.dur)));
             ['banner-title', 'banner-subtitle', 'wa-message', 'wa-phone', 'site-url'].forEach(id => $(id).addEventListener('input', updatePreview));
             $('ins-event').addEventListener('click', () => {
                 const t = $('wa-message');
@@ -345,6 +426,7 @@
                 const r = await fetch(`/IDs/${restaurantId}/banners.json`);
                 banners = r.ok ? await r.json() : [];
                 if (!Array.isArray(banners)) banners = [];
+                banners = banners.filter(b => !isExpired(b)); // i scaduti vengono eliminati anche dal server
             } catch (e) { console.error('Errore caricamento banner:', e); banners = []; }
         }
 
@@ -390,7 +472,7 @@
                         </div>
                     </div>
                     <div class="bn-sub">${esc(b.subtitle)}</div>
-                    ${linkBadge(b)}
+                    <div class="bn-badges">${linkBadge(b)}${durBadge(b)}</div>
                 </div>`).join('')}</div>`;
 
             // click sulla card = modifica
@@ -413,6 +495,13 @@
             $('box-whatsapp').classList.toggle('hidden', type !== 'whatsapp');
             $('box-website').classList.toggle('hidden', type !== 'website');
             updatePreview();
+        }
+
+        function setDurType(type) {
+            durType = type;
+            document.querySelectorAll('.dur-type').forEach(b => b.setAttribute('aria-pressed', b.dataset.dur === type));
+            $('box-days').classList.toggle('hidden', type !== 'days');
+            $('box-range').classList.toggle('hidden', type !== 'range');
         }
 
         function updatePreview() {
@@ -440,9 +529,14 @@
             $('wa-message').value = l.message || DEFAULT_MSG;
             $('wa-phone').value = phone || '';
             $('site-url').value = l.type === 'website' ? (l.url || '') : '';
-            ['banner-title', 'banner-subtitle', 'wa-phone', 'site-url'].forEach(id => $(id).classList.remove('field-err'));
+            const d = b ? getDuration(b) : { type: 'forever' };
+            $('dur-days').value = d.type === 'days' ? d.days : 7;
+            $('dur-from').value = d.type === 'range' ? d.from : todayStr();
+            $('dur-to').value = d.type === 'range' ? d.to : '';
+            ['banner-title', 'banner-subtitle', 'wa-phone', 'site-url', 'dur-days', 'dur-from', 'dur-to'].forEach(id => $(id).classList.remove('field-err'));
 
             setLinkType(l.type);
+            setDurType(d.type);
             $('banner-popup').classList.remove('hidden');
             document.body.classList.add('popup-open');
             setTimeout(() => $('banner-title').focus(), 50);
@@ -482,6 +576,30 @@
             if (!title || !subtitle) { showNotification('Compila titolo e sottotitolo', 'error'); return; }
 
             const data = { title, subtitle };
+
+            // durata
+            if (durType === 'days') {
+                const n = Number($('dur-days').value);
+                const ok = Number.isInteger(n) && n >= 1 && n <= 365;
+                $('dur-days').classList.toggle('field-err', !ok);
+                if (!ok) { showNotification('Inserisci un numero di giorni da 1 a 365', 'error'); return; }
+                const old = editingIndex !== null ? banners[editingIndex].duration : null;
+                // se i giorni non sono cambiati mantengo la scadenza originale
+                data.duration = (old && old.type === 'days' && old.days === n && old.until)
+                    ? old
+                    : { type: 'days', days: n, until: addDays(todayStr(), n - 1) };
+            } else if (durType === 'range') {
+                const from = $('dur-from').value, to = $('dur-to').value;
+                const badFrom = !from, badTo = !to || (from && to < from) || to < todayStr();
+                $('dur-from').classList.toggle('field-err', badFrom);
+                $('dur-to').classList.toggle('field-err', badTo);
+                if (badFrom || !to) { showNotification('Scegli la data di inizio e di fine', 'error'); return; }
+                if (to < from) { showNotification('La data di fine è prima di quella di inizio', 'error'); return; }
+                if (to < todayStr()) { showNotification('La data di fine è già passata', 'error'); return; }
+                data.duration = { type: 'range', from, to };
+            } else {
+                data.duration = { type: 'forever' };
+            }
 
             if (linkType === 'whatsapp') {
                 // numero: se è nuovo o cambiato lo salvo nelle impostazioni del locale
