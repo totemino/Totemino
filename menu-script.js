@@ -284,8 +284,8 @@ function getCustomizationLabel(customizations) {
 
 // Prezzo base a 0 + una sola categoria di modifica con poche opzioni (es. 30cl, 75cl, 3L):
 // mostriamo direttamente i prezzi "€3.00 | €8.00 | €20.00".
-// Dettagli: 1-3 opzioni, con il nome sotto in piccolo e grigio.
-// Griglia: 1 sola categoria e max 2 opzioni, solo prezzi. Altrimenti "Seleziona".
+// Dettagli: 1-3 opzioni; il nome sotto in piccolo e grigio.
+// Griglia: 1 sola categoria e max 2 opzioni. Altrimenti "Seleziona".
 const MAX_INLINE_OPTIONS = 3;
 
 function getInlineOptionPrices(item) {
@@ -308,9 +308,8 @@ function getInlineOptionPrices(item) {
   return options.map(o => ({ price: `€${Number(o.priceModifier).toFixed(2)}`, name: o.name || "" }));
 }
 
-// Scrive nel <p> il prezzo: "prezzo | prezzo" con nome opzione sotto (solo layout dettagli)
+// Scrive nel <p> il prezzo: "prezzo | prezzo" con nome opzione sotto
 function fillInlineOptionPrices(priceEl, opts) {
-  const showNames = isListLayout();
   priceEl.textContent = "";
   priceEl.classList.add("inline-options");
   opts.forEach((o, i) => {
@@ -326,7 +325,7 @@ function fillInlineOptionPrices(priceEl, opts) {
     pr.className = "opt-price";
     pr.textContent = o.price;
     col.appendChild(pr);
-    if (o.name && (showNames || o.note)) {
+    if (o.name) {
       const nm = document.createElement("span");
       nm.className = "opt-name";
       nm.textContent = o.name;
@@ -1168,6 +1167,7 @@ function renderItems(category) {
 
   setTimeout(() => {
     itemsContainer.innerHTML = "";
+    itemsContainer.classList.toggle("list-view", isListLayout()); // layout nuovo applicato insieme al nuovo contenuto
     const items = Array.isArray(category) ? category : (window.menuData[category] || []);
     const frag = document.createDocumentFragment();
 
@@ -1592,7 +1592,7 @@ function setViewMode(mode, rerender = true) {
   viewMode = mode;
   autoList = computeAutoList();
 
-  itemsContainer.classList.toggle("list-view", isListLayout());
+  if (!(rerender && categories.length)) itemsContainer.classList.toggle("list-view", isListLayout()); // altrimenti lo fa renderItems
   document.querySelectorAll(".side-segmented button").forEach(b => {
     const on = b.dataset.view === mode;
     b.classList.toggle("active", on);
@@ -1799,10 +1799,11 @@ window.addEventListener("resize", () => {
     const next = computeAutoList();
     if (next === autoList) return;
     autoList = next;
-    itemsContainer.classList.toggle("list-view", isListLayout());
     if (categories.length) {
       lastSwipeDirection = null;
-      renderItems(categories[currentCategoryIndex]);
+      renderItems(categories[currentCategoryIndex]); // applica anche la classe list-view
+    } else {
+      itemsContainer.classList.toggle("list-view", isListLayout());
     }
   }, 120);
 });

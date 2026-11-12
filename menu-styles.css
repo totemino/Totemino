@@ -388,6 +388,9 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 /* ===== PRODOTTI ===== */
+/* Griglia: contenuto in alto, lo spazio extra resta sotto al prezzo */
+.items:not(.list-view) button { justify-content: flex-start; }
+
 .items {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -1613,13 +1616,14 @@ input[type="number"]::-webkit-outer-spin-button {
   font-weight: 400;
   color: var(--text-primary);
   opacity: 0.5;
-  max-width: 5.5rem;
+  max-width: 4.5rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .items p.inline-options .opt-sep { opacity: 0.4; font-weight: 400; }
 .items.list-view p.inline-options { justify-content: flex-end; margin-left: 0; }
+.items.list-view p.inline-options .opt-name { max-width: 5.5rem; }
 
 /* Cellulari: un'opzione per riga, allineate a destra, senza "|", nome sotto al prezzo */
 @media (max-width: 600px) {
