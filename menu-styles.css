@@ -1592,3 +1592,31 @@ input[type="number"]::-webkit-outer-spin-button {
   opacity: 1;
   transform: translate(-50%, 0);
 }
+
+/* Prezzi per opzione in vista dettagliata: [prezzo] | [prezzo] con nome opzione sotto */
+.items.list-view p.inline-options {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0 0.55rem;
+  margin-left: 0;
+}
+.items.list-view p.inline-options .opt-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.15;
+}
+.items.list-view p.inline-options .opt-price { font-size: 1rem; font-weight: 500; }
+.items.list-view p.inline-options .opt-name {
+  font-size: 0.62rem;
+  font-weight: 400;
+  color: var(--text-primary);
+  opacity: 0.5;
+  max-width: 5.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.items.list-view p.inline-options .opt-sep { opacity: 0.4; font-weight: 400; }

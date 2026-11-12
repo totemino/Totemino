@@ -271,21 +271,60 @@ function getCustomizationLabel(customizations) {
 }
 
 // Prezzo base a 0 + una sola categoria di modifica con poche opzioni (es. 30cl, 75cl, 3L):
-// mostra direttamente i prezzi "€3.00 | €8.00 | €20.00". Se non applicabile restituisce "".
+// SOLO in vista dettagliata mostriamo direttamente i prezzi "€3.00 | €8.00 | €20.00",
+// con sotto il nome dell'opzione in piccolo e grigio. In griglia resta "Seleziona".
+// Funziona da 1 a MAX_INLINE_OPTIONS opzioni.
 const MAX_INLINE_OPTIONS = 3;
 
-function getOptionPricesLabel(item) {
+function getInlineOptionPrices(item) {
+  if (viewMode !== "list") return null;
+  if (!item.customizable || item.price > 0) return null;
   const group = item.customizationGroup && customizationData[item.customizationGroup];
-  if (!Array.isArray(group) || group.length === 0) return "";
+  if (!Array.isArray(group) || group.length === 0) return null;
 
   // Categoria di riferimento: la prima obbligatoria, altrimenti la prima
   const section = group.find(s => s.required) || group[0];
   const options = (section && section.options) || [];
 
-  if (options.length < 2 || options.length > MAX_INLINE_OPTIONS) return "";
-  if (!options.every(o => Number(o.priceModifier) > 0)) return "";
+  if (options.length < 1 || options.length > MAX_INLINE_OPTIONS) return null;
+  if (!options.every(o => Number(o.priceModifier) > 0)) return null;
 
-  return options.map(o => `€${Number(o.priceModifier).toFixed(2)}`).join(" | ");
+  return options.map(o => ({ price: `€${Number(o.priceModifier).toFixed(2)}`, name: o.name || "" }));
+}
+
+// Scrive nel <p> il prezzo: colonne "prezzo | prezzo" con nome opzione sotto (solo lista)
+function fillInlineOptionPrices(priceEl, opts) {
+  priceEl.textContent = "";
+  priceEl.classList.add("inline-options");
+  opts.forEach((o, i) => {
+    if (i > 0) {
+      const sep = document.createElement("span");
+      sep.className = "opt-sep";
+      sep.textContent = "|";
+      priceEl.appendChild(sep);
+    }
+    const col = document.createElement("span");
+    col.className = "opt-col";
+    const pr = document.createElement("span");
+    pr.className = "opt-price";
+    pr.textContent = o.price;
+    const nm = document.createElement("span");
+    nm.className = "opt-name";
+    nm.textContent = o.name;
+    col.appendChild(pr);
+    col.appendChild(nm);
+    priceEl.appendChild(col);
+  });
+}
+
+function setUnselectedCustomizablePrice(priceEl, item) {
+  const opts = getInlineOptionPrices(item);
+  if (opts) {
+    fillInlineOptionPrices(priceEl, opts);
+    return;
+  }
+  priceEl.classList.remove("inline-options");
+  priceEl.textContent = item.price < 0.01 ? "Seleziona" : `€${item.price.toFixed(2)} + Modifica`;
 }
 
 // Etichetta prezzo di un item, in base a prezzo e presenza di customizzazioni
@@ -293,8 +332,7 @@ function getPriceLabel(item) {
   const hasCustomizations = !!item.customizable;
 
   if (item.price <= 0) {
-    if (!hasCustomizations) return "Gratuito";
-    return getOptionPricesLabel(item) || "Seleziona";
+    return hasCustomizations ? "Seleziona" : "Gratuito";
   }
 
   const price = `€${item.price.toFixed(2)}`;
@@ -355,15 +393,12 @@ function updateCustomizableItemPrice(priceEl, item, itemName, totalQty) {
   if (totalQty > 0) {
     // Item selezionato: mostra prezzo totale di tutte le varianti
     const totalPrice = calculateTotalPriceForAllVariants(itemName);
+    priceEl.classList.remove("inline-options");
     priceEl.textContent = `€${totalPrice.toFixed(2)}`;
     priceEl.classList.remove("customizable-price");
   } else {
     // Item non selezionato: mostra prezzo base + indicazione
-    if (item.price < 0.01) {
-      priceEl.textContent = getOptionPricesLabel(item) || "Seleziona";
-    } else {
-      priceEl.textContent = `€${item.price.toFixed(2)} + Modifica`;
-    }
+    setUnselectedCustomizablePrice(priceEl, item);
     priceEl.classList.add("customizable-price");
   }
 }
@@ -1147,7 +1182,10 @@ function renderItems(category) {
 
       const price = document.createElement("p");
       price.textContent = getPriceLabel(item);
-      if (item.customizable) price.classList.add("customizable-price");
+      if (item.customizable) {
+        price.classList.add("customizable-price");
+        if (item.price <= 0) setUnselectedCustomizablePrice(price, item);
+      }
 
       btn.appendChild(img);
       btn.appendChild(title);
