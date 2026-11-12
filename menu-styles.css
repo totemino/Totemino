@@ -1622,6 +1622,21 @@ input[type="number"]::-webkit-outer-spin-button {
   text-overflow: ellipsis;
 }
 .items p.inline-options .opt-sep { opacity: 0.4; font-weight: 400; }
+/* Griglia: nome opzione / "+ Modifica" a destra del prezzo, qualche px più grande */
+.items:not(.list-view) p.inline-options {
+  flex-wrap: nowrap;
+  align-items: baseline;
+}
+.items:not(.list-view) p.inline-options .opt-col {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.items:not(.list-view) p.inline-options .opt-name {
+  font-size: 0.8rem;
+  max-width: 6rem;
+}
 .items.list-view p.inline-options { justify-content: flex-end; margin-left: 0; }
 .items.list-view p.inline-options .opt-name { max-width: 5.5rem; }
 

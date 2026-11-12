@@ -285,7 +285,7 @@ function getCustomizationLabel(customizations) {
 // Prezzo base a 0 + una sola categoria di modifica con poche opzioni (es. 30cl, 75cl, 3L):
 // mostriamo direttamente i prezzi "€3.00 | €8.00 | €20.00".
 // Dettagli: 1-3 opzioni; il nome sotto in piccolo e grigio.
-// Griglia: 1 sola categoria e max 2 opzioni. Altrimenti "Seleziona".
+// Griglia: 1 sola categoria e 1 sola opzione. Altrimenti "Seleziona".
 const MAX_INLINE_OPTIONS = 3;
 
 function getInlineOptionPrices(item) {
@@ -294,14 +294,14 @@ function getInlineOptionPrices(item) {
   if (!Array.isArray(group) || group.length === 0) return null;
 
   const list = isListLayout();
-  // Griglia: solo 1 categoria di scelta con al massimo 2 opzioni
+  // Griglia: solo 1 categoria di scelta con 1 sola opzione
   if (!list && group.length > 1) return null;
 
   // Categoria di riferimento: la prima obbligatoria, altrimenti la prima
   const section = group.find(s => s.required) || group[0];
   const options = (section && section.options) || [];
 
-  const maxOpts = list ? MAX_INLINE_OPTIONS : 2;
+  const maxOpts = list ? MAX_INLINE_OPTIONS : 1;
   if (options.length < 1 || options.length > maxOpts) return null;
   if (!options.every(o => Number(o.priceModifier) > 0)) return null;
 
