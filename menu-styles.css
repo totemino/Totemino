@@ -1258,6 +1258,7 @@ input[type="number"]::-webkit-outer-spin-button {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  margin-bottom: 0.4rem;
 }
 
 .items.list-view p {
