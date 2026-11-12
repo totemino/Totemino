@@ -129,6 +129,9 @@ document.addEventListener('keydown', (e) => {
 function plainDescription(text) {
   if (!text) return "";
   let raw = String(text).trim();
+  // A capo (reale o "\n" letterale) → separatore " • "
+  const BREAK = "\u0001";
+  raw = raw.replace(/(?:\s*(?:\\n|\r?\n)\s*)+/g, BREAK);
   if (raw.includes(";")) {
     raw = raw
       .replace(/^\s*ingredienti\s*:\s*/i, "")
@@ -137,7 +140,11 @@ function plainDescription(text) {
       .filter(Boolean)
       .join(", ");
   }
-  return raw.replace(/\\n/g, " ").replace(/\s+/g, " ");
+  return raw
+    .split(BREAK)
+    .map(p => p.replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+    .join(" • ");
 }
 
 //helper
@@ -263,12 +270,31 @@ function getCustomizationLabel(customizations) {
   return labels.length > 0 ? ` (${labels.join(', ')})` : '';
 }
 
+// Prezzo base a 0 + una sola categoria di modifica con poche opzioni (es. 30cl, 75cl, 3L):
+// mostra direttamente i prezzi "€3.00 | €8.00 | €20.00". Se non applicabile restituisce "".
+const MAX_INLINE_OPTIONS = 3;
+
+function getOptionPricesLabel(item) {
+  const group = item.customizationGroup && customizationData[item.customizationGroup];
+  if (!Array.isArray(group) || group.length === 0) return "";
+
+  // Categoria di riferimento: la prima obbligatoria, altrimenti la prima
+  const section = group.find(s => s.required) || group[0];
+  const options = (section && section.options) || [];
+
+  if (options.length < 2 || options.length > MAX_INLINE_OPTIONS) return "";
+  if (!options.every(o => Number(o.priceModifier) > 0)) return "";
+
+  return options.map(o => `€${Number(o.priceModifier).toFixed(2)}`).join(" | ");
+}
+
 // Etichetta prezzo di un item, in base a prezzo e presenza di customizzazioni
 function getPriceLabel(item) {
   const hasCustomizations = !!item.customizable;
 
   if (item.price <= 0) {
-    return hasCustomizations ? "Seleziona" : "Gratuito";
+    if (!hasCustomizations) return "Gratuito";
+    return getOptionPricesLabel(item) || "Seleziona";
   }
 
   const price = `€${item.price.toFixed(2)}`;
@@ -334,7 +360,7 @@ function updateCustomizableItemPrice(priceEl, item, itemName, totalQty) {
   } else {
     // Item non selezionato: mostra prezzo base + indicazione
     if (item.price < 0.01) {
-      priceEl.textContent = "Seleziona";
+      priceEl.textContent = getOptionPricesLabel(item) || "Seleziona";
     } else {
       priceEl.textContent = `€${item.price.toFixed(2)} + Modifica`;
     }
