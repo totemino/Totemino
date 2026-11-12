@@ -5,6 +5,18 @@ let favorites = []; // id dei gruppi preferiti (stringhe)
 
 const isFav = id => favorites.includes(String(id));
 
+// Stato del bottone "Preferito" nell'editor gruppo (applicato solo al salvataggio)
+let groupFavDraft = false;
+function setGroupFavDraft(on) {
+  groupFavDraft = !!on;
+  const b = document.getElementById('group-favorite-btn');
+  if (!b) return;
+  b.textContent = (groupFavDraft ? '★' : '☆') + ' Preferito';
+  b.classList.toggle('on', groupFavDraft);
+  b.setAttribute('aria-pressed', groupFavDraft);
+}
+function toggleGroupFavoriteDraft() { setGroupFavDraft(!groupFavDraft); }
+
 async function loadFavorites() {
   try {
     const res = await fetch(`/IDs/${restaurantId}/custom-favorites.json`);
@@ -208,7 +220,7 @@ function openCustomizationGroupPopup(groupId = null) {
     groupId ? `Modifica Gruppo ${groupId}` : 'Crea Nuovo Gruppo Customizzazione';
   
   groupId ? loadCustomizationGroup(groupId) : resetCustomizationForm();
-  document.getElementById('group-favorite').checked = groupId ? isFav(groupId) : false;
+  setGroupFavDraft(groupId ? isFav(groupId) : false);
   
   document.getElementById('customization-popup').classList.remove('hidden');
   lockScroll();
@@ -364,7 +376,7 @@ async function saveCustomizationGroup() {
     });
   }
   
-  const wantFav = document.getElementById('group-favorite').checked;
+  const wantFav = groupFavDraft;
   const isNew = editingGroupId === null;
   const gid = String(isNew ? getNextGroupId() : editingGroupId);
   customData[gid] = groupData;
@@ -448,6 +460,7 @@ function openCurrentGroupOrSelection() {
 window.loadCustomizations = loadCustomizations;
 window.pruneCustomizations = pruneCustomizations;
 window.setFavorite = setFavorite;
+window.toggleGroupFavoriteDraft = toggleGroupFavoriteDraft;
 window.toggleCurrentGroupFavorite = toggleCurrentGroupFavorite;
 window.openGroupSelectionPopup = openGroupSelectionPopup;
 window.closeGroupSelectionPopup = closeGroupSelectionPopup;

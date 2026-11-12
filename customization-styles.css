@@ -22,7 +22,10 @@
 .group-fav-btn { width: 28px; height: 28px; font-size: 16px; }
 .btn-fav:hover, .group-fav-btn:hover { border-color: var(--accent-gold); }
 .btn-fav.on, .group-fav-btn.on { color: var(--accent-gold); border-color: var(--accent-gold); }
-.group-fav-toggle { margin-bottom: 12px; }
+/* bottone "Preferito" nella barra azioni dell'editor gruppo (a sinistra) */
+.btn-fav-toggle { margin-right: auto; padding: 8px 14px; font: inherit; font-weight: 600; font-size: 14px; border-radius: 12px; border: 1px solid var(--btn-secondary); background: transparent; color: var(--text-primary); cursor: pointer; transition: all .15s; }
+.btn-fav-toggle:hover { border-color: var(--accent-gold); }
+.btn-fav-toggle.on { background: #f6f3a8; border-color: #f6f3a8; color: #000; }
 .no-groups-message { text-align: center; opacity: .7; padding: 24px; font-size: 13px; }
 
 .group-card { background: var(--card-bg); border: 1px solid var(--btn-secondary); border-radius: 12px; padding: 10px 12px; transition: border-color .15s, box-shadow .15s; }

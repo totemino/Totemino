@@ -226,13 +226,11 @@
       <button class="close-popup" onclick="closeCustomizationGroupPopup()"><img src="img/x.png" alt="Chiudi"></button>
       <h2 class="popup-title" id="customization-popup-title">Crea nuovo gruppo</h2>
       <div class="pop-body">
-        <label class="checkbox-label group-fav-toggle">
-          <input type="checkbox" id="group-favorite"><span class="checkmark"></span><span class="checkbox-text">★ Salva nei preferiti (riutilizzabile da "Scegli Gruppo")</span>
-        </label>
         <div id="customization-sections-container"></div>
         <button class="btn-primary add-section-btn" onclick="addCustomizationSection()">+ Aggiungi nuova sezione</button>
       </div>
       <div class="popup-actions">
+        <button type="button" class="btn-fav-toggle" id="group-favorite-btn" onclick="toggleGroupFavoriteDraft()" aria-pressed="false">☆ Preferito</button>
         <button class="btn-secondary" onclick="closeCustomizationGroupPopup()">Annulla</button>
         <button class="btn-save" onclick="saveCustomizationGroup()">Salva gruppo</button>
       </div>
