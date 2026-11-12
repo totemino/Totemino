@@ -304,7 +304,7 @@ function fillInlineOptionPrices(priceEl, opts) {
       priceEl.appendChild(sep);
     }
     const col = document.createElement("span");
-    col.className = "opt-col";
+    col.className = "opt-col" + (o.note ? " opt-note" : "");
     const pr = document.createElement("span");
     pr.className = "opt-price";
     pr.textContent = o.price;
@@ -321,6 +321,11 @@ function setUnselectedCustomizablePrice(priceEl, item) {
   const opts = getInlineOptionPrices(item);
   if (opts) {
     fillInlineOptionPrices(priceEl, opts);
+    return;
+  }
+  // Vista dettagliata, prezzo base + modifiche: "€5.00" con "+ Modifica" piccolo sotto
+  if (viewMode === "list" && item.price >= 0.01) {
+    fillInlineOptionPrices(priceEl, [{ price: `€${item.price.toFixed(2)}`, name: "+ Modifica", note: true }]);
     return;
   }
   priceEl.classList.remove("inline-options");
@@ -1184,7 +1189,7 @@ function renderItems(category) {
       price.textContent = getPriceLabel(item);
       if (item.customizable) {
         price.classList.add("customizable-price");
-        if (item.price <= 0) setUnselectedCustomizablePrice(price, item);
+        setUnselectedCustomizablePrice(price, item);
       }
 
       btn.appendChild(img);

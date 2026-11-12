@@ -1620,3 +1620,20 @@ input[type="number"]::-webkit-outer-spin-button {
   text-overflow: ellipsis;
 }
 .items.list-view p.inline-options .opt-sep { opacity: 0.4; font-weight: 400; }
+
+/* Cellulari: un'opzione per riga, allineate a destra, senza "|" */
+@media (max-width: 600px) {
+  .items.list-view p.inline-options {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.15rem 0;
+  }
+  .items.list-view p.inline-options .opt-sep { display: none; }
+  .items.list-view p.inline-options .opt-col:not(.opt-note) {
+    flex-direction: row-reverse;
+    align-items: baseline;
+    gap: 0.4rem;
+  }
+  .items.list-view p.inline-options .opt-col.opt-note { align-items: flex-end; }
+  .items.list-view p.inline-options .opt-name { max-width: 8rem; }
+}
