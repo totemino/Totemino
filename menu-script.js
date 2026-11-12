@@ -37,6 +37,18 @@ document.documentElement.classList.add('view-only');
 // La modalità iniziale è sempre quella scelta dal ristorante (settings.menu.defaultView),
 // letta ad ogni caricamento/refresh. La scelta del cliente vale solo finché la pagina resta aperta.
 let viewMode = 'grid';
+// In griglia, se lo schermo e' cosi' stretto che ci sta 1 sola colonna, usiamo il layout "dettagli"
+let autoList = false;
+function isListLayout() { return viewMode === "list" || autoList; }
+function computeAutoList() {
+  if (viewMode === "list") return false;
+  const w = document.documentElement.clientWidth || window.innerWidth;
+  const cs = getComputedStyle(itemsContainer);
+  const pad = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+  const gap = parseFloat(cs.columnGap) || 16;
+  const MIN_CARD = 160; // minmax(160px, 1fr) in menu-styles.css
+  return Math.floor((w - pad + gap) / (MIN_CARD + gap)) < 2;
+}
 try { localStorage.removeItem('totemino_view_mode'); } catch (e) {} // vecchia chiave: non serve più
 
 // ===== CATEGORIA CORRENTE (ripristinata dopo il ricaricamento) =====
@@ -271,29 +283,34 @@ function getCustomizationLabel(customizations) {
 }
 
 // Prezzo base a 0 + una sola categoria di modifica con poche opzioni (es. 30cl, 75cl, 3L):
-// SOLO in vista dettagliata mostriamo direttamente i prezzi "€3.00 | €8.00 | €20.00",
-// con sotto il nome dell'opzione in piccolo e grigio. In griglia resta "Seleziona".
-// Funziona da 1 a MAX_INLINE_OPTIONS opzioni.
+// mostriamo direttamente i prezzi "€3.00 | €8.00 | €20.00".
+// Dettagli: 1-3 opzioni, con il nome sotto in piccolo e grigio.
+// Griglia: 1 sola categoria e max 2 opzioni, solo prezzi. Altrimenti "Seleziona".
 const MAX_INLINE_OPTIONS = 3;
 
 function getInlineOptionPrices(item) {
-  if (viewMode !== "list") return null;
   if (!item.customizable || item.price > 0) return null;
   const group = item.customizationGroup && customizationData[item.customizationGroup];
   if (!Array.isArray(group) || group.length === 0) return null;
+
+  const list = isListLayout();
+  // Griglia: solo 1 categoria di scelta con al massimo 2 opzioni
+  if (!list && group.length > 1) return null;
 
   // Categoria di riferimento: la prima obbligatoria, altrimenti la prima
   const section = group.find(s => s.required) || group[0];
   const options = (section && section.options) || [];
 
-  if (options.length < 1 || options.length > MAX_INLINE_OPTIONS) return null;
+  const maxOpts = list ? MAX_INLINE_OPTIONS : 2;
+  if (options.length < 1 || options.length > maxOpts) return null;
   if (!options.every(o => Number(o.priceModifier) > 0)) return null;
 
   return options.map(o => ({ price: `€${Number(o.priceModifier).toFixed(2)}`, name: o.name || "" }));
 }
 
-// Scrive nel <p> il prezzo: colonne "prezzo | prezzo" con nome opzione sotto (solo lista)
+// Scrive nel <p> il prezzo: "prezzo | prezzo" con nome opzione sotto (solo layout dettagli)
 function fillInlineOptionPrices(priceEl, opts) {
+  const showNames = isListLayout();
   priceEl.textContent = "";
   priceEl.classList.add("inline-options");
   opts.forEach((o, i) => {
@@ -308,11 +325,13 @@ function fillInlineOptionPrices(priceEl, opts) {
     const pr = document.createElement("span");
     pr.className = "opt-price";
     pr.textContent = o.price;
-    const nm = document.createElement("span");
-    nm.className = "opt-name";
-    nm.textContent = o.name;
     col.appendChild(pr);
-    col.appendChild(nm);
+    if (o.name && (showNames || o.note)) {
+      const nm = document.createElement("span");
+      nm.className = "opt-name";
+      nm.textContent = o.name;
+      col.appendChild(nm);
+    }
     priceEl.appendChild(col);
   });
 }
@@ -323,8 +342,8 @@ function setUnselectedCustomizablePrice(priceEl, item) {
     fillInlineOptionPrices(priceEl, opts);
     return;
   }
-  // Vista dettagliata, prezzo base + modifiche: "€5.00" con "+ Modifica" piccolo sotto
-  if (viewMode === "list" && item.price >= 0.01) {
+  // Prezzo base + modifiche: "€5.00" con "+ Modifica" piccolo sotto
+  if (item.price >= 0.01) {
     fillInlineOptionPrices(priceEl, [{ price: `€${item.price.toFixed(2)}`, name: "+ Modifica", note: true }]);
     return;
   }
@@ -1195,7 +1214,7 @@ function renderItems(category) {
       btn.appendChild(img);
       btn.appendChild(title);
 
-      if (viewMode === "list") {
+      if (isListLayout()) {
         const descText = plainDescription(item.description);
         if (descText) {
           const desc = document.createElement("div");
@@ -1571,8 +1590,9 @@ if (itemsContainer) {
 // ===== MENU LATERALE (hamburger) =====
 function setViewMode(mode, rerender = true) {
   viewMode = mode;
+  autoList = computeAutoList();
 
-  itemsContainer.classList.toggle("list-view", mode === "list");
+  itemsContainer.classList.toggle("list-view", isListLayout());
   document.querySelectorAll(".side-segmented button").forEach(b => {
     const on = b.dataset.view === mode;
     b.classList.toggle("active", on);
@@ -1754,7 +1774,7 @@ function fitGridTitles() {
   const spans = itemsContainer.querySelectorAll(".title-text");
   if (!spans.length) return;
 
-  if (viewMode !== "grid") {                // vista dettagliata: ellipsis CSS su una riga
+  if (isListLayout()) {                     // vista dettagliata: ellipsis CSS su una riga
     spans.forEach(sp => { if (sp.dataset.full) sp.textContent = sp.dataset.full; });
     return;
   }
@@ -1770,6 +1790,22 @@ function fitGridTitles() {
     if (full) sp.textContent = fitTwoLines(full, maxW - 1, measure);
   });
 }
+
+// Griglia → dettagli automatico quando ci sta 1 sola colonna (e viceversa)
+let autoListTimer = null;
+window.addEventListener("resize", () => {
+  clearTimeout(autoListTimer);
+  autoListTimer = setTimeout(() => {
+    const next = computeAutoList();
+    if (next === autoList) return;
+    autoList = next;
+    itemsContainer.classList.toggle("list-view", isListLayout());
+    if (categories.length) {
+      lastSwipeDirection = null;
+      renderItems(categories[currentCategoryIndex]);
+    }
+  }, 120);
+});
 
 let fitTitlesTimer = null;
 window.addEventListener("resize", () => {
