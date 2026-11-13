@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+
+# Pagine riservate e gestione
+Disallow: /profile
+Disallow: /gestione-menu
+Disallow: /sconti
+Disallow: /settings
+Disallow: /create-banners
+
+# Endpoint e dati tecnici
+Disallow: /api/
+Disallow: /userdata/
+Disallow: /IDs/
+Disallow: /save-
+Disallow: /upload-image
+
+Sitemap: https://totemino.app/sitemap.xml
