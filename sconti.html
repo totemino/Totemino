@@ -11,7 +11,7 @@
     </script>
     <title>Sconti per te - Totemino</title>
     <link rel="icon" type="image/png" href="img/favicon.png">
-    <link rel="stylesheet" href="gestionale-styles.css"/>
+    <link rel="stylesheet" href="sconti-styles.css"/>
 </head>
 <body>
     <div class="bg-light light1"></div>
@@ -32,58 +32,58 @@
         </div>
     </nav>
 
-    <main class="mg gx-narrow">
-        <h2 class="gx-title">Il tuo piano</h2>
-        <section class="gx-card gx-plan" id="plan"></section>
+    <main class="sc-page">
+        <h2 class="sc-title">Il tuo piano</h2>
+        <section class="sc-card sc-plan" id="plan"></section>
 
-        <h2 class="gx-title">Sconti per te</h2>
-        <section class="gx-card gx-overview">
-            <div class="gx-ring">
+        <h2 class="sc-title">Sconti per te</h2>
+        <section class="sc-card sc-overview">
+            <div class="sc-ring">
                 <svg viewBox="0 0 120 120" aria-hidden="true">
                     <circle class="bg" cx="60" cy="60" r="52"/>
                     <circle class="fg" id="ringFg" cx="60" cy="60" r="52" stroke-dasharray="0 326.7"/>
                 </svg>
                 <b id="pct">0%</b>
             </div>
-            <div class="gx-months" id="months">Nessuno sconto per ora</div>
-            <p class="muted" id="discountNote"></p>
+            <div class="sc-months" id="months">Nessuno sconto per ora</div>
+            <p class="sc-muted" id="discountNote"></p>
         </section>
 
-        <div class="gx-head-row">
-            <h2 class="gx-title">Referenze</h2>
-            <button class="btn-primary" id="addBtn" type="button">+ Aggiungi referenze</button>
+        <div class="sc-head">
+            <h2 class="sc-title">Referenze</h2>
+            <button class="sc-btn sc-primary" id="addBtn" type="button">+ Aggiungi referenze</button>
         </div>
-        <p class="muted">Ogni contatto che diventa cliente vale il 25% di sconto sulla tua prossima fattura.</p>
-        <div class="gx-list" id="refList"></div>
+        <p class="sc-muted">Ogni contatto che diventa cliente vale il 25% di sconto sulla tua prossima fattura.</p>
+        <div class="sc-list" id="refList"></div>
     </main>
 
     <!-- Aggiungi referenze -->
-    <div class="gx-overlay" id="addModal">
-        <div class="gx-modal">
+    <div class="sc-overlay" id="addModal">
+        <div class="sc-modal">
             <h3>Aggiungi referenze</h3>
-            <div class="pop-body">
-                <button class="btn-secondary hidden" id="pickBtn" type="button">Scegli dalla rubrica</button>
-                <div class="gx-row" style="margin-top:12px">
-                    <div class="form-field">
+            <div class="sc-body">
+                <button class="sc-btn sc-ghost hidden" id="pickBtn" type="button">Scegli dalla rubrica</button>
+                <div class="sc-row" style="margin-top:12px">
+                    <div class="sc-field">
                         <label for="cName">Nome</label>
                         <input type="text" id="cName" maxlength="60" placeholder="Es. Mario Rossi" autocomplete="off">
                     </div>
-                    <div class="form-field">
+                    <div class="sc-field">
                         <label for="cPhone">Telefono</label>
                         <input type="tel" id="cPhone" maxlength="20" placeholder="333 1234567" autocomplete="off">
                     </div>
                 </div>
-                <button class="btn-secondary btn-sm" id="manualAdd" type="button">+ Aggiungi alla lista</button>
-                <div class="gx-stage" id="stage"></div>
+                <button class="sc-btn sc-ghost sc-sm" id="manualAdd" type="button">+ Aggiungi alla lista</button>
+                <div class="sc-stage" id="stage"></div>
             </div>
-            <div class="popup-actions">
-                <button class="btn-secondary" id="addCancel" type="button">Annulla</button>
-                <button class="btn-save" id="sendBtn" type="button" disabled>Invia</button>
+            <div class="sc-actions">
+                <button class="sc-btn sc-ghost" id="addCancel" type="button">Annulla</button>
+                <button class="sc-btn sc-save" id="sendBtn" type="button" disabled>Invia</button>
             </div>
         </div>
     </div>
 
-    <div class="notification" id="note"></div>
+    <div class="sc-note" id="note"></div>
 
     <script src="auth-protection.js"></script>
     <script src="theme.js"></script>

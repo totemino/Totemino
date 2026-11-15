@@ -36,8 +36,8 @@
     const pay = p.paid ? ['paid', 'Pagato'] : days !== null && days < 0 ? ['late', 'Scaduto'] : ['due', 'Da pagare'];
     $('#plan').innerHTML = `
       <div class="r"><span>Iscritto dal</span><span>${fmt(p.createdAt)}</span></div>
-      <div class="r"><span>Prossimo rinnovo</span><span>${fmt(p.renewalDate)}${left ? `<br><small class="muted">${left}</small>` : ''}</span></div>
-      <div class="r"><span>Pagamento</span><span class="gx-tag ${pay[0]}">${pay[1]}</span></div>`;
+      <div class="r"><span>Prossimo rinnovo</span><span>${fmt(p.renewalDate)}${left ? `<br><small class="sc-muted">${left}</small>` : ''}</span></div>
+      <div class="r"><span>Pagamento</span><span class="sc-tag ${pay[0]}">${pay[1]}</span></div>`;
   }
 
   // ---------- sconto ----------
@@ -51,10 +51,10 @@
   // ---------- referenze ----------
   function renderRefs(list) {
     $('#refList').innerHTML = list.map((r) => `
-      <div class="gx-card st-${r.status}">
-        <div class="gx-info"><b>${esc(r.name)}</b><small>${esc(r.phone)} · ${fmt((r.createdAt || '').slice(0, 10))}</small></div>
-        <span class="gx-tag ${r.status}">${LABEL[r.status] || r.status}</span>
-      </div>`).join('') || '<p class="muted">Non hai ancora inviato nessuna referenza.</p>';
+      <div class="sc-card sc-st-${r.status}">
+        <div class="sc-info"><b>${esc(r.name)}</b><small>${esc(r.phone)} · ${fmt((r.createdAt || '').slice(0, 10))}</small></div>
+        <span class="sc-tag ${r.status}">${LABEL[r.status] || r.status}</span>
+      </div>`).join('') || '<p class="sc-muted">Non hai ancora inviato nessuna referenza.</p>';
   }
 
   async function load() {
@@ -69,7 +69,7 @@
   // ---------- popup aggiunta ----------
   function renderStage() {
     $('#stage').innerHTML = stage.map((c, i) =>
-      `<span class="chip">${esc(c.name || c.phone)} <small>${esc(c.phone)}</small><button class="gx-x" data-rm="${i}" type="button" aria-label="Rimuovi">✕</button></span>`).join('');
+      `<span class="sc-chip">${esc(c.name || c.phone)} <small>${esc(c.phone)}</small><button class="sc-x" data-rm="${i}" type="button" aria-label="Rimuovi">✕</button></span>`).join('');
     $('#sendBtn').disabled = !stage.length;
     $('#sendBtn').textContent = stage.length ? `Invia (${stage.length})` : 'Invia';
   }
