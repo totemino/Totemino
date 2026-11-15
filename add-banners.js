@@ -179,6 +179,10 @@
 	let paused = false;      // hover / touch / scheda in background
 	let rotateTimer = null;
 	let reshowTimer = null;
+	let pos = 0;             // posizione logica nel carosello (-1 e N = copie per il giro infinito)
+	let snapTimer = null;
+	let borderTimer = null;
+	const BORDER_MS = 2000;  // il contorno nero resta 2s dopo lo scorrimento
 
 	const DEFAULT_WA_MESSAGE = "Ciao, voglio prenotare un tavolo per l'evento [evento]";
 
@@ -242,7 +246,10 @@
 		viewport.className = 'totemino-viewport';
 		trackElement = document.createElement('div');
 		trackElement.className = 'totemino-track';
+		// Con più banner: copia dell'ultimo davanti e del primo in coda, per il giro infinito
+		if (slides.length > 1) trackElement.appendChild(slides[slides.length - 1].cloneNode(true));
 		slides.forEach(s => trackElement.appendChild(s));
+		if (slides.length > 1) trackElement.appendChild(slides[0].cloneNode(true));
 		viewport.appendChild(trackElement);
 
 		closeBtn = document.createElement('button');
@@ -283,15 +290,35 @@
 		[...dotsElement.children].forEach((d, i) => d.classList.toggle('active', i === currentIndex));
 	}
 
+	// Con più banner la traccia ha una copia in testa, quindi la posizione è sfasata di 1
 	function setTransform(extraPx) {
-		trackElement.style.transform = `translateX(calc(${-currentIndex * 100}% + ${extraPx || 0}px))`;
+		const trackPos = banners.length > 1 ? pos + 1 : pos;
+		trackElement.style.transform = `translateX(calc(${-trackPos * 100}% + ${extraPx || 0}px))`;
 	}
 
-	function goTo(index, animate = true) {
-		currentIndex = (index + banners.length) % banners.length;
+	// Se siamo su una copia (prima/ultima), salta senza animazione al banner vero
+	function finishSnap() {
+		clearTimeout(snapTimer);
+		const n = banners.length;
+		if (pos >= 0 && pos < n) return;
+		pos = (pos + n) % n;
+		trackElement.classList.add('no-anim');
+		setTransform(0);
+		void trackElement.offsetWidth; // forza il reflow prima di riattivare l'animazione
+		trackElement.classList.remove('no-anim');
+	}
+
+	// pos può valere -1 o N: è la copia, e subito dopo l'animazione si riallinea al banner vero
+	function goTo(newPos, animate = true) {
+		const n = banners.length;
+		clearTimeout(snapTimer);
+		pos = newPos;
+		currentIndex = ((pos % n) + n) % n;
 		trackElement.classList.toggle('no-anim', !animate);
 		setTransform(0);
 		updateDots();
+		if (animate && (pos < 0 || pos >= n)) snapTimer = setTimeout(finishSnap, 380);
+		else if (!animate) finishSnap();
 	}
 
 	// ===== SWIPE =====
@@ -308,6 +335,8 @@
 			startY = e.clientY;
 			startT = Date.now();
 			dx = 0;
+			finishSnap();
+			clearTimeout(borderTimer);
 			pauseRotation();
 		});
 
@@ -315,6 +344,7 @@
 			if (!tracking) return;
 			dx = e.clientX - startX;
 			const dy = e.clientY - startY;
+			if (banners.length < 2) return;
 
 			if (!dragging) {
 				if (Math.abs(dx) < DRAG_THRESHOLD) return;
@@ -326,10 +356,7 @@
 				try { viewport.setPointerCapture(e.pointerId); } catch (_) {}
 			}
 
-			// resistenza ai bordi (primo/ultimo banner)
-			let offset = dx;
-			if ((currentIndex === 0 && dx > 0) || (currentIndex === banners.length - 1 && dx < 0)) offset = dx * 0.3;
-			setTransform(offset);
+			setTransform(dx);
 		});
 
 		const end = (e) => {
@@ -338,13 +365,16 @@
 
 			if (dragging) {
 				dragging = false;
-				bannerElement.classList.remove('dragging');
 				trackElement.classList.remove('no-anim');
 
+				// il contorno nero resta ancora 2 secondi dopo che hai tolto il dito
+				clearTimeout(borderTimer);
+				borderTimer = setTimeout(() => bannerElement.classList.remove('dragging'), BORDER_MS);
+
 				const fast = Date.now() - startT < 300 && Math.abs(dx) > 25;
-				let next = currentIndex;
-				if (dx < -SWIPE_DISTANCE || (fast && dx < 0)) next = Math.min(currentIndex + 1, banners.length - 1);
-				else if (dx > SWIPE_DISTANCE || (fast && dx > 0)) next = Math.max(currentIndex - 1, 0);
+				let next = pos;
+				if (dx < -SWIPE_DISTANCE || (fast && dx < 0)) next = pos + 1;
+				else if (dx > SWIPE_DISTANCE || (fast && dx > 0)) next = pos - 1;
 				goTo(next);
 			}
 			resumeRotation();
@@ -384,7 +414,7 @@
 		clearTimeout(rotateTimer);
 		if (banners.length < 2 || stopped || paused || !isVisible) return;
 		rotateTimer = setTimeout(() => {
-			goTo(currentIndex + 1);
+			goTo(pos + 1); // dall'ultimo si prosegue verso il primo, sempre nella stessa direzione
 			scheduleNext();
 		}, ROTATE_MS);
 	}
@@ -408,6 +438,7 @@
 		if (!isVisible) return;
 		isVisible = false;
 		bannerElement.classList.add('hide');
+		clearTimeout(borderTimer);
 		setTimeout(() => {
 			bannerElement.classList.remove('show', 'hide', 'dragging');
 			if (done) done();
