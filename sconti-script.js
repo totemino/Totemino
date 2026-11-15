@@ -64,7 +64,7 @@
     steps.forEach((el, i) => el.classList.toggle('on', i < d.closed));
     $('#discountNote').textContent = d.closed >= 4
       ? 'Sconto massimo raggiunto.'
-      : `${d.closed} di 4 referenze diventate clienti. Ognuna vale il 25% di sconto.`;
+      : `${d.closed} di 4 referenze diventate clienti.`;
   }
 
   // ---------- referenze ----------
