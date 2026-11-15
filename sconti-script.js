@@ -129,6 +129,12 @@
     } catch (e) { toast(e.message, true); btn.disabled = false; }
   });
 
+  // Indietro: pagina precedente del sito, altrimenti il profilo
+  $('#back-btn').addEventListener('click', () => {
+    if (history.length > 1 && document.referrer.startsWith(location.origin)) history.back();
+    else location.href = '/profile';
+  });
+
   renderStage();
   load();
 })();
