@@ -156,7 +156,8 @@
                 </div>
                 <div class="form-field">
                     <label for="banner-subtitle">Sottotitolo *</label>
-                    <textarea id="banner-subtitle" maxlength="160" placeholder="Es. Non mancare! Clicca qui per prenotare il tuo tavolo"></textarea>
+                    <textarea id="banner-subtitle" maxlength="160" placeholder="Es. Non mancare! Una serata da non perdere"></textarea>
+                    <span class="hint">Se il banner è cliccabile, in coda viene aggiunto "Clicca qui per prenotare il tuo posto".</span>
                 </div>
 
                 <span class="lbl">Cosa succede quando il cliente clicca</span>
@@ -294,6 +295,16 @@
             if (!ph) return '';
             const text = (message || DEFAULT_MSG).replaceAll('[evento]', title || '');
             return `https://wa.me/+39${ph}?text=${encodeURIComponent(text)}`;
+        }
+
+        // Frase aggiunta in automatico alla descrizione quando il banner è cliccabile
+        const CTA = 'Clicca qui per prenotare il tuo posto';
+        const CTA_RE = new RegExp('\\s*' + CTA + '\\.?\\s*$', 'i');
+        const stripCta = s => String(s || '').replace(CTA_RE, '').replace(/\s+$/, '');
+        function withCta(s) {
+            const base = stripCta(s);
+            if (!base) return CTA;
+            return (/[.!?…]$/.test(base) ? base : base + '.') + ' ' + CTA;
         }
 
         // Solo cifre, senza prefisso italiano (+39 / 0039). Stringa vuota se non valido.
@@ -509,7 +520,9 @@
             const idx = editingIndex ?? banners.length;
             $('pv').style.setProperty('--pill-color', COLORS[idx % COLORS.length]);
             $('pv-title').textContent = title || 'Titolo del banner';
-            $('pv-sub').textContent = $('banner-subtitle').value.trim() || 'Il sottotitolo apparirà qui';
+            const sub = $('banner-subtitle').value.trim();
+            const clickable = linkType === 'whatsapp' || (linkType === 'website' && !!normalizeUrl($('site-url').value));
+            $('pv-sub').textContent = clickable ? withCta(sub) : (sub || 'Il sottotitolo apparirà qui');
 
             const ph = normalizePhone($('wa-phone').value);
             $('wa-warn').classList.toggle('hidden', !!ph);
@@ -525,7 +538,7 @@
 
             $('popup-title').textContent = b ? 'Modifica banner' : 'Nuovo banner';
             $('banner-title').value = b?.title || '';
-            $('banner-subtitle').value = b?.subtitle || '';
+            $('banner-subtitle').value = stripCta(b?.subtitle || ''); // la frase "Clicca qui..." viene riaggiunta al salvataggio
             $('wa-message').value = l.message || DEFAULT_MSG;
             $('wa-phone').value = phone || '';
             $('site-url').value = l.type === 'website' ? (l.url || '') : '';
@@ -631,6 +644,10 @@
             } else {
                 data.link = { type: 'none' };
             }
+
+            // Se il banner è cliccabile, la descrizione termina con "Clicca qui per prenotare il tuo posto"
+            const clickable = data.link.type === 'website' || (data.link.type === 'whatsapp' && !!phone);
+            data.subtitle = clickable ? withCta(subtitle) : stripCta(subtitle) || subtitle;
 
             const backup = banners.slice();
             if (editingIndex !== null) banners[editingIndex] = data; else banners.push(data);
