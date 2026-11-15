@@ -41,7 +41,7 @@
 .gx-tag.amount { background: var(--close-bg); color: var(--text-primary); }
 
 /* ===== TINTA PER STATO (referenze): bordo sottile grigio ===== */
-.gx-swipe { border: 1px solid rgba(128,128,128,.35); }
+.gx-swipe { border: 1px solid rgba(128,128,128,.15); }
 .gx-swipe-in.gx-card { border: 0; }
 .gx-card.st-closed { background: color-mix(in srgb, #22c55e 24%, var(--bg-primary)); }
 .gx-card.st-interested { background: color-mix(in srgb, #fde68a 40%, var(--bg-primary)); }
