@@ -34,9 +34,21 @@
     return data;
   }
 
+  // ---------- prezzi ----------
+  const BASE_PRICE = 99;
+  const REF_DISCOUNT = 25;
+  const eur = (n) => `€${Number.isInteger(n) ? n : n.toFixed(2).replace('.', ',')}`;
+  const closedCount = (u) => state.refs.filter((r) => r.owner === u.id && r.status === 'closed').length;
+  const priceOf = (u) => Math.max(0, BASE_PRICE - REF_DISCOUNT * closedCount(u));
+
+  function ownerName(id) {
+    const u = state.users.find((x) => x.id === id);
+    return (u && u.name) || id;
+  }
+
   // ---------- utenti ----------
   function userState(u) {
-    if (u.paid) return ['paid', 'Pagato'];
+    if (u.paid || priceOf(u) < 1) return ['paid', 'Pagato'];
     if (u.renewalDate && u.renewalDate < TODAY) return ['late', 'Scaduto'];
     return ['due', 'Da pagare'];
   }
@@ -45,11 +57,13 @@
     const [cls, label] = userState(u);
     const initial = esc((u.name || u.id).trim().charAt(0).toUpperCase());
     const avatar = u.logo ? `<img src="${esc(u.logo)}" alt="" loading="lazy">` : initial;
-    const disc = u.discount ? `<span class="gx-tag closed">Sconto ${u.discount}%</span>` : '';
+    const n = closedCount(u);
+    const price = priceOf(u);
+    const amount = `<span class="gx-tag amount" title="${n ? `${eur(BASE_PRICE)} − ${eur(REF_DISCOUNT)} × ${n}` : 'Prezzo base'}">${price < 1 ? 'Gratis' : eur(price)}</span>`;
     return `<div class="gx-card gx-user" data-id="${esc(u.id)}">
       <div class="gx-avatar">${avatar}</div>
-      <div class="gx-info"><b>${esc(u.name || 'Senza nome')}</b><small>ID ${esc(u.id)} · iscritto ${fmt(u.createdAt)} · rinnovo ${fmt(u.renewalDate)}</small></div>
-      ${disc}<span class="gx-tag ${cls}">${label}</span>
+      <div class="gx-info"><b>${esc(u.name || 'Senza nome')}</b><small>ID ${esc(u.id)} · iscritto ${fmt(u.createdAt)} · rinnovo ${fmt(u.renewalDate)}${n ? ` · ${n} ${n === 1 ? 'cliente' : 'clienti'} portati` : ''}</small></div>
+      ${amount}<span class="gx-tag ${cls}">${label}</span>
       <button class="icon-btn" data-paid type="button" title="${u.paid ? 'Segna non pagato' : 'Segna pagato'}" aria-label="Segna pagato">${u.paid ? '↺' : '✓'}</button>
     </div>`;
   }
@@ -68,7 +82,7 @@
       ? `<button class="btn-secondary btn-sm" data-close type="button">${r.status === 'closed' ? 'Riapri' : 'Chiuso'}</button>` : '';
     return `<div class="gx-swipe" data-id="${esc(r.id)}">
       <div class="gx-swipe-in gx-card st-${r.status}">
-        <div class="gx-info"><b>${esc(r.name)}</b><small><a href="tel:${esc(r.phone)}">${esc(r.phone)}</a> · da ${esc(r.ownerName || r.owner)} · ${fmt((r.createdAt || '').slice(0, 10))}</small></div>
+        <div class="gx-info"><b>${esc(r.name)}</b><small><a href="tel:${esc(r.phone)}">${esc(r.phone)}</a> · da ${esc(ownerName(r.owner) || r.ownerName)} · ${fmt((r.createdAt || '').slice(0, 10))}</small></div>
         ${closeBtn}<span class="gx-tag ${r.status}">${REF_LABEL[r.status] || r.status}</span>
       </div>
     </div>`;
@@ -122,7 +136,8 @@
       $('#stats').textContent = `${rows.length} utenti`;
       box.innerHTML = rows.map(userRow).join('') || '<p class="muted">Nessun utente.</p>';
     } else {
-      const rows = state.refs.filter((r) => (!q || `${r.name} ${r.phone} ${r.owner} ${r.ownerName || ''}`.toLowerCase().includes(q)) && (f === 'all' || r.status === f));
+      const o = $('#ownerFilter').value || 'all';
+      const rows = state.refs.filter((r) => (!q || `${r.name} ${r.phone} ${r.owner} ${ownerName(r.owner)}`.toLowerCase().includes(q)) && (f === 'all' || r.status === f) && (o === 'all' || r.owner === o));
       $('#stats').textContent = `${rows.length} referenze · scorri a destra = interessato, a sinistra = non interessato`;
       box.innerHTML = rows.map(refRow).join('') || '<p class="muted">Nessuna referenza.</p>';
       box.querySelectorAll('.gx-swipe').forEach(bindSwipe);
@@ -134,7 +149,17 @@
     document.querySelectorAll('.gx-tab').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tab === tab)));
     $('#filter').innerHTML = FILTERS[tab].map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
     $('#search').value = '';
+    fillOwnerFilter();
     render();
+  }
+
+  function fillOwnerFilter() {
+    const sel = $('#ownerFilter');
+    sel.classList.toggle('hidden', state.tab !== 'refs');
+    const prev = sel.value || 'all';
+    sel.innerHTML = '<option value="all">Tutti i ristoranti</option>' +
+      state.users.map((u) => `<option value="${esc(u.id)}">${esc(u.name || u.id)}</option>`).join('');
+    sel.value = [...sel.options].some((o) => o.value === prev) ? prev : 'all';
   }
 
   // ---------- modifica utente ----------
@@ -148,6 +173,7 @@
   function openEdit(u) {
     state.editId = u.id;
     state.logo = u.logo || '';
+    state.pendingLogo = null;
     $('#editTitle').textContent = `Utente ${u.id}`;
     $('#fName').value = u.name || '';
     $('#fRenew').value = u.renewalDate || '';
@@ -166,17 +192,23 @@
   async function saveEdit() {
     const u = state.users.find((x) => x.id === state.editId);
     if (!u) return;
-    const body = { name: $('#fName').value.trim(), paid: $('#fPaid').checked };
+    const name = $('#fName').value.trim();
+    if (!name) return toast('Inserisci il nome', true);
+    const body = { paid: $('#fPaid').checked, name };
     if ($('#fRenew').value) body.renewalDate = $('#fRenew').value;
-    if (state.logo !== (u.logo || '')) body.logo = state.logo; // solo se cambiata
     const btn = $('#editSave');
     btn.disabled = true;
     try {
+      let logo = u.logo || '';
+      if (state.pendingLogo) logo = await uploadLogo(u, state.pendingLogo);
+      else if (!state.logo) logo = '';
+      if (logo !== (u.logo || '')) body.logo = logo;
       await api(`/api/admin/users/${encodeURIComponent(u.id)}`, body);
-      u.name = body.name;
+      u.name = name;
+      u.logo = logo;
       u.paid = body.paid;
       if (body.renewalDate) u.renewalDate = body.renewalDate;
-      if ('logo' in body) u.logo = body.logo;
+      fillOwnerFilter();
       closeEdit();
       render();
       toast('Salvato');
@@ -184,28 +216,48 @@
     finally { btn.disabled = false; }
   }
 
+  // Immagine quadrata 256x256 con bordi trasparenti (come nel profilo)
+  function squareAndResize(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const S = 256;
+        const c = document.createElement('canvas');
+        c.width = S; c.height = S;
+        const ctx = c.getContext('2d');
+        ctx.imageSmoothingQuality = 'high';
+        const k = S / Math.max(img.naturalWidth, img.naturalHeight);
+        const w = Math.round(img.naturalWidth * k), h = Math.round(img.naturalHeight * k);
+        ctx.drawImage(img, Math.round((S - w) / 2), Math.round((S - h) / 2), w, h);
+        resolve(c.toDataURL('image/png'));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Immagine non valida')); };
+      img.src = url;
+    });
+  }
+
+  async function uploadLogo(u, dataUrl) {
+    const d = await api('/api/admin/upload', { fileName: `logo-${u.id}.png`, fileData: dataUrl, restaurantId: u.id });
+    return d.imageUrl;
+  }
+
   async function uploadPhoto(file) {
     if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return toast('Usa un file JPG, PNG o WebP', true);
-    const area = $('#imgArea');
-    area.classList.add('busy');
+    if (file.size > 5 * 1024 * 1024) return toast('Immagine troppo grande (max 5MB)', true);
     try {
-      const fileData = await new Promise((ok, ko) => {
-        const fr = new FileReader();
-        fr.onload = () => ok(fr.result);
-        fr.onerror = ko;
-        fr.readAsDataURL(file);
-      });
-      const r = await api('/api/admin/upload', { fileName: file.name, fileData, restaurantId: state.editId });
-      state.logo = r.imageUrl;
-      setPreview(r.imageUrl);
+      state.pendingLogo = await squareAndResize(file); // caricata al salvataggio
+      state.logo = state.pendingLogo;
+      setPreview(state.pendingLogo);
     } catch (e) { toast(e.message, true); }
-    finally { area.classList.remove('busy'); }
   }
 
   // ---------- eventi ----------
   $('#tabs').addEventListener('click', (e) => { const b = e.target.closest('.gx-tab'); if (b) setTab(b.dataset.tab); });
   $('#search').addEventListener('input', render);
   $('#filter').addEventListener('change', render);
+  $('#ownerFilter').addEventListener('change', render);
 
   $('#list').addEventListener('click', (e) => {
     const card = e.target.closest('.gx-user');
@@ -228,7 +280,7 @@
   $('#imgArea').addEventListener('click', () => $('#imgInput').click());
   $('#imgArea').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#imgInput').click(); } });
   $('#imgInput').addEventListener('change', (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) uploadPhoto(f); });
-  $('#imgRemove').addEventListener('click', () => { state.logo = ''; setPreview(''); });
+  $('#imgRemove').addEventListener('click', () => { state.logo = ''; state.pendingLogo = null; setPreview(''); });
 
   // ---------- accesso (password del gestionale, nessun profilo) ----------
   function showAuth(configured) {
@@ -251,6 +303,7 @@
       const [u, r] = await Promise.all([api('/api/admin/users'), api('/api/admin/referrals')]);
       state.users = u.users;
       state.refs = r.referrals;
+      fillOwnerFilter();
       render();
     } catch (e) { toast(e.message, true); }
   }

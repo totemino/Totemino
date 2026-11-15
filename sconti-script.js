@@ -19,7 +19,6 @@
   const stage = [];
   let refs = [];
   let editId = null;
-  let delId = null;
   let googleContacts = [];
   const googlePicked = new Set();
 
@@ -83,28 +82,32 @@
     }
 
     $('#refList').innerHTML = refs.map((r) => {
-      const tools = EDITABLE.includes(r.status) ? `
-        <div class="sc-tools">
-          <button class="sc-icon" type="button" data-edit="${esc(r.id)}" aria-label="Modifica ${esc(r.name)}">${ICON_EDIT}</button>
-          <button class="sc-icon del" type="button" data-del="${esc(r.id)}" aria-label="Elimina ${esc(r.name)}">${ICON_DEL}</button>
-        </div>` : '';
+      const click = EDITABLE.includes(r.status);
       return `
-        <div class="sc-card sc-st-${esc(r.status)}">
+        <div class="sc-card sc-st-${esc(r.status)}${click ? ' sc-click' : ''}" ${click ? `data-ref="${esc(r.id)}" role="button" tabindex="0"` : ''}>
           <div class="sc-info"><b>${esc(r.name || r.phone)}</b><small>${esc(r.phone)} · ${fmt((r.createdAt || '').slice(0, 10))}</small></div>
           <span class="sc-tag ${esc(r.status)}">${LABEL[r.status] || esc(r.status)}</span>
-          ${tools}
         </div>`;
     }).join('');
   }
 
   // ---------- piano ----------
-  function renderPlan(p) {
+  const BASE_PRICE = 99;
+  const REF_DISCOUNT = 25;
+  const eur = (n) => `€${Number.isInteger(n) ? n : n.toFixed(2).replace('.', ',')}`;
+
+  function renderPlan(p, closed) {
     const days = p.renewalDate ? Math.round((Date.parse(p.renewalDate) - Date.parse(TODAY)) / 864e5) : null;
     const left = days === null ? '' : days > 0 ? `tra ${days} ${days === 1 ? 'giorno' : 'giorni'}` : days === 0 ? 'oggi' : `scaduto da ${-days} ${-days === 1 ? 'giorno' : 'giorni'}`;
-    const pay = p.paid ? ['paid', 'Pagato'] : days !== null && days < 0 ? ['late', 'Scaduto'] : ['due', 'Da pagare'];
+    const price = Math.max(0, BASE_PRICE - REF_DISCOUNT * closed);
+    const free = price < 1;
+    const pay = free || p.paid ? ['paid', 'Pagato'] : days !== null && days < 0 ? ['late', 'Scaduto'] : ['due', 'Da pagare'];
+    const priceTxt = free ? 'Gratis' : eur(price);
+    const detail = closed > 0 ? `${eur(BASE_PRICE)} − ${eur(REF_DISCOUNT)} × ${closed}` : '';
     $('#plan').innerHTML = `
       <div class="r"><span>Iscritto dal</span><span>${fmt(p.createdAt)}</span></div>
       <div class="r"><span>Rinnovo</span><span>${fmt(p.renewalDate)}${left ? `<small>${left}</small>` : ''}</span></div>
+      <div class="r"><span>Prezzo</span><span>${priceTxt}${detail ? `<small>${detail}</small>` : ''}</span></div>
       <div class="r"><span>Pagamento</span><span class="sc-tag ${pay[0]}">${pay[1]}</span></div>`;
   }
 
@@ -120,7 +123,7 @@
       refs = d.referrals || [];
       renderDiscount(d.discount);
       renderRefs();
-      renderPlan(d.plan);
+      renderPlan(d.plan, refs.filter((r) => r.status === 'closed').length);
     } catch (e) {
       renderError();
       toast(e.message, true);
@@ -288,26 +291,28 @@
     if (e.target.closest('[data-open-add]')) return openAdd();
     if (e.target.closest('[data-retry]')) return load();
 
-    const ed = e.target.closest('[data-edit]');
-    if (ed) {
-      const r = refs.find((x) => String(x.id) === ed.dataset.edit);
-      if (!r) return;
-      editId = r.id;
-      $('#eName').value = r.name || '';
-      $('#ePhone').value = r.phone || '';
-      openModal('#editModal');
-      return;
-    }
-
-    const dl = e.target.closest('[data-del]');
-    if (dl) {
-      const r = refs.find((x) => String(x.id) === dl.dataset.del);
-      if (!r) return;
-      delId = r.id;
-      $('#delText').textContent = `${r.name || r.phone} verrà rimosso dalle tue referenze.`;
-      openModal('#delModal');
-    }
+    openRef(e.target.closest('[data-ref]'));
   });
+  $('#refList').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { const c = e.target.closest('[data-ref]'); if (c) { e.preventDefault(); openRef(c); } }
+  });
+
+  function openRef(card) {
+    if (!card) return;
+    const r = refs.find((x) => String(x.id) === card.dataset.ref);
+    if (!r) return;
+    editId = r.id;
+    $('#eName').value = r.name || '';
+    $('#ePhone').value = r.phone || '';
+    resetDelete();
+    openModal('#editModal');
+  }
+
+  function resetDelete() {
+    const b = $('#editDelete');
+    b.textContent = 'Elimina';
+    b.dataset.sure = '';
+  }
 
   $('#plan').addEventListener('click', (e) => { if (e.target.closest('[data-retry]')) load(); });
 
@@ -327,17 +332,18 @@
     btn.disabled = false;
   });
 
-  $('#delCancel').addEventListener('click', () => closeModal('#delModal'));
-  $('#delConfirm').addEventListener('click', async () => {
-    const btn = $('#delConfirm');
+  $('#editDelete').addEventListener('click', async () => {
+    const btn = $('#editDelete');
+    if (!btn.dataset.sure) { btn.dataset.sure = '1'; btn.textContent = 'Sicuro? Elimina'; return; }
     btn.disabled = true;
     try {
-      await api('/api/referrals/delete', { id: delId });
+      await api('/api/referrals/delete', { id: editId });
       toast('Referenza eliminata');
-      closeModal('#delModal');
+      closeModal('#editModal');
       load();
     } catch (e) { toast(e.message, true); }
     btn.disabled = false;
+    resetDelete();
   });
 
   // ---------- chiusura popup ----------

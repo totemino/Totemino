@@ -596,9 +596,8 @@ const REF_STATUSES = ['pending', 'interested', 'not_interested', 'closed'];
 const MAX_REFERRALS_PER_USER = 50;
 const DISCOUNT_PER_CLOSED = 25; // % sulla prossima fattura per ogni referenza "closed"
 const PLAN_MONTHS = 12;         // 100% di sconto = 12 mesi, quindi 25% = 3 mesi
-// Chiavi di settings.json con nome e foto profilo: allinearle a quelle usate da profile-script.js
-const NAME_KEY = 'restaurantName';
-const LOGO_KEY = 'logo';
+// Nome e foto profilo stanno in settings.json -> restaurant.name / restaurant.logo (come in profile-script.js)
+const profileOf = (s) => ({ name: s?.restaurant?.name || '', logo: s?.restaurant?.logo || '' });
 
 async function loadReferrals(env) {
   const obj = await env.BUCKET.get(REFERRALS_KEY);
@@ -802,7 +801,7 @@ async function handleAdmin(request, env, path, method) {
     const refs = await loadReferrals(env);
     const rows = await Promise.all(Object.entries(users).map(async ([id, u]) => {
       const s = await readSettings(env, id);
-      return { id, ...planOf(u), name: s[NAME_KEY] || '', logo: s[LOGO_KEY] || '', discount: discountOf(refs, id).percent };
+      return { id, ...planOf(u), ...profileOf(s), discount: discountOf(refs, id).percent };
     }));
     rows.sort((a, b) => (a.id < b.id ? -1 : 1));
     return json({ success: true, users: rows });
@@ -811,7 +810,7 @@ async function handleAdmin(request, env, path, method) {
   if (path === '/api/admin/referrals' && method === 'GET') {
     const refs = (await loadReferrals(env)).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
     const names = {};
-    await Promise.all([...new Set(refs.map((r) => r.owner))].map(async (id) => { names[id] = (await readSettings(env, id))[NAME_KEY] || ''; }));
+    await Promise.all([...new Set(refs.map((r) => r.owner))].map(async (id) => { names[id] = profileOf(await readSettings(env, id)).name; }));
     return json({ success: true, referrals: refs.map((r) => ({ ...r, ownerName: names[r.owner] })) });
   }
 
@@ -859,8 +858,10 @@ async function handleAdmin(request, env, path, method) {
       const prevText = prev ? await prev.text() : '';
       let s = {};
       try { s = prevText ? JSON.parse(prevText) : {}; } catch { s = {}; }
-      if (typeof body.name === 'string') s[NAME_KEY] = clean(body.name, 60);
-      if (body.logo !== undefined) s[LOGO_KEY] = body.logo;
+      const rest = { ...(s.restaurant || {}) };
+      if (typeof body.name === 'string') rest.name = clean(body.name, 60);
+      if (body.logo !== undefined) rest.logo = body.logo || null;
+      s.restaurant = rest;
       await putJSON(env, key, s);
       await cleanupImages(env, id, prevText);
     }

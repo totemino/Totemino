@@ -79,13 +79,17 @@ body.noscroll { overflow: hidden; }
   background: var(--close-bg); color: var(--text-primary);
   font-size: 11px; font-weight: 700; white-space: nowrap;
 }
-.sc-tag.paid, .sc-tag.interested { background: #22c55e; color: #fff; }
-.sc-tag.due, .sc-tag.closed { background: var(--accent-gold); }
+.sc-tag.paid, .sc-tag.closed { background: #22c55e; color: #fff; }
+.sc-tag.interested { background: #fde68a; color: #3d3200; }
+.sc-tag.due { background: var(--accent-gold); }
 .sc-tag.late, .sc-tag.not_interested { background: #e53e3e; color: #fff; }
 
-.sc-card.sc-st-interested { background: color-mix(in srgb, #22c55e 18%, var(--bg-primary)); border-color: #22c55e; }
+.sc-card.sc-st-closed { background: color-mix(in srgb, #22c55e 18%, var(--bg-primary)); border-color: #22c55e; }
+.sc-card.sc-st-interested { background: color-mix(in srgb, #fde68a 35%, var(--bg-primary)); border-color: #fde68a; }
 .sc-card.sc-st-not_interested { background: color-mix(in srgb, #e53e3e 16%, var(--bg-primary)); border-color: #e53e3e; }
-.sc-card.sc-st-closed { background: color-mix(in srgb, var(--accent-gold) 30%, var(--bg-primary)); border-color: var(--accent-gold); }
+.sc-card.sc-click { cursor: pointer; transition: filter .15s; }
+.sc-card.sc-click:hover { filter: brightness(.96); }
+.sc-actions .sc-danger { margin-right: auto; }
 
 .sc-tools { display: flex; flex-shrink: 0; gap: 2px; }
 

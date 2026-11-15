@@ -34,14 +34,16 @@
 
 /* ===== TAG DI STATO ===== */
 .gx-tag { flex-shrink: 0; padding: 2px 9px; border-radius: 99px; background: var(--close-bg); color: var(--text-primary); font-size: 11px; font-weight: 700; white-space: nowrap; }
-.gx-tag.paid, .gx-tag.interested { background: #22c55e; color: #fff; }
-.gx-tag.due, .gx-tag.closed { background: var(--accent-gold); color: var(--text-primary); }
+.gx-tag.paid, .gx-tag.closed { background: #22c55e; color: #fff; }
+.gx-tag.interested { background: #fde68a; color: #3d3200; }
+.gx-tag.due { background: var(--accent-gold); color: var(--text-primary); }
 .gx-tag.late, .gx-tag.not_interested { background: #e53e3e; color: #fff; }
+.gx-tag.amount { background: var(--close-bg); color: var(--text-primary); }
 
 /* ===== TINTA PER STATO (referenze) ===== */
-.gx-card.st-interested { background: color-mix(in srgb, #22c55e 24%, var(--bg-primary)); border-color: #22c55e; }
+.gx-card.st-closed { background: color-mix(in srgb, #22c55e 24%, var(--bg-primary)); border-color: #22c55e; }
+.gx-card.st-interested { background: color-mix(in srgb, #fde68a 40%, var(--bg-primary)); border-color: #fde68a; }
 .gx-card.st-not_interested { background: color-mix(in srgb, #e53e3e 22%, var(--bg-primary)); border-color: #e53e3e; }
-.gx-card.st-closed { background: color-mix(in srgb, var(--accent-gold) 35%, var(--bg-primary)); border-color: var(--accent-gold); }
 
 /* ===== SWIPE ===== */
 .gx-swipe { position: relative; overflow: hidden; border-radius: var(--r, 12px); background: var(--close-bg); }
