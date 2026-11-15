@@ -9,7 +9,7 @@
         document.documentElement.setAttribute('data-theme', saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
       })();
     </script>
-    <title>Sconti per te - Totemino</title>
+    <title>Sconti - Totemino</title>
     <link rel="icon" type="image/png" href="img/favicon.png">
     <link rel="stylesheet" href="sconti-styles.css"/>
 </head>
@@ -21,11 +21,11 @@
     <div class="title">
         <div class="logo_space">
             <img class="theme-img" data-light="img/logo/1_light.png" data-dark="img/logo/1_dark.png" alt="Logo" id="logoSwap">
-            <p>Sconti per te</p>
+            <p>Sconti</p>
         </div>
         <div>
             <button id="back-btn" class="header-btn" type="button" data-act="back">
-                <img class="theme-img" data-light="img/exit_light.png" data-dark="img/exit_dark.png" alt="Torna a Gestione">
+                <img class="theme-img" data-light="img/exit_light.png" data-dark="img/exit_dark.png" alt="Indietro">
             </button>
             <button id="theme" class="header-btn" type="button">
                 <img class="theme-img" data-light="img/theme_light.png" data-dark="img/theme_dark.png" alt="Cambia tema">
@@ -34,11 +34,10 @@
     </div>
 
     <main class="sc-page">
-        <h2 class="sc-title">Il tuo piano</h2>
-        <section class="sc-card sc-plan" id="plan"></section>
 
+        <!-- 1. Sconti per te -->
         <h2 class="sc-title">Sconti per te</h2>
-        <section class="sc-card sc-overview">
+        <section class="sc-card sc-overview" id="discount" aria-live="polite">
             <div class="sc-ring">
                 <svg viewBox="0 0 120 120" aria-hidden="true">
                     <circle class="bg" cx="60" cy="60" r="52"/>
@@ -46,35 +45,63 @@
                 </svg>
                 <b id="pct">0%</b>
             </div>
-            <div class="sc-months" id="months">Nessuno sconto per ora</div>
-            <p class="sc-muted" id="discountNote"></p>
+            <div class="sc-months" id="months">Nessuno sconto</div>
+            <div class="sc-steps" id="steps" aria-hidden="true">
+                <i></i><i></i><i></i><i></i>
+            </div>
+            <p class="sc-hint" id="discountNote">Ogni referenza che diventa cliente vale il 25% di sconto, fino al 100%.</p>
         </section>
 
+        <!-- 2. Referenze -->
         <div class="sc-head">
             <h2 class="sc-title">Referenze</h2>
-            <button class="sc-btn sc-primary" id="addBtn" type="button">+ Aggiungi referenze</button>
+            <button class="sc-btn sc-primary" id="addBtn" type="button">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                Aggiungi
+            </button>
         </div>
-        <p class="sc-muted">Ogni contatto che diventa cliente vale il 25% di sconto sulla tua prossima fattura.</p>
-        <div class="sc-list" id="refList"></div>
+        <p class="sc-hint" id="refSummary"></p>
+        <div class="sc-list" id="refList">
+            <div class="sc-skel"></div>
+            <div class="sc-skel"></div>
+        </div>
+
+        <!-- 3. Piano -->
+        <h2 class="sc-title">Il tuo piano</h2>
+        <section class="sc-card sc-plan" id="plan">
+            <div class="sc-skel sc-skel-plan"></div>
+        </section>
     </main>
 
     <!-- Aggiungi referenze -->
-    <div class="sc-overlay" id="addModal">
+    <div class="sc-overlay" id="addModal" role="dialog" aria-modal="true" aria-labelledby="addTitle">
         <div class="sc-modal">
-            <h3>Aggiungi referenze</h3>
+            <h3 id="addTitle">Aggiungi referenze</h3>
             <div class="sc-body">
-                <button class="sc-btn sc-ghost hidden" id="pickBtn" type="button">Scegli dalla rubrica</button>
-                <div class="sc-row" style="margin-top:12px">
+                <div class="sc-sources" id="sources">
+                    <button class="sc-btn sc-ghost hidden" id="pickBtn" type="button">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg>
+                        Rubrica del telefono
+                    </button>
+                    <button class="sc-btn sc-ghost hidden" id="googleBtn" type="button">
+                        <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23 12.3c0-.8-.1-1.5-.2-2.2H12v4.2h6.2a5.3 5.3 0 0 1-2.3 3.5v2.9h3.7c2.2-2 3.4-5 3.4-8.4z"/><path fill="#34A853" d="M12 23.5c3.1 0 5.7-1 7.6-2.8l-3.7-2.9c-1 .7-2.3 1.1-3.9 1.1-3 0-5.5-2-6.4-4.7H1.8v3A11.5 11.5 0 0 0 12 23.5z"/><path fill="#FBBC05" d="M5.6 14.2a6.9 6.9 0 0 1 0-4.4v-3H1.8a11.5 11.5 0 0 0 0 10.4l3.8-3z"/><path fill="#EA4335" d="M12 5.4c1.7 0 3.2.6 4.4 1.7l3.3-3.3A11.5 11.5 0 0 0 1.8 6.8l3.8 3C6.5 7.4 9 5.4 12 5.4z"/></svg>
+                        Google Contatti
+                    </button>
+                </div>
+                <p class="sc-hint hidden" id="noPickerHint">La rubrica del telefono è disponibile solo su Android con Chrome. Inserisci i contatti a mano.</p>
+
+                <div class="sc-row">
                     <div class="sc-field">
                         <label for="cName">Nome</label>
-                        <input type="text" id="cName" maxlength="60" placeholder="Es. Mario Rossi" autocomplete="off">
+                        <input type="text" id="cName" maxlength="60" placeholder="Mario Rossi" autocomplete="off">
                     </div>
                     <div class="sc-field">
                         <label for="cPhone">Telefono</label>
-                        <input type="tel" id="cPhone" maxlength="20" placeholder="333 1234567" autocomplete="off">
+                        <input type="tel" id="cPhone" maxlength="20" placeholder="333 1234567" autocomplete="off" inputmode="tel">
                     </div>
                 </div>
-                <button class="sc-btn sc-ghost sc-sm" id="manualAdd" type="button">+ Aggiungi alla lista</button>
+                <button class="sc-btn sc-ghost sc-sm" id="manualAdd" type="button">Aggiungi alla lista</button>
+
                 <div class="sc-stage" id="stage"></div>
             </div>
             <div class="sc-actions">
@@ -84,7 +111,61 @@
         </div>
     </div>
 
-    <div class="sc-note" id="note"></div>
+    <!-- Scelta contatti Google -->
+    <div class="sc-overlay" id="gModal" role="dialog" aria-modal="true" aria-labelledby="gTitle">
+        <div class="sc-modal">
+            <h3 id="gTitle">Google Contatti</h3>
+            <div class="sc-body">
+                <div class="sc-field">
+                    <input type="search" id="gSearch" placeholder="Cerca per nome o numero" autocomplete="off" aria-label="Cerca contatti">
+                </div>
+                <div class="sc-pick" id="gList"></div>
+            </div>
+            <div class="sc-actions">
+                <button class="sc-btn sc-ghost" id="gCancel" type="button">Indietro</button>
+                <button class="sc-btn sc-save" id="gConfirm" type="button" disabled>Aggiungi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modifica referenza -->
+    <div class="sc-overlay" id="editModal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+        <div class="sc-modal">
+            <h3 id="editTitle">Modifica referenza</h3>
+            <div class="sc-body">
+                <div class="sc-row">
+                    <div class="sc-field">
+                        <label for="eName">Nome</label>
+                        <input type="text" id="eName" maxlength="60" autocomplete="off">
+                    </div>
+                    <div class="sc-field">
+                        <label for="ePhone">Telefono</label>
+                        <input type="tel" id="ePhone" maxlength="20" autocomplete="off" inputmode="tel">
+                    </div>
+                </div>
+            </div>
+            <div class="sc-actions">
+                <button class="sc-btn sc-ghost" id="editCancel" type="button">Annulla</button>
+                <button class="sc-btn sc-save" id="editSave" type="button">Salva</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Elimina referenza -->
+    <div class="sc-overlay" id="delModal" role="dialog" aria-modal="true" aria-labelledby="delTitle">
+        <div class="sc-modal">
+            <h3 id="delTitle">Eliminare la referenza?</h3>
+            <div class="sc-body">
+                <p class="sc-hint" id="delText"></p>
+            </div>
+            <div class="sc-actions">
+                <button class="sc-btn sc-ghost" id="delCancel" type="button">Annulla</button>
+                <button class="sc-btn sc-danger" id="delConfirm" type="button">Elimina</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="sc-note" id="note" role="status"></div>
 
     <script src="auth-protection.js"></script>
     <script src="theme.js"></script>
