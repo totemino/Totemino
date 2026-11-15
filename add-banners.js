@@ -182,7 +182,7 @@
 	let pos = 0;             // posizione logica nel carosello (-1 e N = copie per il giro infinito)
 	let snapTimer = null;
 	let borderTimer = null;
-	const BORDER_MS = 2000;  // il contorno nero resta 2s dopo lo scorrimento
+	const BORDER_MS = 670;  // il contorno nero resta 2s dopo lo scorrimento
 
 	const DEFAULT_WA_MESSAGE = "Ciao, voglio prenotare un tavolo per l'evento [evento]";
 
