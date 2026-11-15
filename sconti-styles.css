@@ -80,3 +80,6 @@ body.noscroll { overflow: hidden; }
   .sc-actions { padding: 10px 14px 14px; }
   .sc-note { left: 12px; right: 12px; max-width: none; }
 }
+
+/* pulsante tema nell'header (struttura di menu.html) */
+.title .header-btn { border-radius: 12px; }

@@ -72,3 +72,6 @@
   .gx-modal > .popup-actions { padding: 10px 14px 14px; }
   .gx-modal h3 { padding: 16px 14px 8px; }
 }
+
+/* pulsante tema nell'header (struttura di menu.html) */
+.title .header-btn { border-radius: 12px; }
