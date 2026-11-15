@@ -184,12 +184,10 @@
     $('#fPaid').checked = !!u.paid;
     setPreview(state.logo);
     $('#editModal').classList.add('open');
-    document.body.classList.add('noscroll');
   }
 
   function closeEdit() {
     $('#editModal').classList.remove('open');
-    document.body.classList.remove('noscroll');
     state.editId = null;
   }
 

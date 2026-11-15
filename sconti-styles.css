@@ -136,7 +136,9 @@ body.noscroll { overflow: hidden; }
 .sc-overlay {
   position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center;
   padding: 12px; background: rgba(0,0,0,.5); backdrop-filter: blur(3px);
+  overscroll-behavior: contain; touch-action: none;
 }
+.sc-modal { touch-action: auto; }
 .sc-overlay.open { display: flex; }
 .sc-modal {
   display: flex; flex-direction: column; width: min(94vw, 520px); max-height: 88vh; overflow: hidden;

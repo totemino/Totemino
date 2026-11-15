@@ -43,11 +43,8 @@
     return data;
   }
 
-  const openModal = (id) => { $(id).classList.add('open'); document.body.classList.add('noscroll'); };
-  const closeModal = (id) => {
-    $(id).classList.remove('open');
-    if (!document.querySelector('.sc-overlay.open')) document.body.classList.remove('noscroll');
-  };
+  const openModal = (id) => { $(id).classList.add('open'); };
+  const closeModal = (id) => { $(id).classList.remove('open'); };
 
   const digitsOf = (p) => String(p || '').replace(/\D/g, '');
   const cleanPhone = (p) => { const t = String(p || '').trim(); return (t.startsWith('+') ? '+' : '') + digitsOf(t); };
