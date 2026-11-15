@@ -40,7 +40,7 @@ const PBKDF2_ITERATIONS = 100000; // massimo consentito da Workers
 
 // Pagine di gestione: senza sessione valida il server non invia l'HTML (302 a login).
 // Devono comparire anche in _routes.json, altrimenti il worker non viene invocato.
-const PROTECTED_PAGES = new Set(['/profile', '/gestione-menu', '/sconti', '/settings','/create-banners']);
+const PROTECTED_PAGES = new Set(['/profile', '/gestione-menu', '/sconti', '/settings', '/create-banners']);
 
 const ID_RE = /^[\w-]{1,20}$/;
 const DEFAULT_MENU_TYPES = {
@@ -535,11 +535,11 @@ async function saveMenu(env, restaurantId, menuContent) {
   return { success: true, backupCreated: !!current };
 }
 
-async function uploadImage(env, session, body) {
+async function uploadImage(env, session, body, isAdmin = false) {
   const { fileName, fileData, restaurantId } = body || {};
 
   if (!fileName || !fileData || !restaurantId) return fail(400, 'Dati mancanti');
-  if (session.restaurantId !== restaurantId || !ID_RE.test(restaurantId)) {
+  if ((session.restaurantId !== restaurantId && !isAdmin) || !ID_RE.test(restaurantId)) {
     return fail(403, 'Accesso non autorizzato');
   }
 
@@ -587,6 +587,289 @@ const SAVE_ROUTES = {
   'save-promo': { file: 'promo.json', field: 'promos', array: true, missing: 'Dati promo non validi', wrap: (v) => v }
 };
 
+// ==================== PIANO, REFERENZE E GESTIONALE ====================
+// users.json: campi opzionali per utente -> "renewalDate": "YYYY-MM-DD", "paid": true/false (li gestisce il gestionale).
+// userdata/admin.json: { password: <hash PBKDF2> } = password del gestionale (/gestionale), indipendente dai profili.
+// userdata/referrals.json: [{ id, owner, name, phone, status, createdAt, updatedAt }]
+const REFERRALS_KEY = 'userdata/referrals.json';
+const REF_STATUSES = ['pending', 'interested', 'not_interested', 'closed'];
+const MAX_REFERRALS_PER_USER = 50;
+const DISCOUNT_PER_CLOSED = 25; // % sulla prossima fattura per ogni referenza "closed"
+const PLAN_MONTHS = 12;         // 100% di sconto = 12 mesi, quindi 25% = 3 mesi
+// Chiavi di settings.json con nome e foto profilo: allinearle a quelle usate da profile-script.js
+const NAME_KEY = 'restaurantName';
+const LOGO_KEY = 'logo';
+
+async function loadReferrals(env) {
+  const obj = await env.BUCKET.get(REFERRALS_KEY);
+  if (!obj) return [];
+  try { const list = await obj.json(); return Array.isArray(list) ? list : []; } catch { return []; }
+}
+
+async function mutateReferrals(env, fn) {
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const obj = await env.BUCKET.get(REFERRALS_KEY);
+    let list = [];
+    if (obj) { try { list = await obj.json(); } catch { list = []; } }
+    if (!Array.isArray(list)) list = [];
+    const { changed, result } = await fn(list);
+    if (!changed) return result;
+    const options = { httpMetadata: { contentType: 'application/json' } };
+    if (obj) options.onlyIf = { etagMatches: obj.etag };
+    const put = await env.BUCKET.put(REFERRALS_KEY, JSON.stringify(list), options);
+    if (put) return result;
+  }
+  throw new Error('Conflitto di scrittura referenze');
+}
+
+function addYear(iso) {
+  const d = new Date(`${iso}T00:00:00Z`);
+  if (isNaN(d)) return '';
+  d.setUTCFullYear(d.getUTCFullYear() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
+// Senza renewalDate esplicito: un anno dopo l'iscrizione
+function planOf(user) {
+  const createdAt = String(user.createdAt || '').slice(0, 10);
+  const renewalDate = DATE_RE.test(user.renewalDate || '') ? user.renewalDate : (createdAt ? addYear(createdAt) : '');
+  return { createdAt, renewalDate, paid: user.paid === true };
+}
+
+function discountOf(list, owner) {
+  const closed = list.filter((r) => r.owner === owner && r.status === 'closed').length;
+  const percent = Math.min(100, closed * DISCOUNT_PER_CLOSED);
+  return { closed, percent, months: Math.round((percent * PLAN_MONTHS) / 100) };
+}
+
+const phoneKey = (p) => String(p).replace(/\D/g, '').slice(-9); // confronto tollerante al prefisso +39
+function normPhone(v) {
+  const s = String(v ?? '').replace(/[^\d+]/g, '');
+  const d = s.replace(/\D/g, '');
+  return d.length >= 6 && d.length <= 15 ? (s.startsWith('+') ? '+' : '') + d : '';
+}
+
+async function readSettings(env, id) {
+  const obj = await env.BUCKET.get(`IDs/${id}/settings.json`);
+  if (!obj) return {};
+  try { return await obj.json(); } catch { return {}; }
+}
+
+async function handleAccount(request, env, path, method) {
+  const session = await readSession(request, env);
+  if (!session) return json({ success: false, requireLogin: true, message: 'Autenticazione richiesta' }, 401);
+  const users = await loadUsers(env, request);
+  const me = users[session.userCode];
+  if (!me) return json({ success: false, requireLogin: true, message: 'Utente non trovato' }, 401);
+  const owner = session.userCode;
+
+  // ---------- utente: piano, sconto e proprie referenze ----------
+  if (path === '/api/sconti' && method === 'GET') {
+    const list = await loadReferrals(env);
+    const mine = list.filter((r) => r.owner === owner)
+      .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
+      .map(({ id, name, phone, status, createdAt }) => ({ id, name, phone, status, createdAt }));
+    return json({ success: true, plan: planOf(me), discount: discountOf(list, owner), referrals: mine });
+  }
+
+  if (path === '/api/referrals' && method === 'POST') {
+    const body = await readBody(request);
+    const items = [];
+    for (const c of (Array.isArray(body?.contacts) ? body.contacts.slice(0, 20) : [])) {
+      const phone = normPhone(c?.phone);
+      if (phone) items.push({ name: clean(c.name, 60) || phone, phone });
+    }
+    if (!items.length) return fail(400, 'Inserisci almeno un contatto con un numero valido');
+
+    const out = await mutateReferrals(env, async (list) => {
+      const known = new Set(list.map((r) => phoneKey(r.phone))); // niente doppioni, nemmeno tra utenti diversi
+      const fresh = [];
+      for (const it of items) {
+        const k = phoneKey(it.phone);
+        if (known.has(k)) continue;
+        known.add(k);
+        fresh.push(it);
+      }
+      if (list.filter((r) => r.owner === owner).length + fresh.length > MAX_REFERRALS_PER_USER) {
+        return { changed: false, result: { error: 'Hai raggiunto il limite di referenze' } };
+      }
+      const now = new Date().toISOString();
+      for (const it of fresh) {
+        list.push({ id: b64urlEncode(crypto.getRandomValues(new Uint8Array(6))), owner, name: it.name, phone: it.phone, status: 'pending', createdAt: now, updatedAt: now });
+      }
+      return { changed: fresh.length > 0, result: { added: fresh.length, skipped: items.length - fresh.length } };
+    });
+    if (out.error) return fail(400, out.error);
+    return json({ success: true, ...out });
+  }
+
+  return fail(404, 'Endpoint non trovato');
+}
+
+// ---------- Gestionale: password propria, salvata in R2 (userdata/admin.json) ----------
+const ADMIN_KEY = 'userdata/admin.json';
+const ADMIN_COOKIE = 'tm_admin';
+const ADMIN_SESSION_MAX_AGE = 30 * 24 * 60 * 60;
+const ADMIN_FAIL_COOLDOWN_MS = 3000; // dopo un tentativo sbagliato, 3 secondi di attesa per IP
+
+async function loadAdmin(env) {
+  const obj = await env.BUCKET.get(ADMIN_KEY);
+  if (!obj) return null;
+  try { const a = await obj.json(); return a && a.password ? a : null; } catch { return null; }
+}
+// Cambia a ogni cambio password: invalida tutte le sessioni precedenti
+const adminVersion = (a) => String(a.password).split('$')[3].slice(0, 12);
+const adminCookie = (value, maxAge = ADMIN_SESSION_MAX_AGE) => `${ADMIN_COOKIE}=${value}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}`;
+
+async function signAdmin(env, admin) {
+  const payload = b64urlEncode(enc.encode(JSON.stringify({ a: adminVersion(admin), exp: Math.floor(Date.now() / 1000) + ADMIN_SESSION_MAX_AGE })));
+  const sig = await crypto.subtle.sign('HMAC', await hmacKey(env, ['sign']), enc.encode(`admin.${payload}`));
+  return `${payload}.${b64urlEncode(new Uint8Array(sig))}`;
+}
+
+async function readAdminSession(request, env, admin) {
+  const m = (request.headers.get('Cookie') || '').match(new RegExp(`(?:^|;\\s*)${ADMIN_COOKIE}=([^;]+)`));
+  if (!m) return false;
+  const [payload, sig] = m[1].split('.');
+  if (!payload || !sig) return false;
+  try {
+    const ok = await crypto.subtle.verify('HMAC', await hmacKey(env, ['verify']), b64urlDecode(sig), enc.encode(`admin.${payload}`));
+    if (!ok) return false;
+    const data = JSON.parse(new TextDecoder().decode(b64urlDecode(payload)));
+    return data.exp >= Math.floor(Date.now() / 1000) && data.a === adminVersion(admin);
+  } catch { return false; }
+}
+
+const checkNewPassword = (pw) => (typeof pw !== 'string' || pw.length < 8 || pw.length > 200 ? 'La password deve avere almeno 8 caratteri' : '');
+
+async function handleAdmin(request, env, path, method) {
+  const admin = await loadAdmin(env);
+  const authed = !!admin && (await readAdminSession(request, env, admin));
+
+  if (path === '/api/admin/status' && method === 'GET') return json({ success: true, configured: !!admin, authed });
+
+  // Primo accesso: la prima password inserita viene salvata
+  if (path === '/api/admin/setup' && method === 'POST') {
+    if (admin) return fail(409, 'Password già impostata');
+    const body = await readBody(request);
+    const err = checkNewPassword(body?.password);
+    if (err) return fail(400, err);
+    const fresh = { password: await hashPassword(body.password), createdAt: new Date().toISOString() };
+    const put = await env.BUCKET.put(ADMIN_KEY, JSON.stringify(fresh), { httpMetadata: { contentType: 'application/json' }, onlyIf: { etagDoesNotMatch: '*' } });
+    if (!put) return fail(409, 'Password già impostata');
+    return json({ success: true }, 200, { 'Set-Cookie': adminCookie(await signAdmin(env, fresh)) });
+  }
+
+  if (path === '/api/admin/login' && method === 'POST') {
+    if (!admin) return fail(409, 'Password non ancora impostata');
+    const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+    const failKey = `userdata/_admin-fail/${(await sha256Hex(ip)).slice(0, 32)}`;
+    const last = await env.BUCKET.head(failKey);
+    if (last && Date.now() - last.uploaded.getTime() < ADMIN_FAIL_COOLDOWN_MS) return fail(429, 'Troppi tentativi, riprova tra qualche secondo');
+    const body = await readBody(request);
+    if (typeof body?.password !== 'string' || !(await verifyPassword(body.password, admin.password))) {
+      await env.BUCKET.put(failKey, '1');
+      return fail(401, 'Password errata');
+    }
+    return json({ success: true }, 200, { 'Set-Cookie': adminCookie(await signAdmin(env, admin)) });
+  }
+
+  if (path === '/api/admin/logout' && method === 'POST') return json({ success: true }, 200, { 'Set-Cookie': adminCookie('', 0) });
+
+  // Da qui in poi serve la sessione del gestionale
+  if (!authed) return json({ success: false, requireLogin: true, message: 'Autenticazione richiesta' }, 401);
+
+  if (path === '/api/admin/password' && method === 'POST') {
+    const body = await readBody(request);
+    if (!(await verifyPassword(String(body?.currentPassword ?? ''), admin.password))) return fail(403, 'La password attuale non è corretta');
+    const err = checkNewPassword(body?.newPassword);
+    if (err) return fail(400, err);
+    const next = { ...admin, password: await hashPassword(body.newPassword), changedAt: new Date().toISOString() };
+    await env.BUCKET.put(ADMIN_KEY, JSON.stringify(next), { httpMetadata: { contentType: 'application/json' } });
+    return json({ success: true }, 200, { 'Set-Cookie': adminCookie(await signAdmin(env, next)) });
+  }
+
+  const users = await loadUsers(env, request);
+
+  // Foto profilo di un utente (il gestionale non ha un profilo, quindi non usa /upload-image)
+  if (path === '/api/admin/upload' && method === 'POST') {
+    const body = await readBody(request);
+    if (!body || !users[body.restaurantId]) return fail(404, 'Utente non trovato');
+    return await uploadImage(env, { restaurantId: body.restaurantId }, body, true);
+  }
+
+  if (path === '/api/admin/users' && method === 'GET') {
+    const refs = await loadReferrals(env);
+    const rows = await Promise.all(Object.entries(users).map(async ([id, u]) => {
+      const s = await readSettings(env, id);
+      return { id, ...planOf(u), name: s[NAME_KEY] || '', logo: s[LOGO_KEY] || '', discount: discountOf(refs, id).percent };
+    }));
+    rows.sort((a, b) => (a.id < b.id ? -1 : 1));
+    return json({ success: true, users: rows });
+  }
+
+  if (path === '/api/admin/referrals' && method === 'GET') {
+    const refs = (await loadReferrals(env)).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+    const names = {};
+    await Promise.all([...new Set(refs.map((r) => r.owner))].map(async (id) => { names[id] = (await readSettings(env, id))[NAME_KEY] || ''; }));
+    return json({ success: true, referrals: refs.map((r) => ({ ...r, ownerName: names[r.owner] })) });
+  }
+
+  const refMatch = path.match(/^\/api\/admin\/referrals\/([\w-]+)$/);
+  if (refMatch && method === 'POST') {
+    const body = await readBody(request);
+    if (!REF_STATUSES.includes(body?.status)) return fail(400, 'Stato non valido');
+    const ok = await mutateReferrals(env, async (list) => {
+      const r = list.find((x) => x.id === refMatch[1]);
+      if (!r) return { changed: false, result: false };
+      r.status = body.status;
+      r.updatedAt = new Date().toISOString();
+      return { changed: true, result: true };
+    });
+    return ok ? json({ success: true }) : fail(404, 'Referenza non trovata');
+  }
+
+  const userMatch = path.match(/^\/api\/admin\/users\/([\w-]+)$/);
+  if (userMatch && method === 'POST') {
+    const id = userMatch[1];
+    const body = (await readBody(request)) || {};
+    if (!ID_RE.test(id) || !users[id]) return fail(404, 'Utente non trovato');
+    if (body.renewalDate !== undefined && !DATE_RE.test(body.renewalDate)) return fail(400, 'Data di rinnovo non valida');
+    if (body.paid !== undefined && typeof body.paid !== 'boolean') return fail(400, 'Valore "pagato" non valido');
+    if (body.logo !== undefined && !(body.logo === '' || (typeof body.logo === 'string' && body.logo.startsWith(`/IDs/${id}/img/`)))) {
+      return fail(400, 'Foto non valida');
+    }
+
+    if (body.renewalDate !== undefined || body.paid !== undefined) {
+      await mutateUsers(env, request, async (all) => {
+        const u = all[id];
+        if (!u) return { changed: false, result: false };
+        if (body.renewalDate !== undefined) u.renewalDate = body.renewalDate;
+        if (body.paid !== undefined) {
+          u.paid = body.paid;
+          if (body.paid) u.paidAt = new Date().toISOString(); else delete u.paidAt;
+        }
+        return { changed: true, result: true };
+      });
+    }
+
+    if (typeof body.name === 'string' || body.logo !== undefined) {
+      const key = `IDs/${id}/settings.json`;
+      const prev = await env.BUCKET.get(key);
+      const prevText = prev ? await prev.text() : '';
+      let s = {};
+      try { s = prevText ? JSON.parse(prevText) : {}; } catch { s = {}; }
+      if (typeof body.name === 'string') s[NAME_KEY] = clean(body.name, 60);
+      if (body.logo !== undefined) s[LOGO_KEY] = body.logo;
+      await putJSON(env, key, s);
+      await cleanupImages(env, id, prevText);
+    }
+    return json({ success: true });
+  }
+
+  return fail(404, 'Endpoint non trovato');
+}
+
 // ==================== ENTRYPOINT ====================
 export default {
   async fetch(request, env) {
@@ -608,6 +891,13 @@ export default {
 
       // ---------- Richieste di informazioni (pubblico, salva in R2 -> Richieste/) ----------
       if (path === '/api/info-request' && method === 'POST') return await handleInfoRequest(request, env);
+
+      // ---------- Piano, sconti, referenze e gestionale (richiedono login) ----------
+      if ((path === '/api/sconti' && method === 'GET') || (path === '/api/referrals' && method === 'POST')) {
+        return await handleAccount(request, env, path, method);
+      }
+      // Gestionale: password propria, nessun legame con i profili
+      if (path.startsWith('/api/admin/')) return await handleAdmin(request, env, path, method);
 
       // ---------- Elenco utenti per index-user.html (solo gli ID, mai le password) ----------
       if (path === '/userdata/users.json' && method === 'GET') {
@@ -735,7 +1025,13 @@ export default {
       }
 
       // ---------- Tutto il resto: file statici del sito ----------
-      return env.ASSETS.fetch(request);
+      if (path.startsWith('/api/')) return fail(404, 'Endpoint non trovato');
+      const res = await env.ASSETS.fetch(request);
+      // Link sbagliato: con 404.html nel sito Pages risponde 404 -> torniamo alla home (senza il percorso errato)
+      if (res.status === 404 && (method === 'GET' || method === 'HEAD')) {
+        return Response.redirect(`${url.origin}/`, 302);
+      }
+      return res;
     } catch (error) {
       console.error('Errore worker:', error);
       return fail(500, 'Errore interno del server');

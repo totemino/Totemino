@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+      (function() {
+        const saved = localStorage.getItem('totemino_theme');
+        document.documentElement.setAttribute('data-theme', saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+      })();
+    </script>
+    <title>Gestionale - Totemino</title>
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    <link rel="stylesheet" href="gestionale-styles.css"/>
+</head>
+<body>
+    <div class="bg-light light1"></div>
+    <div class="bg-light light2"></div>
+    <div class="bg-light light3"></div>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img class="theme-img" data-light="img/logo/1_light.png" data-dark="img/logo/1_dark.png" alt="Totemino Logo" id="logoSwap">
+                <a href="index.html"><h1>Totemino</h1></a>
+            </div>
+            <div class="nav-actions">
+                <button id="theme" class="nav-btn theme-btn" type="button">
+                    <img class="theme-img" data-light="img/theme_light.png" data-dark="img/theme_dark.png" alt="Tema">
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="mg gx-narrow hidden" id="authView">
+        <section class="gx-card gx-auth">
+            <h2 class="gx-title" id="authTitle">Accesso</h2>
+            <p class="muted" id="authHint"></p>
+            <form id="authForm" autocomplete="off">
+                <div class="form-field">
+                    <label for="aPass">Password</label>
+                    <input type="password" id="aPass" autocomplete="current-password" required>
+                </div>
+                <div class="form-field hidden" id="aPass2Wrap">
+                    <label for="aPass2">Ripeti password</label>
+                    <input type="password" id="aPass2" autocomplete="new-password">
+                </div>
+                <button class="btn-primary" id="authBtn" type="submit">Entra</button>
+            </form>
+        </section>
+    </main>
+
+    <main class="mg hidden" id="appView">
+        <div class="toolbar">
+            <div class="tb-row">
+                <div class="seg" id="tabs">
+                    <button class="gx-tab" data-tab="users" aria-pressed="true" type="button">Utenti</button>
+                    <button class="gx-tab" data-tab="refs" aria-pressed="false" type="button">Referenze</button>
+                </div>
+                <div class="gx-tb-actions">
+                    <button class="btn-secondary btn-sm" id="pwBtn" type="button">Password</button>
+                    <button class="btn-secondary btn-sm" id="logoutBtn" type="button">Esci</button>
+                </div>
+            </div>
+            <div class="tb-row">
+                <div class="search">
+                    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                    <input type="search" id="search" placeholder="Cerca…" autocomplete="off">
+                </div>
+                <select id="filter" class="dropdown"></select>
+            </div>
+        </div>
+        <div class="stats" id="stats"></div>
+        <div class="gx-list" id="list"></div>
+    </main>
+
+    <!-- Modifica utente -->
+    <div class="gx-overlay" id="editModal">
+        <div class="gx-modal">
+            <h3 id="editTitle">Modifica utente</h3>
+            <div class="pop-body">
+                <div class="main-form-section">
+                    <div class="image-section">
+                        <div class="image-upload-area" id="imgArea" role="button" tabindex="0" aria-label="Cambia foto">
+                            <img id="imgPrev" class="image-preview hidden" alt="">
+                            <div id="imgPh" class="upload-placeholder">Foto</div>
+                        </div>
+                        <input type="file" id="imgInput" accept="image/jpeg,image/png,image/webp" hidden>
+                        <button type="button" class="link-btn" id="imgRemove">Rimuovi</button>
+                    </div>
+                    <div class="text-inputs">
+                        <div class="form-field">
+                            <label for="fName">Nome del ristorante</label>
+                            <input type="text" id="fName" maxlength="60" autocomplete="off">
+                        </div>
+                        <div class="form-field">
+                            <label for="fRenew">Data di rinnovo</label>
+                            <input type="date" id="fRenew">
+                        </div>
+                    </div>
+                </div>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="fPaid">
+                    <span class="checkmark"></span>
+                    <span class="checkbox-text">Pagato</span>
+                </label>
+            </div>
+            <div class="popup-actions">
+                <button class="btn-secondary" id="editCancel" type="button">Annulla</button>
+                <button class="btn-save" id="editSave" type="button">Salva</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cambia password -->
+    <div class="gx-overlay" id="pwModal">
+        <div class="gx-modal">
+            <h3>Cambia password</h3>
+            <div class="pop-body">
+                <div class="form-field"><label for="pCur">Password attuale</label><input type="password" id="pCur" autocomplete="current-password"></div>
+                <div class="form-field"><label for="pNew">Nuova password (min. 8 caratteri)</label><input type="password" id="pNew" autocomplete="new-password"></div>
+                <div class="form-field"><label for="pNew2">Ripeti nuova password</label><input type="password" id="pNew2" autocomplete="new-password"></div>
+            </div>
+            <div class="popup-actions">
+                <button class="btn-secondary" id="pwCancel" type="button">Annulla</button>
+                <button class="btn-save" id="pwSave" type="button">Salva</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="note"></div>
+
+    <script src="theme.js"></script>
+    <script src="logo-pop.js"></script>
+    <script src="gestionale-script.js"></script>
+</body>
+</html>
