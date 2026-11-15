@@ -6,6 +6,16 @@
     <title>Profilo - Totemino</title>
     <link rel="icon" type="image/png" href="img/favicon.png">
     <link rel="stylesheet" href="profile-styles.css"/>
+    <style>
+        .pf-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1rem 0; max-width: 1400px; margin: 0 auto; }
+        .pf-header > div { display: flex; align-items: center; gap: .5rem; }
+        .pf-logo { height: 4rem; width: auto; }
+        .pf-btn { display: inline-flex; align-items: center; justify-content: center; padding: .5rem; border: 0; border-radius: 12px; cursor: pointer; color: inherit; background: var(--close-btn-bg, rgba(127,127,127,.2)); transition: filter .2s, transform .1s; }
+        .pf-btn:hover { filter: brightness(.93); }
+        .pf-btn:active { transform: scale(.95); }
+        .pf-btn img { width: 1.5rem; height: 1.5rem; }
+        @media (min-width: 768px) { .pf-header { padding: 1.5rem 2rem 0; } }
+    </style>
 </head>
 <body>
     <!-- Background lights -->
@@ -13,20 +23,18 @@
     <div class="bg-light light2"></div>
     <div class="bg-light light3"></div>
     
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-brand">
-                <img class="theme-img" data-light="img/logo/1_light.png" data-dark="img/logo/1_dark.png" alt="Totemino Logo" id="logoSwap">
-                <a href="index.html"><h1>Totemino</h1></a>
-            </div>
-            <div class="nav-actions">
-                <button id="theme" class="nav-btn theme-btn" type="button">
-                    <img class="theme-img" data-light="img/theme_light.png" data-dark="img/theme_dark.png" alt="Tema">
-                </button>
-            </div>
+    <!-- Header (stile di gestione-menu): niente nome, con tasto indietro -->
+    <header class="pf-header">
+        <div>
+            <button id="backBtn" class="pf-btn" type="button" aria-label="Indietro">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+            </button>
+            <img id="logoSwap" class="theme-img pf-logo" data-light="img/logo/1_light.png" data-dark="img/logo/1_dark.png" alt="Totemino">
         </div>
-    </nav>
+        <button id="theme" class="pf-btn" type="button" aria-label="Cambia tema">
+            <img class="theme-img" data-light="img/theme_light.png" data-dark="img/theme_dark.png" alt="">
+        </button>
+    </header>
 
     <main class="container">
         <!-- Hero Card -->
@@ -200,6 +208,11 @@
     <div id="profileToast" class="profile-toast"></div>
     
     <script>(function(){var s=document.getElementById('scontiCard');if(s&&(s.getAttribute('href')||'#')==='#')s.setAttribute('href','/sconti');})();</script>
+    <script>
+    document.getElementById('backBtn').addEventListener('click', function () {
+        if (history.length > 1) history.back(); else location.href = '/';
+    });
+    </script>
     <script src="auth-protection.js"></script>
     <script src="theme.js"></script>
     <script src="logo-pop.js"></script>
