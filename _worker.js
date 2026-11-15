@@ -702,6 +702,42 @@ async function handleAccount(request, env, path, method) {
     return json({ success: true, ...out });
   }
 
+  if ((path === '/api/referrals/update' || path === '/api/referrals/delete') && method === 'POST') {
+    const body = await readBody(request);
+    const id = String(body?.id ?? '');
+    if (!id) return fail(400, 'Referenza non valida');
+
+    if (path === '/api/referrals/delete') {
+      const res = await mutateReferrals(env, async (list) => {
+        const i = list.findIndex((r) => r.id === id && r.owner === owner);
+        if (i < 0) return { changed: false, result: 'missing' };
+        if (list[i].status !== 'pending') return { changed: false, result: 'locked' };
+        list.splice(i, 1);
+        return { changed: true, result: 'ok' };
+      });
+      if (res === 'missing') return fail(404, 'Referenza non trovata');
+      if (res === 'locked') return fail(403, 'Questa referenza non può più essere eliminata');
+      return json({ success: true });
+    }
+
+    const phone = normPhone(body?.phone);
+    if (!phone) return fail(400, 'Numero di telefono non valido');
+    const res = await mutateReferrals(env, async (list) => {
+      const r = list.find((x) => x.id === id && x.owner === owner);
+      if (!r) return { changed: false, result: 'missing' };
+      if (r.status !== 'pending') return { changed: false, result: 'locked' };
+      if (list.some((x) => x.id !== id && phoneKey(x.phone) === phoneKey(phone))) return { changed: false, result: 'dup' };
+      r.name = clean(body?.name, 60) || phone;
+      r.phone = phone;
+      r.updatedAt = new Date().toISOString();
+      return { changed: true, result: 'ok' };
+    });
+    if (res === 'missing') return fail(404, 'Referenza non trovata');
+    if (res === 'locked') return fail(403, 'Questa referenza non può più essere modificata');
+    if (res === 'dup') return fail(409, 'Numero già presente');
+    return json({ success: true });
+  }
+
   return fail(404, 'Endpoint non trovato');
 }
 
@@ -894,7 +930,8 @@ export default {
       if (path === '/api/info-request' && method === 'POST') return await handleInfoRequest(request, env);
 
       // ---------- Piano, sconti, referenze e gestionale (richiedono login) ----------
-      if ((path === '/api/sconti' && method === 'GET') || (path === '/api/referrals' && method === 'POST')) {
+      if ((path === '/api/sconti' && method === 'GET') || (path === '/api/referrals' && method === 'POST') ||
+          ((path === '/api/referrals/update' || path === '/api/referrals/delete') && method === 'POST')) {
         return await handleAccount(request, env, path, method);
       }
       // Gestionale: password propria, nessun legame con i profili

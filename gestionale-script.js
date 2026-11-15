@@ -78,18 +78,17 @@
 
   // ---------- referenze ----------
   function refRow(r) {
-    const closeBtn = (r.status === 'interested' || r.status === 'closed')
-      ? `<button class="btn-secondary btn-sm" data-close type="button">${r.status === 'closed' ? 'Riapri' : 'Chiuso'}</button>` : '';
-    return `<div class="gx-swipe" data-id="${esc(r.id)}">
+    const toClosed = r.status === 'interested' || r.status === 'closed';
+    const back = r.status === 'not_interested';
+    return `<div class="gx-swipe" data-id="${esc(r.id)}" data-rs="${toClosed ? 'closed' : 'interested'}" data-rl="${toClosed ? 'Chiuso' : 'Interessato'}" data-ll="${back ? 'Da contattare' : 'Non interessato'}" data-lr="${back ? 'back' : ''}">
       <div class="gx-swipe-in gx-card st-${r.status}">
         <div class="gx-info"><b>${esc(r.name)}</b><small><a href="tel:${esc(r.phone)}">${esc(r.phone)}</a> · da ${esc(ownerName(r.owner) || r.ownerName)} · ${fmt((r.createdAt || '').slice(0, 10))}</small></div>
-        ${closeBtn}<span class="gx-tag ${r.status}">${REF_LABEL[r.status] || r.status}</span>
+        <span class="gx-tag ${r.status}">${REF_LABEL[r.status] || r.status}</span>
       </div>
     </div>`;
   }
 
   async function setStatus(r, next) {
-    if (r.status === next) next = 'pending'; // stesso gesto due volte = annulla
     const prev = r.status;
     r.status = next;
     render();
@@ -120,7 +119,12 @@
       inner.classList.remove('dragging');
       inner.style.transform = '';
       el.dataset.dir = '';
-      if (Math.abs(d) > 80) setStatus(r, d > 0 ? 'interested' : 'not_interested');
+      if (Math.abs(d) <= 80) return;
+      // destra: interessato -> (di nuovo) chiuso; sinistra: non interessato -> (di nuovo) da contattare
+      const next = d > 0
+        ? (r.status === 'interested' || r.status === 'closed' ? 'closed' : 'interested')
+        : (r.status === 'not_interested' ? 'pending' : 'not_interested');
+      if (next !== r.status) setStatus(r, next);
     };
     inner.addEventListener('pointerup', end);
     inner.addEventListener('pointercancel', end);
@@ -138,7 +142,7 @@
     } else {
       const o = $('#ownerFilter').value || 'all';
       const rows = state.refs.filter((r) => (!q || `${r.name} ${r.phone} ${r.owner} ${ownerName(r.owner)}`.toLowerCase().includes(q)) && (f === 'all' || r.status === f) && (o === 'all' || r.owner === o));
-      $('#stats').textContent = `${rows.length} referenze · scorri a destra = interessato, a sinistra = non interessato`;
+      $('#stats').textContent = `${rows.length} referenze · scorri a destra = interessato (di nuovo = chiuso), a sinistra = non interessato`;
       box.innerHTML = rows.map(refRow).join('') || '<p class="muted">Nessuna referenza.</p>';
       box.querySelectorAll('.gx-swipe').forEach(bindSwipe);
     }
@@ -266,11 +270,6 @@
       if (!u) return;
       if (e.target.closest('[data-paid]')) togglePaid(u); else openEdit(u);
       return;
-    }
-    const sw = e.target.closest('.gx-swipe');
-    if (sw && e.target.closest('[data-close]')) {
-      const r = state.refs.find((x) => x.id === sw.dataset.id);
-      if (r) setStatus(r, r.status === 'closed' ? 'interested' : 'closed');
     }
   });
 

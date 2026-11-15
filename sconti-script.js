@@ -102,13 +102,10 @@
     const price = Math.max(0, BASE_PRICE - REF_DISCOUNT * closed);
     const free = price < 1;
     const pay = free || p.paid ? ['paid', 'Pagato'] : days !== null && days < 0 ? ['late', 'Scaduto'] : ['due', 'Da pagare'];
-    const priceTxt = free ? 'Gratis' : eur(price);
-    const detail = closed > 0 ? `${eur(BASE_PRICE)} − ${eur(REF_DISCOUNT)} × ${closed}` : '';
     $('#plan').innerHTML = `
       <div class="r"><span>Iscritto dal</span><span>${fmt(p.createdAt)}</span></div>
       <div class="r"><span>Rinnovo</span><span>${fmt(p.renewalDate)}${left ? `<small>${left}</small>` : ''}</span></div>
-      <div class="r"><span>Prezzo</span><span>${priceTxt}${detail ? `<small>${detail}</small>` : ''}</span></div>
-      <div class="r"><span>Pagamento</span><span class="sc-tag ${pay[0]}">${pay[1]}</span></div>`;
+      <div class="r"><span>Costo</span><span class="v"><span class="sc-tag amount">${free ? 'Gratis' : eur(price)}</span><span class="sc-tag ${pay[0]}">${pay[1]}</span></span></div>`;
   }
 
   function renderError() {
@@ -304,15 +301,10 @@
     editId = r.id;
     $('#eName').value = r.name || '';
     $('#ePhone').value = r.phone || '';
-    resetDelete();
     openModal('#editModal');
   }
 
-  function resetDelete() {
-    const b = $('#editDelete');
-    b.textContent = 'Elimina';
-    b.dataset.sure = '';
-  }
+
 
   $('#plan').addEventListener('click', (e) => { if (e.target.closest('[data-retry]')) load(); });
 
@@ -332,18 +324,24 @@
     btn.disabled = false;
   });
 
-  $('#editDelete').addEventListener('click', async () => {
-    const btn = $('#editDelete');
-    if (!btn.dataset.sure) { btn.dataset.sure = '1'; btn.textContent = 'Sicuro? Elimina'; return; }
+  // Elimina: popup di conferma
+  $('#editDelete').addEventListener('click', () => {
+    const r = refs.find((x) => x.id === editId);
+    $('#delText').textContent = `${(r && (r.name || r.phone)) || 'La referenza'} verrà rimosso dalle tue referenze.`;
+    openModal('#delModal');
+  });
+  $('#delCancel').addEventListener('click', () => closeModal('#delModal'));
+  $('#delConfirm').addEventListener('click', async () => {
+    const btn = $('#delConfirm');
     btn.disabled = true;
     try {
       await api('/api/referrals/delete', { id: editId });
       toast('Referenza eliminata');
+      closeModal('#delModal');
       closeModal('#editModal');
       load();
     } catch (e) { toast(e.message, true); }
     btn.disabled = false;
-    resetDelete();
   });
 
   // ---------- chiusura popup ----------

@@ -40,23 +40,28 @@
 .gx-tag.late, .gx-tag.not_interested { background: #e53e3e; color: #fff; }
 .gx-tag.amount { background: var(--close-bg); color: var(--text-primary); }
 
-/* ===== TINTA PER STATO (referenze) ===== */
-.gx-card.st-closed { background: color-mix(in srgb, #22c55e 24%, var(--bg-primary)); border-color: #22c55e; }
-.gx-card.st-interested { background: color-mix(in srgb, #fde68a 40%, var(--bg-primary)); border-color: #fde68a; }
-.gx-card.st-not_interested { background: color-mix(in srgb, #e53e3e 22%, var(--bg-primary)); border-color: #e53e3e; }
+/* ===== TINTA PER STATO (referenze): bordo sottile grigio ===== */
+.gx-swipe { border: 1px solid rgba(128,128,128,.35); }
+.gx-swipe-in.gx-card { border: 0; }
+.gx-card.st-closed { background: color-mix(in srgb, #22c55e 24%, var(--bg-primary)); }
+.gx-card.st-interested { background: color-mix(in srgb, #fde68a 40%, var(--bg-primary)); }
+.gx-card.st-not_interested { background: color-mix(in srgb, #e53e3e 22%, var(--bg-primary)); }
 
-/* ===== SWIPE ===== */
-.gx-swipe { position: relative; overflow: hidden; border-radius: var(--r, 12px); background: var(--close-bg); }
+/* ===== SWIPE (le scritte stanno SOTTO la card) ===== */
+.gx-swipe { position: relative; overflow: hidden; border-radius: var(--r, 12px); background: var(--close-bg); isolation: isolate; }
 .gx-swipe::before, .gx-swipe::after {
-  position: absolute; top: 50%; transform: translateY(-50%); color: #fff; font-size: 13px; font-weight: 700; opacity: 0; pointer-events: none;
+  position: absolute; z-index: 0; top: 50%; transform: translateY(-50%); color: #fff; font-size: 13px; font-weight: 700; opacity: 0; pointer-events: none;
 }
-.gx-swipe::before { content: 'Interessato'; left: 16px; }
-.gx-swipe::after { content: 'Non interessato'; right: 16px; }
-.gx-swipe[data-dir="right"] { background: #22c55e; }
+.gx-swipe::before { content: attr(data-rl); left: 16px; }
+.gx-swipe::after { content: attr(data-ll); right: 16px; }
+.gx-swipe[data-dir="right"][data-rs="closed"] { background: #22c55e; }
+.gx-swipe[data-dir="right"][data-rs="interested"] { background: #fde68a; }
+.gx-swipe[data-dir="right"][data-rs="interested"]::before { color: #3d3200; }
 .gx-swipe[data-dir="right"]::before { opacity: 1; }
 .gx-swipe[data-dir="left"] { background: #e53e3e; }
+.gx-swipe[data-dir="left"][data-lr="back"] { background: #9ca3af; }
 .gx-swipe[data-dir="left"]::after { opacity: 1; }
-.gx-swipe-in { position: relative; touch-action: pan-y; user-select: none; -webkit-user-select: none; transition: transform .2s; }
+.gx-swipe-in { position: relative; z-index: 1; touch-action: pan-y; user-select: none; -webkit-user-select: none; transition: transform .2s; }
 .gx-swipe-in.dragging { transition: none; }
 
 /* ===== POPUP ===== */

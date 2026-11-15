@@ -152,6 +152,20 @@
         </div>
     </div>
 
+    <!-- Conferma eliminazione -->
+    <div class="sc-overlay" id="delModal" role="dialog" aria-modal="true" aria-labelledby="delTitle">
+        <div class="sc-modal">
+            <h3 id="delTitle">Sei sicuro di eliminare?</h3>
+            <div class="sc-body">
+                <p class="sc-hint" id="delText"></p>
+            </div>
+            <div class="sc-actions">
+                <button class="sc-btn sc-ghost" id="delCancel" type="button">Annulla</button>
+                <button class="sc-btn sc-danger" id="delConfirm" type="button">Elimina</button>
+            </div>
+        </div>
+    </div>
+
     <div class="sc-note" id="note" role="status"></div>
 
     <script src="auth-protection.js"></script>

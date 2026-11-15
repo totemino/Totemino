@@ -58,8 +58,8 @@ body.noscroll { overflow: hidden; }
 .sc-icon.del:hover { color: #e53e3e; }
 
 /* ---------- card ---------- */
-.sc-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.sc-head .sc-title { margin-right: auto !important; }
+.sc-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 26px 0 10px; }
+.sc-head .sc-title { margin: 0 auto 0 2px !important; }
 .sc-list { display: flex; flex-direction: column; gap: 8px; }
 
 .sc-card {
@@ -116,6 +116,7 @@ body.noscroll { overflow: hidden; }
 .sc-plan .r:last-child { border-bottom: 0; }
 .sc-plan .r > span:first-child { opacity: .7; }
 .sc-plan .r > span:last-child { font-weight: 600; text-align: right; }
+.sc-plan .v { display: flex; align-items: center; gap: 8px; }
 .sc-plan small { display: block; font-weight: 500; font-size: 12px; opacity: .65; }
 
 /* ---------- stati vuoti / errore / caricamento ---------- */
