@@ -10,6 +10,13 @@
 			(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 			document.documentElement.setAttribute('data-theme', theme);
 
+			// Dimensione interfaccia scelta dal cliente (Piccolo / Normale)
+			try {
+				if (localStorage.getItem('totemino_ui_size') === 'small') {
+					document.documentElement.setAttribute('data-ui-size', 'small');
+				}
+			} catch (e) {}
+
 			// Dispositivi poco potenti: niente animazioni di sfondo / blur
 			try {
 				const mem = navigator.deviceMemory, cores = navigator.hardwareConcurrency;
@@ -94,6 +101,14 @@
 			<div class="side-segmented" role="group" aria-label="Metodo di visualizzazione">
 				<button type="button" data-view="grid" aria-pressed="true"><i class="fa-solid fa-table-cells-large"></i><span>Griglia</span></button>
 				<button type="button" data-view="list" aria-pressed="false"><i class="fa-solid fa-list"></i><span>Dettagli</span></button>
+			</div>
+		</section>
+
+		<section class="side-group">
+			<h3>Dimensione</h3>
+			<div class="side-segmented" role="group" aria-label="Dimensione dell'interfaccia">
+				<button type="button" data-size="small" aria-pressed="false"><span>Piccolo</span></button>
+				<button type="button" data-size="normal" aria-pressed="true"><span>Normale</span></button>
 			</div>
 		</section>
 

@@ -1594,7 +1594,7 @@ function setViewMode(mode, rerender = true) {
   autoList = computeAutoList();
 
   if (!(rerender && categories.length)) itemsContainer.classList.toggle("list-view", isListLayout()); // altrimenti lo fa renderItems
-  document.querySelectorAll(".side-segmented button").forEach(b => {
+  document.querySelectorAll(".side-segmented button[data-view]").forEach(b => {
     const on = b.dataset.view === mode;
     b.classList.toggle("active", on);
     b.setAttribute("aria-pressed", on ? "true" : "false");
@@ -1638,6 +1638,33 @@ function openLanguageSelector() {
 // TODO: da implementare (aprire la fotocamera e leggere il QR di un altro ristorante)
 function openRestaurantScanner() {
   console.log("Scanner ristorante: non ancora implementato");
+}
+
+// ===== DIMENSIONE INTERFACCIA (Piccolo / Normale) =====
+// Lo stato e' l'attributo data-ui-size="small" su <html> (applicato subito da menu.html, senza lampeggio)
+const UI_SIZE_KEY = 'totemino_ui_size';
+
+function getUiSize() {
+  return document.documentElement.getAttribute('data-ui-size') === 'small' ? 'small' : 'normal';
+}
+
+function syncUiSizeButtons() {
+  const cur = getUiSize();
+  document.querySelectorAll('.side-segmented button[data-size]').forEach(b => {
+    const on = b.dataset.size === cur;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+}
+
+function setUiSize(size) {
+  if (size === getUiSize()) return;
+  if (size === 'small') document.documentElement.setAttribute('data-ui-size', 'small');
+  else document.documentElement.removeAttribute('data-ui-size');
+  try { localStorage.setItem(UI_SIZE_KEY, size); } catch (e) {}
+  syncUiSizeButtons();
+  // Pill delle categorie, titoli, griglia/dettagli, altezza barra e banner si riallineano da soli
+  window.dispatchEvent(new Event('resize'));
 }
 
 function initSideMenu() {
@@ -1724,12 +1751,20 @@ function initSideMenu() {
     el.addEventListener("touchcancel", onEnd, { passive: true });
   });
 
-  panel.querySelectorAll(".side-segmented button").forEach(btn => {
+  panel.querySelectorAll(".side-segmented button[data-view]").forEach(btn => {
     btn.addEventListener("click", () => {
       if (btn.dataset.view !== viewMode) setViewMode(btn.dataset.view);
       setTimeout(dismissTopLayer, 180);
     });
   });
+
+  panel.querySelectorAll(".side-segmented button[data-size]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      setUiSize(btn.dataset.size);
+      setTimeout(dismissTopLayer, 180);
+    });
+  });
+  syncUiSizeButtons();
 
   document.getElementById("language-btn").addEventListener("click", openLanguageSelector);
   

@@ -154,18 +154,25 @@
 /* Tutta l'interfaccia e' in rem. Su telefono 1rem = 3.49vw, cosi' la UI occupa sempre
    la stessa frazione di schermo, qualunque sia browser, zoom o dimensione testo.
    Su un viewport di 412px (S21 FE, Chrome 100%) 1rem = 14.4px = identico al tuo zoom 90%.
-   Per ingrandire/rimpicciolire tutto cambia SOLO --ui-scale. */
+   Per ingrandire/rimpicciolire tutto cambia SOLO --ui-scale.
+   Il bottone "Dimensione" del menu laterale imposta data-ui-size="small" su <html>:
+   0.89 x 3.49vw = 3.106vw = identico allo zoom Chrome 80% su S21 FE. */
 html {
   --ui-scale: 3.49;
-  font-size: calc(var(--ui-scale) * 1vw);
+  --ui-size: 1;
+  font-size: calc(var(--ui-scale) * var(--ui-size) * 1vw);
   -webkit-text-size-adjust: 100%;
   -moz-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
 
+html[data-ui-size="small"] {
+  --ui-size: 0.89;
+}
+
 /* Tablet e desktop: dimensione fissa */
 @media (min-width: 768px) {
-  html { font-size: 16px; }
+  html { font-size: calc(16px * var(--ui-size)); }
 }
 
 /* ===== RESET & BASE ===== */
