@@ -1096,7 +1096,7 @@ async function loadMenu() {
 
   
   setTimeout(checkAndActivate, 0);
-  setTimeout(maybeShowSwipeHint, 700);
+  setTimeout(() => maybeShowSwipeHint(), 700);
 }
 
 // Altezza della riga categorie + ricerca (serve al bottone tondo e al campo di ricerca).
@@ -1887,19 +1887,41 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitGridTit
 // ===== SUGGERIMENTO SWIPE (solo la prima volta, solo su telefono) =====
 const SWIPE_HINT_KEY = 'totemino_swipe_hint_seen';
 
-function maybeShowSwipeHint() {
+// Memoria "già visto" a prova di browser: localStorage → sessionStorage → variabile in pagina.
+// Così se lo storage è bloccato (modalità privata, browser interni di app) il suggerimento
+// compare comunque, al massimo una volta per visita, invece di non comparire mai.
+let swipeHintSeenInMemory = false;
+function swipeHintAlreadySeen() {
+  if (swipeHintSeenInMemory) return true;
+  try { if (localStorage.getItem(SWIPE_HINT_KEY)) return true; } catch (e) {}
+  try { if (sessionStorage.getItem(SWIPE_HINT_KEY)) return true; } catch (e) {}
+  return false;
+}
+function markSwipeHintSeen() {
+  swipeHintSeenInMemory = true;
+  try { localStorage.setItem(SWIPE_HINT_KEY, "1"); } catch (e) {}
+  try { sessionStorage.setItem(SWIPE_HINT_KEY, "1"); } catch (e) {}
+}
+
+function isTouchDevice() {
+  // Più affidabile di (hover: none) and (pointer: coarse), che alcuni browser/telefoni
+  // (Firefox, Samsung, "sito desktop") riportano in modo diverso.
+  return (navigator.maxTouchPoints > 0) || ("ontouchstart" in window)
+    || window.matchMedia("(pointer: coarse)").matches;
+}
+
+function maybeShowSwipeHint(attempt = 0) {
   const forced = new URLSearchParams(location.search).get('hint') === '1'; // ?hint=1 per provarlo
   if (!forced) {
-    const isPhone = window.matchMedia('(hover: none) and (pointer: coarse)').matches
-      && Math.min(screen.width, screen.height) < 768;
-    if (!isPhone) return;
-    try {
-      if (localStorage.getItem(SWIPE_HINT_KEY)) return;
-    } catch (e) {
-      return; // senza localStorage non potremmo ricordarlo: meglio non mostrarlo ogni volta
-    }
+    if (!isTouchDevice()) return;          // con il mouse lo swipe non esiste
+    if (swipeHintAlreadySeen()) return;
   }
-  if (categories.length < 2 || document.querySelector(".swipe-hint")) return;
+  // Se il menu non è ancora pronto riprova, invece di rinunciare in silenzio
+  if (categories.length < 2) {
+    if (attempt < 10) setTimeout(() => maybeShowSwipeHint(attempt + 1), 500);
+    return;
+  }
+  if (document.querySelector(".swipe-hint")) return;
 
   const chevron = '<svg viewBox="0 0 24 40" aria-hidden="true"><polyline points="20,4 6,20 20,36"/></svg>';
   const el = document.createElement("div");
@@ -1918,7 +1940,7 @@ function maybeShowSwipeHint() {
   const close = (goNext) => {
     if (closed) return;
     closed = true;
-    try { localStorage.setItem(SWIPE_HINT_KEY, "1"); } catch (e) {}
+    markSwipeHintSeen();
     el.classList.remove("show");
     setTimeout(() => el.remove(), 300);
     if (goNext && !searchActive && currentCategoryIndex < categories.length - 1) {
