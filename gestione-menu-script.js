@@ -586,7 +586,7 @@ function openPopup(idx, cat) {
 function closeItemPopup() { hide('edit-popup'); currentEdit = { category: null, index: null }; }
 
 function saveItem() {
-  const name = $('item-name').value.trim(), price = parseFloat($('item-price').value);
+  const name = $('item-name').value.trim(), price = $('item-price').value.trim() === '' ? 0 : parseFloat($('item-price').value);
   if (!name) return notify('Nome obbligatorio', 'error');
   if (isNaN(price) || price < 0) return notify('Prezzo non valido', 'error');
 

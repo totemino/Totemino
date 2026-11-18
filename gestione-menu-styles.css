@@ -196,6 +196,8 @@ svg.ic { width: 16px; height: 16px; flex-shrink: 0; }
 .upload-placeholder img { width: 26px; height: 26px; }
 
 .text-inputs { min-width: 0; }
+.price-voce-row { display: flex; gap: 10px; }
+.price-voce-row .form-field { flex: 1; min-width: 0; }
 
 
 .checkbox-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px 16px; margin: 8px 0; }
