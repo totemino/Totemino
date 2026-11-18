@@ -1033,11 +1033,12 @@ async function loadMenu() {
     btn.addEventListener("click", () => setActiveCategory(index));
     nav.appendChild(btn);
   });
+  measureCategoryRow(); // ora la barra ha la sua altezza vera
 
   // (listener 'scroll' sulla nav rimosso: la pill e' dentro la nav e scorre con lei)
   window.addEventListener("resize", () => {
     const active = document.querySelector(".categories button.active");
-    if (active) movePillTo(active);
+    if (active) snapCategoryBar(active);
   });
 
   window.menuData = {};
@@ -1084,6 +1085,31 @@ async function loadMenu() {
   
   setTimeout(checkAndActivate, 0);
   setTimeout(maybeShowSwipeHint, 700);
+}
+
+// Altezza della riga categorie + ricerca (serve al bottone tondo e al campo di ricerca).
+// Con la riga ad altezza "auto" la barra ha la sua altezza naturale (con una altezza fissa verrebbe
+// stirata e misureremmo sempre il valore vecchio). Salvata in rem, segue da sola lo zoom del browser.
+function measureCategoryRow() {
+  const row = document.querySelector(".categories-row");
+  if (!row || !nav.offsetWidth) return; // barra nascosta durante la ricerca
+  row.style.setProperty("--cat-h", "auto");
+  const h = nav.getBoundingClientRect().height;
+  const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+  row.style.setProperty("--cat-h", (h / rem).toFixed(4) + "rem");
+}
+
+// Zoom del browser / cambio Piccolo-Normale: la pill e la barra si riallineano SUBITO, senza animazione,
+// e la categoria attiva resta al centro (lo scroll della barra e' in px e altrimenti "scivolerebbe").
+function snapCategoryBar(active) {
+  if (!nav.offsetWidth) return; // barra nascosta durante la ricerca
+  const pill = document.querySelector(".pill");
+  if (pill) pill.style.transition = "none";
+  movePillTo(active);
+  nav.style.scrollBehavior = "auto";
+  nav.scrollLeft = Math.max(0, active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2);
+  nav.style.scrollBehavior = "";
+  if (pill) { void pill.offsetWidth; pill.style.transition = ""; }
 }
 
 function movePillTo(button) {
@@ -1648,13 +1674,9 @@ function getUiSize() {
   return document.documentElement.getAttribute('data-ui-size') === 'small' ? 'small' : 'normal';
 }
 
-function syncUiSizeButtons() {
-  const cur = getUiSize();
-  document.querySelectorAll('.side-segmented button[data-size]').forEach(b => {
-    const on = b.dataset.size === cur;
-    b.classList.toggle('active', on);
-    b.setAttribute('aria-pressed', on ? 'true' : 'false');
-  });
+function updateZoomLabel() {
+  const el = document.getElementById('zoom-value');
+  if (el) el.textContent = getUiSize() === 'small' ? 'Piccolo' : 'Normale';
 }
 
 function setUiSize(size) {
@@ -1662,7 +1684,7 @@ function setUiSize(size) {
   if (size === 'small') document.documentElement.setAttribute('data-ui-size', 'small');
   else document.documentElement.removeAttribute('data-ui-size');
   try { localStorage.setItem(UI_SIZE_KEY, size); } catch (e) {}
-  syncUiSizeButtons();
+  updateZoomLabel();
   // Pill delle categorie, titoli, griglia/dettagli, altezza barra e banner si riallineano da soli
   window.dispatchEvent(new Event('resize'));
 }
@@ -1758,13 +1780,10 @@ function initSideMenu() {
     });
   });
 
-  panel.querySelectorAll(".side-segmented button[data-size]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      setUiSize(btn.dataset.size);
-      setTimeout(dismissTopLayer, 180);
-    });
-  });
-  syncUiSizeButtons();
+  // Zoom: come il bottone Tema, alterna Normale <-> Piccolo e il menu resta aperto
+  const zoomBtn = document.getElementById("zoom-btn");
+  if (zoomBtn) zoomBtn.addEventListener("click", () => setUiSize(getUiSize() === "small" ? "normal" : "small"));
+  updateZoomLabel();
 
   document.getElementById("language-btn").addEventListener("click", openLanguageSelector);
   
@@ -1917,15 +1936,13 @@ function initSearch() {
   if (!row || !btn || !input) return;
 
   // Misura la barra categorie e la usa come altezza della riga (bottone tondo, campo alto uguale)
-  const measure = () => {
-    const h = nav.offsetHeight;
-    if (h > 0) row.style.setProperty("--cat-h", h + "px"); // 0 = nav nascosta durante la ricerca
-  };
+  const measure = measureCategoryRow;
   measure();
   if (window.ResizeObserver) new ResizeObserver(measure).observe(nav);
   window.addEventListener("resize", measure);
   window.addEventListener("load", measure);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+  if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener("loadingdone", measure);
 
   const norm = (t) => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   let timer = null;
@@ -1965,6 +1982,7 @@ function initSearch() {
     searchActive = false;
     clearTimeout(timer);
     row.classList.remove("searching");
+    { const a = document.querySelector(".categories button.active"); if (a) snapCategoryBar(a); }
     btn.setAttribute("aria-expanded", "false");
     btn.setAttribute("aria-label", "Cerca");
     btn.firstElementChild.className = "fa-solid fa-magnifying-glass";

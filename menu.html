@@ -63,8 +63,8 @@
 
 	<title>Menu - Totemino</title>
 	<link rel="icon" type="image/png" href="img/favicon.png">
-	<link rel="stylesheet" href="menu-styles.css"/>
-	<link rel="stylesheet" href="menu-customization-styles.css"/>
+	<link rel="stylesheet" href="menu-styles.css?v=4"/>
+	<link rel="stylesheet" href="menu-customization-styles.css?v=4"/>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 	<style>
@@ -105,18 +105,15 @@
 		</section>
 
 		<section class="side-group">
-			<h3>Dimensione</h3>
-			<div class="side-segmented" role="group" aria-label="Dimensione dell'interfaccia">
-				<button type="button" data-size="small" aria-pressed="false"><span>Piccolo</span></button>
-				<button type="button" data-size="normal" aria-pressed="true"><span>Normale</span></button>
-			</div>
-		</section>
-
-		<section class="side-group">
 			<button id="theme" class="side-item" type="button">
 				<img class="theme-img" data-light="img/theme_light.png" data-dark="img/theme_dark.png" alt="">
 				<span>Tema</span>
 				<span id="theme-value" class="side-item-value"></span>
+			</button>
+			<button id="zoom-btn" class="side-item" type="button">
+				<img class="theme-img" data-light="img/zoom_light.png" data-dark="img/zoom_dark.png" alt="">
+				<span>Zoom</span>
+				<span id="zoom-value" class="side-item-value">Normale</span>
 			</button>
 			<button id="language-btn" class="side-item" type="button" style="display: none;">
 				<span class="side-icon"><i class="fa-solid fa-language"></i></span>
@@ -165,8 +162,8 @@
 	</div>
   </body>
 	
-	<script src="add-banners.js"></script>
-	<script src="menu-script.js"></script>
+	<script src="add-banners.js?v=4"></script>
+	<script src="menu-script.js?v=4"></script>
 	<script src="theme.js"></script>
     <script src="logo-pop.js"></script>
 </html>
