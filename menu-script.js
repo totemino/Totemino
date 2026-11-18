@@ -46,7 +46,7 @@ function computeAutoList() {
   const cs = getComputedStyle(itemsContainer);
   const pad = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
   const gap = parseFloat(cs.columnGap) || 16;
-  const MIN_CARD = 160; // minmax(160px, 1fr) in menu-styles.css
+  const MIN_CARD = 10 * (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16); // minmax(10rem, 1fr) in menu-styles.css
   return Math.floor((w - pad + gap) / (MIN_CARD + gap)) < 2;
 }
 try { localStorage.removeItem('totemino_view_mode'); } catch (e) {} // vecchia chiave: non serve più
@@ -1083,6 +1083,7 @@ async function loadMenu() {
 
   
   setTimeout(checkAndActivate, 0);
+  setTimeout(maybeShowSwipeHint, 700);
 }
 
 function movePillTo(button) {
@@ -1814,6 +1815,64 @@ window.addEventListener("resize", () => {
   fitTitlesTimer = setTimeout(fitGridTitles, 150);
 });
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitGridTitles); // font QS caricato → rimisura
+
+// ===== SUGGERIMENTO SWIPE (solo la prima volta, solo su telefono) =====
+const SWIPE_HINT_KEY = 'totemino_swipe_hint_seen';
+
+function maybeShowSwipeHint() {
+  const forced = new URLSearchParams(location.search).get('hint') === '1'; // ?hint=1 per provarlo
+  if (!forced) {
+    const isPhone = window.matchMedia('(hover: none) and (pointer: coarse)').matches
+      && Math.min(screen.width, screen.height) < 768;
+    if (!isPhone) return;
+    try {
+      if (localStorage.getItem(SWIPE_HINT_KEY)) return;
+    } catch (e) {
+      return; // senza localStorage non potremmo ricordarlo: meglio non mostrarlo ogni volta
+    }
+  }
+  if (categories.length < 2 || document.querySelector(".swipe-hint")) return;
+
+  const chevron = '<svg viewBox="0 0 24 40" aria-hidden="true"><polyline points="20,4 6,20 20,36"/></svg>';
+  const el = document.createElement("div");
+  el.className = "swipe-hint";
+  el.setAttribute("role", "dialog");
+  el.setAttribute("aria-label", "Come cambiare categoria");
+  el.innerHTML = `
+    <div class="swipe-hint-arrows">${chevron.repeat(5)}</div>
+    <p class="swipe-hint-text">Trascina da destra verso sinistra<br>per vedere le altre categorie</p>
+    <span class="swipe-hint-tap">Tocca per continuare</span>
+  `;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add("show"));
+
+  let closed = false;
+  const close = (goNext) => {
+    if (closed) return;
+    closed = true;
+    try { localStorage.setItem(SWIPE_HINT_KEY, "1"); } catch (e) {}
+    el.classList.remove("show");
+    setTimeout(() => el.remove(), 300);
+    if (goNext && !searchActive && currentCategoryIndex < categories.length - 1) {
+      lastSwipeDirection = "left";
+      setActiveCategory(currentCategoryIndex + 1);
+    }
+  };
+
+  // Lo swipe vero (destra → sinistra) chiude l'avviso e passa alla categoria successiva
+  let sx = 0, sy = 0;
+  el.addEventListener("touchstart", (e) => {
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
+  }, { passive: true });
+  el.addEventListener("touchend", (e) => {
+    const t = e.changedTouches[0];
+    const dx = t.clientX - sx;
+    const dy = t.clientY - sy;
+    if (dx < -50 && Math.abs(dx) > Math.abs(dy)) close(true);
+  }, { passive: true });
+  el.addEventListener("click", () => close(false)); // un tocco chiude e basta
+}
 
 // ===== RICERCA =====
 function initSearch() {

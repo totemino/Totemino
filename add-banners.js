@@ -6,28 +6,28 @@
 		position: fixed;
 		bottom: 2rem; /* o 8rem quando esiste .order */
 		left: auto;
-		margin-left: 16px;
-		right: 16px;
-		width: calc(100% - 32px);
-		max-width: 500px;
+		margin-left: 1rem;
+		right: 1rem;
+		width: calc(100% - 2rem);
+		max-width: 31.25rem;
 		background: var(--bg-secondary);
 		border-radius: 1.5rem;
-		box-shadow: 0 3px 12px var(--shadow-sm), 0 0 0 0 rgba(0, 0, 0, 0);
+		box-shadow: 0 0.1875rem 0.75rem var(--shadow-sm), 0 0 0 0 rgba(0, 0, 0, 0);
 		z-index: 10;
 		display: none;
-		backdrop-filter: blur(7px);
-		-webkit-backdrop-filter: blur(7px);
+		backdrop-filter: blur(0.4375rem);
+		-webkit-backdrop-filter: blur(0.4375rem);
 		transition: box-shadow 0.25s ease;
 		user-select: none;
 		-webkit-user-select: none;
 	}
 
 	@media (min-width: 1200px) {
-		.totemino-banner { right: 32px; }
+		.totemino-banner { right: 2rem; }
 	}
 
 	@media (min-width: 1416px) {
-		.totemino-banner { right: calc((100dvw - 1337px)/2); }
+		.totemino-banner { right: calc((100dvw - 83.5625rem)/2); }
 	}
 
 	.totemino-banner.show {
@@ -37,11 +37,11 @@
 
 	/* Bordo esterno nero semi-trasparente mentre si scorre (stile widget Samsung) */
 	.totemino-banner.dragging {
-		box-shadow: 0 3px 12px var(--shadow-sm), 0 0 0 6px rgba(0, 0, 0, 0.45);
+		box-shadow: 0 0.1875rem 0.75rem var(--shadow-sm), 0 0 0 0.375rem rgba(0, 0, 0, 0.45);
 	}
 
 	@keyframes slideIn {
-		from { opacity: 0; transform: translateY(20px); }
+		from { opacity: 0; transform: translateY(1.25rem); }
 		to   { opacity: 1; transform: translateY(0); }
 	}
 
@@ -51,7 +51,7 @@
 
 	@keyframes slideOut {
 		from { opacity: 1; transform: translateY(0); }
-		to   { opacity: 0; transform: translateY(20px); }
+		to   { opacity: 0; transform: translateY(1.25rem); }
 	}
 
 	.totemino-viewport {
@@ -107,6 +107,14 @@
 		margin: 0;
 		color: var(--text-primary, #000);
 		line-height: 1.4;
+	}
+
+	/* testo troncato con "…" quando il banner supera il 30% dell'altezza dello schermo */
+	.totemino-clamp {
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	.totemino-dots {
@@ -419,9 +427,84 @@
 		}, ROTATE_MS);
 	}
 
+
+	// ===== ALTEZZA MASSIMA: 30% DELLO SCHERMO =====
+	// Se il banner supera il 30% dell'altezza, il testo viene troncato con "…"
+	const MAX_HEIGHT_RATIO = 0.3;
+
+	function maxBannerHeight() {
+		// 30lvh = 30% dell'altezza con la barra del browser nascosta: non cambia mentre si scorre la pagina
+		try {
+			if (window.CSS && CSS.supports('height', '1lvh')) {
+				const probe = document.createElement('div');
+				probe.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;width:0;height:' + (MAX_HEIGHT_RATIO * 100) + 'lvh';
+				document.body.appendChild(probe);
+				const h = probe.offsetHeight;
+				probe.remove();
+				if (h > 0) return h;
+			}
+		} catch (e) {}
+		return window.innerHeight * MAX_HEIGHT_RATIO;
+	}
+
+	function clampLines(el, n) {
+		el.classList.add('totemino-clamp');
+		el.style.setProperty('-webkit-line-clamp', String(Math.max(1, n)));
+	}
+
+	function fitBanner() {
+		if (!bannerElement || !trackElement) return;
+
+		// Da nascosto il banner non ha misure: lo rendo misurabile senza mostrarlo
+		const wasShown = bannerElement.classList.contains('show');
+		if (!wasShown) {
+			bannerElement.style.display = 'block';
+			bannerElement.style.visibility = 'hidden';
+		}
+
+		const maxH = maxBannerHeight();
+		const slides = trackElement.querySelectorAll('.totemino-slide');
+
+		// Toglie i tagli precedenti (rotazione schermo, cambio font...)
+		slides.forEach(s => s.querySelectorAll('.totemino-clamp').forEach(el => {
+			el.classList.remove('totemino-clamp');
+			el.style.removeProperty('-webkit-line-clamp');
+		}));
+
+		slides.forEach(slide => {
+			const title = slide.querySelector('.totemino-banner-title');
+			const sub = slide.querySelector('.totemino-banner-subtitle');
+			if (!title || !sub) return;
+
+			const cs = getComputedStyle(slide);
+			const pad = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+			const titleMB = parseFloat(getComputedStyle(title).marginBottom) || 0;
+			const natural = pad + title.offsetHeight + titleMB + sub.offsetHeight;
+			if (natural <= maxH + 0.5) return; // sta nel 30%: nessun taglio
+
+			const subLH = parseFloat(getComputedStyle(sub).lineHeight);
+			const subLines = Math.floor((maxH - pad - titleMB - title.offsetHeight) / subLH);
+			if (subLines >= 1) {
+				clampLines(sub, subLines);
+				return;
+			}
+
+			// Anche il titolo da solo e' troppo alto: tagliamo titolo e sottotitolo
+			const titleLH = parseFloat(getComputedStyle(title).lineHeight);
+			clampLines(title, Math.floor((maxH - pad - titleMB - subLH) / titleLH));
+			clampLines(sub, 1);
+		});
+
+		if (!wasShown) {
+			bannerElement.style.display = '';
+			bannerElement.style.visibility = '';
+		}
+	}
+
 	// ===== MOSTRA / NASCONDI =====
 	function showBanner() {
 		if (!banners.length || isVisible) return;
+		fitBanner();
 
 		// Alla quarta apparizione (dopo 3 X) la X non c'è più
 		closeBtn.style.display = dismissCount >= HIDE_MS.length ? 'none' : 'flex';
@@ -493,6 +576,13 @@
 			if (banners.length > 0) {
 				banners.forEach((b, i) => { b._color = colors[i % colors.length]; });
 				bannerElement = createBannerElement();
+				fitBanner();
+				if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitBanner);
+				let fitTimer = null;
+				window.addEventListener('resize', () => {
+					clearTimeout(fitTimer);
+					fitTimer = setTimeout(fitBanner, 150);
+				});
 
 				document.addEventListener('visibilitychange', () => {
 					if (document.hidden) pauseRotation(); else resumeRotation();
