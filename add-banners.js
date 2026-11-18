@@ -17,7 +17,7 @@
 		display: none;
 		backdrop-filter: blur(0.4375rem);
 		-webkit-backdrop-filter: blur(0.4375rem);
-		transition: box-shadow 0.25s ease;
+		transition: box-shadow 0.4s ease;
 		user-select: none;
 		-webkit-user-select: none;
 	}
@@ -141,8 +141,10 @@
 
 	.totemino-banner-close {
 		position: absolute;
-		top: 1rem;
-		right: 1rem;
+		top: 0;
+		right: 0;
+		width: 3rem;
+		height: 3rem;
 		background: none;
 		border: none;
 		display: flex;
@@ -151,11 +153,13 @@
 		cursor: pointer;
 		padding: 0;
 		z-index: 2;
+		-webkit-tap-highlight-color: transparent;
 	}
 	.totemino-banner-close img {
 		height: 1.3rem;
 		width: 1.3rem;
 		opacity: 0.35;
+		pointer-events: none; /* il click lo riceve sempre il bottone, non l'immagine */
 	}
 
 	[data-theme="dark"] .totemino-banner-close img {
