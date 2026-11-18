@@ -350,6 +350,17 @@ function setUnselectedCustomizablePrice(priceEl, item) {
   priceEl.textContent = item.price < 0.01 ? "Seleziona" : `€${item.price.toFixed(2)} + Modifica`;
 }
 
+// "Voce" scelta dal ristorante: stessa resa di un gruppo con 1 sola opzione (nome piccolo e grigio).
+// Solo per prodotti SENZA gruppo; con gruppo la voce non viene mostrata.
+// Restituisce true se ha scritto il prezzo, false se va usata la logica normale.
+function applyVoce(priceEl, item) {
+  if (!item.voce) return false;
+  if (item.customizable && item.customizationGroup) return false;
+  const label = item.price > 0 ? `€${item.price.toFixed(2)}` : "Gratuito";
+  fillInlineOptionPrices(priceEl, [{ price: label, name: item.voce }]);
+  return true;
+}
+
 // Etichetta prezzo di un item, in base a prezzo e presenza di customizzazioni
 function getPriceLabel(item) {
   const hasCustomizations = !!item.customizable;
@@ -1054,6 +1065,7 @@ async function loadMenu() {
         name: item.name,
         displayName: item.name,
         price: item.price,
+        voce: (item.voce || "").trim(),
         img: item.imagePath,
         description: item.description || "",
         ingredients: (item.description || "").split(",").map(i => i.trim()).filter(Boolean),
@@ -1232,10 +1244,12 @@ function renderItems(category) {
       title.appendChild(titleText);
 
       const price = document.createElement("p");
-      price.textContent = getPriceLabel(item);
-      if (item.customizable) {
-        price.classList.add("customizable-price");
-        setUnselectedCustomizablePrice(price, item);
+      if (!applyVoce(price, item)) {
+        price.textContent = getPriceLabel(item);
+        if (item.customizable) {
+          price.classList.add("customizable-price");
+          setUnselectedCustomizablePrice(price, item);
+        }
       }
 
       btn.appendChild(img);

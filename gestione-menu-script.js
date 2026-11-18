@@ -406,7 +406,7 @@ async function loadMenu() {
     (menu.categories || []).forEach(cat => {
       categories.push(cat.name);
       menuData[cat.name] = (cat.items || []).map(i => ({
-        name: i.name, price: i.price, image: i.imagePath, description: i.description || '', allergens: i.allergens || [],
+        name: i.name, price: i.price, voce: i.voce || '', image: i.imagePath, description: i.description || '', allergens: i.allergens || [],
         isNew: i.featured || false, visible: i.visible !== false, menuType: i.menuType || [],
         customizable: i.customizable || false, customizationGroup: i.customizationGroup || null
       }));
@@ -567,6 +567,7 @@ function openPopup(idx, cat) {
   $('delete-item').classList.toggle('hidden', !it);
   $('item-name').value = it?.name || '';
   $('item-price').value = it?.price ?? '';
+  $('item-voce').value = it?.voce || '';
   $('item-description').value = it?.description || '';
   $('item-new').checked = !!it?.isNew;
   $('item-customizable').checked = !!it?.customizable;
@@ -596,7 +597,7 @@ function saveItem() {
   const old = currentEdit.index === null ? null : menuData[currentEdit.category][currentEdit.index];
   const custom = $('item-customizable').checked;
   const data = {
-    name, price,
+    name, price, voce: $('item-voce').value.trim(),
     image: $('product-preview').classList.contains('hidden') ? '' : uploadedImage || old?.image || '',
     description: $('item-description').value.trim(),
     allergens: [...document.querySelectorAll('.allergen-item.selected')].map(e => e.dataset.allergenId),
@@ -898,7 +899,7 @@ async function saveMenu() {
         categories: categories.map(cat => ({
           name: cat,
           items: (menuData[cat] || []).map(i => ({
-            name: i.name, price: i.price, imagePath: i.image, description: i.description, allergens: i.allergens,
+            name: i.name, price: i.price, voce: i.voce || undefined, imagePath: i.image, description: i.description, allergens: i.allergens,
             featured: i.isNew, visible: i.visible, menuType: i.menuType?.length ? i.menuType : undefined,
             customizable: i.customizable || false, customizationGroup: i.customizationGroup || null
           }))
